@@ -304,30 +304,6 @@
       color: var(--muted); border-radius: 10px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; }
     .md-note b { color: var(--gold-soft); }
 
-    /* API-Football: Startelf, Statistik, Tore */
-    .af-lineups { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .af-team-h { font-weight: 700; font-size: 0.92rem; margin-bottom: 8px; color: var(--silver-2); }
-    .af-team-h .form-txt { color: var(--gold-soft); font-weight: 600; }
-    ol.lineup { list-style: none; display: flex; flex-direction: column; gap: 4px; }
-    ol.lineup li { display: flex; align-items: center; gap: 7px; font-size: 0.85rem; }
-    ol.lineup .num { display: inline-flex; align-items: center; justify-content: center;
-      min-width: 20px; height: 20px; border-radius: 5px; background: rgba(200,208,224,0.12);
-      font-size: 0.7rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    ol.lineup .pos { margin-left: auto; color: var(--muted); font-size: 0.72rem; }
-    .af-coach, .af-subs { margin-top: 8px; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
-    .af-subs b { color: var(--silver-2); }
-    .af-stats { display: flex; flex-direction: column; gap: 9px; }
-    .stat-row { display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; gap: 8px;
-      font-size: 0.82rem; }
-    .stat-row .sv { font-weight: 700; font-variant-numeric: tabular-nums; }
-    .stat-row .sv:last-child { text-align: right; }
-    .stat-row .sl { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
-      color: var(--muted); text-align: center; }
-    .stat-row .bar { height: 5px; border-radius: 3px; background: rgba(200,208,224,0.12); overflow: hidden;
-      display: flex; }
-    .stat-row .bar i { height: 100%; background: var(--silver-2); margin-left: auto; }
-    .stat-row .bar.r i { background: var(--gold); margin-left: 0; margin-right: auto; }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
@@ -373,8 +349,7 @@
       WM-Daten: <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">openfootball</a> (gemeinfrei) ·
       Testspiele &amp; Live: <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> ·
       Flaggen: <a href="https://flagcdn.com" target="_blank" rel="noopener">flagcdn</a><br>
-      Automatische Aktualisierung alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span><br>
-      <a href="#" id="set-key" title="API-Football-Key für Startelf, Statistik & Vorlagen">🔑 <span id="key-label">API-Key für Startelf &amp; Statistik</span></a>
+      Automatische Aktualisierung alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span>
     </footer>
   </div>
 
@@ -409,59 +384,6 @@
     const FAV_TEAM = "Germany";
     const isFav = name => name === FAV_TEAM;
 
-    // ====== API-Football (optional: Startelf, Statistik, Vorlagen) ============
-    // Kein Key = Feature inaktiv. Key per Footer-Button "🔑 API-Key" eintragen
-    // (kostenloser Key auf https://www.api-football.com). Wird lokal gespeichert.
-    // Hinweis: Der Key ist im Browser sichtbar; das Gratis-Kontingent ist begrenzt
-    // (ca. 100 Anfragen/Tag). Direkte Aufrufe via api-sports.io (CORS erlaubt).
-    const API_FOOTBALL = {
-      host: "v3.football.api-sports.io",
-      league: 1,     // FIFA World Cup
-      season: 2026,
-      get key() { return (localStorage.getItem("af_key") || "").trim(); },
-    };
-    const afEnabled = () => !!API_FOOTBALL.key;
-
-    async function afGet(path) {
-      const res = await fetch(`https://${API_FOOTBALL.host}/${path}`, {
-        headers: { "x-apisports-key": API_FOOTBALL.key },
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      const errs = data.errors;
-      if (errs && (Array.isArray(errs) ? errs.length : Object.keys(errs).length))
-        throw new Error(typeof errs === "object" ? Object.values(errs).join("; ") : String(errs));
-      return data.response || [];
-    }
-
-    // Teamnamen normalisieren + Aliasse (openfootball <-> API-Football)
-    const afNorm = s => String(s || "").toLowerCase().normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
-    const AF_ALIAS = {
-      southkorea: "korearepublic", korearepublic: "korearepublic",
-      ivorycoast: "ivorycoast", cotedivoire: "ivorycoast",
-      drcongo: "congodr", congodr: "congodr",
-      usa: "usa", unitedstates: "usa",
-      turkey: "turkiye", turkiye: "turkiye",
-      czechrepublic: "czechia", czechia: "czechia",
-    };
-    const afCanon = name => { const n = afNorm(name); return AF_ALIAS[n] || n; };
-
-    let afFixtures = null; // Map: "home|away" -> fixtureId
-    async function afBuildFixtures() {
-      if (afFixtures) return afFixtures;
-      const resp = await afGet(`fixtures?league=${API_FOOTBALL.league}&season=${API_FOOTBALL.season}`);
-      afFixtures = {};
-      for (const f of resp) {
-        const h = afCanon(f.teams?.home?.name), a = afCanon(f.teams?.away?.name);
-        if (h && a) { afFixtures[`${h}|${a}`] = f.fixture.id; afFixtures[`${a}|${h}`] = f.fixture.id; }
-      }
-      return afFixtures;
-    }
-    async function afFixtureId(m) {
-      const map = await afBuildFixtures();
-      return map[`${afCanon(m.home)}|${afCanon(m.away)}`] || null;
-    }
 
     // FIFA-3-Buchstaben-Code -> ISO-3166 alpha-2 (für Flaggen via flagcdn)
     const FIFA2ISO = {
@@ -936,16 +858,10 @@
           ${ht ? `<div class="k">Halbzeit</div><div class="v">${m.htScore[0]}:${m.htScore[1]}</div>` : ""}
         </div>`;
 
-      // Startelf/Statistik: per API-Football (falls Key) sonst Hinweis
-      const extra = afEnabled()
-        ? `<div id="af-extra"></div>`
-        : `<div class="md-h">Aufstellung &amp; Statistik</div>
-           <div class="md-note">⚠️ <b>Startelf</b>, <b>Vorlagen</b> und Detail-Statistiken (Ballbesitz,
-           Schüsse) sind in der freien Datenquelle nicht enthalten.
-           <br>Optional aktivierbar mit einem kostenlosen
-           <a href="#" data-setkey style="color:var(--gold-soft)">API-Football-Key</a>.</div>`;
+      const note = `<div class="md-h">Aufstellung &amp; Statistik</div>
+        <div class="md-note">⚠️ <b>Startelf</b>, <b>Vorlagen</b> und Detail-Statistiken
+        (Ballbesitz, Schüsse) sind in der freien Datenquelle nicht enthalten.</div>`;
 
-      const token = ++openToken;
       $modalBody.innerHTML = `
         <div class="md-stage">${esc(phase)}</div>
         <div class="md-meta">${fullDate(m.date)}${m.venue ? " · " + esc(m.venue) : ""}</div>
@@ -957,100 +873,11 @@
         ${ht}
         ${goalsBlock}
         ${facts}
-        ${extra}`;
+        ${note}`;
       $modal.hidden = false;
       document.body.style.overflow = "hidden";
-      if (afEnabled()) loadAfDetails(m, token);
     }
 
-    // ====== API-Football: Detail-Rendering ===================================
-    let openToken = 0;
-
-    async function loadAfDetails(m, token) {
-      const box = () => document.getElementById("af-extra");
-      const set = html => { if (token === openToken && box()) box().innerHTML = html; };
-      set(`<div class="md-h">Aufstellung &amp; Statistik</div><div class="gnote">Lade Live-Daten von API-Football …</div>`);
-      try {
-        const fid = await afFixtureId(m);
-        if (!fid) return set(`<div class="md-h">Aufstellung &amp; Statistik</div>
-          <div class="md-note">Für dieses Spiel wurden bei API-Football keine Daten gefunden
-          (z. B. K.-o.-Spiel noch ohne feststehende Teams oder abweichender Teamname).</div>`);
-        const [lineups, stats, events] = await Promise.all([
-          afGet(`fixtures/lineups?fixture=${fid}`).catch(() => []),
-          afGet(`fixtures/statistics?fixture=${fid}`).catch(() => []),
-          afGet(`fixtures/events?fixture=${fid}`).catch(() => []),
-        ]);
-        if (token !== openToken) return;
-        const parts = [renderAfGoals(events), renderAfLineups(lineups), renderAfStats(stats)].filter(Boolean);
-        set(parts.length ? parts.join("")
-          : `<div class="md-h">Aufstellung &amp; Statistik</div>
-             <div class="md-note">Noch keine Aufstellungen/Statistiken verfügbar
-             (erscheinen meist ab ~1 Std. vor Anstoß).</div>`);
-      } catch (e) {
-        set(`<div class="md-h">Aufstellung &amp; Statistik</div>
-          <div class="md-note">API-Football-Fehler: ${esc(e.message)}.
-          ${/HTTP 4/.test(e.message) ? "Key prüfen oder Tageslimit erreicht." : ""}</div>`);
-      }
-    }
-
-    function renderAfGoals(events) {
-      const goals = (events || []).filter(e => (e.type || "").toLowerCase() === "goal");
-      if (!goals.length) return "";
-      const rows = goals.map(e => {
-        const min = e.time?.elapsed != null ? `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'` : "";
-        const det = /penalty/i.test(e.detail || "") ? " (Elfmeter)"
-                  : /own/i.test(e.detail || "") ? " (Eigentor)" : "";
-        const assist = e.assist?.name ? ` <span class="gnote">Vorlage: ${esc(e.assist.name)}</span>` : "";
-        return `<div class="goal">⚽ <span class="min">${min}</span> ${esc(e.player?.name || "")}
-          <span class="gnote">(${esc(e.team?.name || "")})</span>${det}${assist}</div>`;
-      }).join("");
-      return `<div class="md-h">Tore &amp; Vorlagen</div><div class="side">${rows}</div>`;
-    }
-
-    function renderAfLineups(lineups) {
-      if (!lineups || !lineups.length) return "";
-      const team = t => {
-        const xi = (t.startXI || []).map(p =>
-          `<li><span class="num">${p.player?.number ?? ""}</span>${esc(p.player?.name || "")}
-            <span class="pos">${esc(p.player?.pos || "")}</span></li>`).join("");
-        const subs = (t.substitutes || []).map(p => esc(p.player?.name || "")).join(", ");
-        return `<div class="af-team">
-          <div class="af-team-h">${esc(t.team?.name || "")}${t.formation ? ` · <span class="form-txt">${esc(t.formation)}</span>` : ""}</div>
-          <ol class="lineup">${xi}</ol>
-          ${t.coach?.name ? `<div class="af-coach">Trainer: ${esc(t.coach.name)}</div>` : ""}
-          ${subs ? `<div class="af-subs"><b>Bank:</b> ${subs}</div>` : ""}
-        </div>`;
-      };
-      return `<div class="md-h">Startelf</div><div class="af-lineups">${lineups.map(team).join("")}</div>`;
-    }
-
-    function renderAfStats(stats) {
-      if (!stats || stats.length < 2) return "";
-      const [A, B] = stats;
-      const get = (t, type) => (t.statistics || []).find(s => s.type === type)?.value;
-      const TYPES = [
-        ["Ball Possession", "Ballbesitz"], ["Total Shots", "Schüsse"],
-        ["Shots on Goal", "aufs Tor"], ["Corner Kicks", "Ecken"],
-        ["Fouls", "Fouls"], ["Yellow Cards", "Gelbe Karten"],
-        ["Passes %", "Passquote"], ["expected_goals", "xG"],
-      ];
-      const num = v => v == null ? 0 : parseFloat(String(v)) || 0;
-      const rows = TYPES.map(([key, label]) => {
-        const a = get(A, key), b = get(B, key);
-        if (a == null && b == null) return "";
-        const av = num(a), bv = num(b), tot = av + bv || 1;
-        return `<div class="stat-row">
-          <span class="sv">${a ?? "–"}</span>
-          <span class="sl">
-            <span class="bar"><i style="width:${(av/tot*100).toFixed(0)}%"></i></span>
-            ${esc(label)}
-            <span class="bar r"><i style="width:${(bv/tot*100).toFixed(0)}%"></i></span>
-          </span>
-          <span class="sv">${b ?? "–"}</span>
-        </div>`;
-      }).filter(Boolean).join("");
-      return rows ? `<div class="md-h">Statistik</div><div class="af-stats">${rows}</div>` : "";
-    }
     function closeModal() { $modal.hidden = true; document.body.style.overflow = ""; }
     $modal.addEventListener("click", e => { if (e.target.hasAttribute("data-close")) closeModal(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !$modal.hidden) closeModal(); });
@@ -1086,34 +913,6 @@
       const card = e.target.closest(".match[data-id]");
       if (card) { e.preventDefault(); openMatch(card.dataset.id); }
     });
-
-    // ====== API-Football Key verwalten =======================================
-    function refreshKeyLabel() {
-      const el = document.getElementById("key-label");
-      if (el) el.textContent = afEnabled()
-        ? "API-Key aktiv – Startelf & Statistik an (ändern)"
-        : "API-Key für Startelf & Statistik";
-    }
-    function manageKey() {
-      const cur = API_FOOTBALL.key;
-      const val = prompt(
-        "API-Football-Key eingeben (kostenlos auf api-football.com).\n" +
-        "Leer lassen und OK = Key entfernen.\n\n" +
-        "Hinweis: Der Key wird nur lokal in deinem Browser gespeichert.",
-        cur);
-      if (val === null) return;               // Abbruch
-      const v = val.trim();
-      if (v) localStorage.setItem("af_key", v); else localStorage.removeItem("af_key");
-      afFixtures = null;                      // Fixture-Cache zurücksetzen
-      refreshKeyLabel();
-      alert(v ? "Key gespeichert. Startelf & Statistik sind jetzt in der Spiel-Detailansicht verfügbar."
-              : "Key entfernt.");
-    }
-    document.getElementById("set-key")?.addEventListener("click", e => { e.preventDefault(); manageKey(); });
-    $modalBody.addEventListener("click", e => {
-      if (e.target.closest("[data-setkey]")) { e.preventDefault(); manageKey(); }
-    });
-    refreshKeyLabel();
 
     // ====== Start & Auto-Refresh =============================================
     loadAll();
