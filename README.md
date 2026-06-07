@@ -21,8 +21,22 @@ Tabellen und Testspielen.
 - Internationale Testspiele rund um das Turnier
 
 > Hinweis: Startelf, Vorlagen und Detail-Statistiken (Ballbesitz/Schüsse) sind in
-> der kostenlosen, gemeinfreien Datenquelle nicht enthalten und werden daher nicht
-> angezeigt.
+> der kostenlosen, gemeinfreien Datenquelle nicht enthalten. Sie lassen sich
+> **optional** über einen eigenen API-Football-Key freischalten.
+
+### Optional: Startelf, Statistik & Vorlagen (API-Football)
+
+Über den Footer-Button **„🔑 API-Key"** kann ein kostenloser Key von
+[api-football.com](https://www.api-football.com) hinterlegt werden (wird nur lokal
+im Browser gespeichert). Danach zeigt die Spiel-Detailansicht zusätzlich:
+
+- **Startelf** beider Teams inkl. Formation, Bank und Trainer
+- **Spielstatistiken** (Ballbesitz, Schüsse, Ecken, Karten, xG …) als Vergleichsbalken
+- **Tore mit Vorlagengeber**
+
+Ohne Key bleibt die Seite voll funktionsfähig; das Feature ist dann einfach inaktiv.
+Hinweis: Der Gratis-Tarif ist limitiert (ca. 100 Anfragen/Tag) und der Key ist im
+Browser sichtbar.
 - Filter (Alle / Gruppen / WM-Endrunde / Testspiele / Live / Kommend) und Suche
 - Nationalflaggen für jedes Team
 - Deutschland-Spiele hervorgehoben (DFB-Touch)
