@@ -18,7 +18,10 @@ Tabellen und Testspielen.
 - Internationale Testspiele rund um das Turnier
 - Filter (Alle / Gruppen / WM-Endrunde / Testspiele / Live / Kommend) und Suche
 - Nationalflaggen für jedes Team
+- Deutschland-Spiele hervorgehoben (DFB-Touch)
 - Automatische Aktualisierung alle 60 Sekunden
+- Installierbar als App (PWA) mit Offline-Spielplan
+- Schöne Link-Vorschau (Open Graph) und Favicon
 
 ## Datenquellen
 
