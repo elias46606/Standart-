@@ -304,6 +304,30 @@
       color: var(--muted); border-radius: 10px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; }
     .md-note b { color: var(--gold-soft); }
 
+    /* Startelf, Statistik (ESPN) */
+    .af-lineups { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .af-team-h { font-weight: 700; font-size: 0.92rem; margin-bottom: 8px; color: var(--silver-2); }
+    .af-team-h .form-txt { color: var(--gold-soft); font-weight: 600; }
+    ol.lineup { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    ol.lineup li { display: flex; align-items: center; gap: 7px; font-size: 0.85rem; }
+    ol.lineup .num { display: inline-flex; align-items: center; justify-content: center;
+      min-width: 20px; height: 20px; border-radius: 5px; background: rgba(200,208,224,0.12);
+      font-size: 0.7rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    ol.lineup .pos { margin-left: auto; color: var(--muted); font-size: 0.72rem; }
+    .af-subs { margin-top: 8px; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .af-subs b { color: var(--silver-2); }
+    .af-stats { display: flex; flex-direction: column; gap: 9px; }
+    .stat-row { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 8px;
+      font-size: 0.82rem; }
+    .stat-row .sv { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-row .sv:last-child { text-align: right; }
+    .stat-row .sl { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+      color: var(--muted); text-align: center; }
+    .stat-row .bar { height: 5px; border-radius: 3px; background: rgba(200,208,224,0.12); overflow: hidden;
+      display: flex; }
+    .stat-row .bar i { height: 100%; background: var(--silver-2); margin-left: auto; }
+    .stat-row .bar.r i { background: var(--gold); margin-left: 0; margin-right: auto; }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
@@ -347,7 +371,7 @@
 
     <footer>
       WM-Daten: <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">openfootball</a> (gemeinfrei) ·
-      Testspiele &amp; Live: <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> ·
+      Testspiele, Aufstellungen &amp; Statistik: <a href="https://www.espn.com" target="_blank" rel="noopener">ESPN</a> ·
       Flaggen: <a href="https://flagcdn.com" target="_blank" rel="noopener">flagcdn</a><br>
       Automatische Aktualisierung alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span>
     </footer>
@@ -369,9 +393,10 @@
       "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
       "https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master/2026/worldcup.json",
     ];
-    // Testspiele (A-Länderspiele) + Live-Notfall-Fallback: TheSportsDB
-    const TSDB = "https://www.thesportsdb.com/api/v1/json/123";
-    const TEST_LEAGUE = "4562", WM_LEAGUE_TSDB = "4429", TEST_SEASON = "2026";
+    // Testspiele + Aufstellungen/Statistik (laufende Spiele): versteckte ESPN-API
+    // (kostenlos, kein Key, CORS-fähig). Liga-Slugs: WM = fifa.world, Testspiele = fifa.friendly
+    const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
+    const ESPN_LEAGUE = { wm: "fifa.world", test: "fifa.friendly" };
 
     // Zeitfenster rund um die WM
     const WINDOW_START = new Date("2026-05-15T00:00:00");
@@ -534,23 +559,59 @@
       });
     }
 
-    // ====== TheSportsDB parsen ===============================================
-    function normalizeTSDB(ev, kind) {
-      const ts = ev.strTimestamp ? new Date(ev.strTimestamp.replace(" ", "T") + "Z")
-               : ev.dateEvent ? new Date(ev.dateEvent + "T" + (ev.strTime || "00:00:00") + "Z") : null;
-      const status = (ev.strStatus || "").trim();
-      const live = isLiveStatus(status);
-      const finished = /finish|ft|aet|full|after|pen/i.test(status) ||
-        (ev.intHomeScore != null && ev.intAwayScore != null && !live && ts && ts < new Date());
-      const home = (ev.strHomeTeam || "").trim(), away = (ev.strAwayTeam || "").trim();
+    // ====== ESPN (Testspiele, Aufstellungen, Statistik) ======================
+    // Teamnamen für den Abgleich openfootball <-> ESPN normalisieren
+    const espnNorm = s => String(s || "").toLowerCase().normalize("NFD")
+      .replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+    const ESPN_ALIAS = {
+      unitedstates: "usa", usa: "usa",
+      korearepublic: "southkorea", southkorea: "southkorea",
+      iriran: "iran", iran: "iran",
+      cotedivoire: "ivorycoast", ivorycoast: "ivorycoast",
+      caboverde: "capeverde", capeverde: "capeverde",
+      czechrepublic: "czechia", czechia: "czechia",
+      turkey: "turkiye", turkiye: "turkiye",
+      congodr: "drcongo", drcongo: "drcongo",
+    };
+    const espnCanon = n => { const x = espnNorm(n); return ESPN_ALIAS[x] || x; };
+    const ymd = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+
+    async function espnJson(url) {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }
+    async function espnScoreboard(league, yyyymmdd) {
+      try {
+        const d = await espnJson(`${ESPN_BASE}/${league}/scoreboard${yyyymmdd ? "?dates=" + yyyymmdd : ""}`);
+        return d.events || [];
+      } catch { return []; }
+    }
+
+    // ESPN-Event -> einheitliches Spiel-Objekt
+    function normalizeESPN(ev, kind) {
+      const c = ev.competitions?.[0]; if (!c) return null;
+      const cs = c.competitors || [];
+      const home = cs.find(x => x.homeAway === "home") || cs[0];
+      const away = cs.find(x => x.homeAway === "away") || cs[1];
+      if (!home?.team || !away?.team) return null;
+      const st = c.status || ev.status || {};
+      const state = st.type?.state;                 // "pre" | "in" | "post"
+      const hName = home.team.displayName || home.team.name || "";
+      const aName = away.team.displayName || away.team.name || "";
+      const hs = home.score != null ? parseInt(home.score, 10) : null;
+      const as = away.score != null ? parseInt(away.score, 10) : null;
       return {
-        id: ev.idEvent, name: ev.strEvent, home, away,
-        homeBadge: flagUrl("", home) || ev.strHomeTeamBadge || "",
-        awayBadge: flagUrl("", away) || ev.strAwayTeamBadge || "",
-        homeScore: ev.intHomeScore, awayScore: ev.intAwayScore,
-        date: ts, venue: ev.strVenue || "", status, live, finished,
-        kind, group: kind === "wm" ? parseGroup(ev.strGroup) : null,
-        stage: kind === "wm" ? detectStage(ev.strGroup || ev.strEvent) : null,
+        id: "espn-" + ev.id, espnId: ev.id, espnLeague: ESPN_LEAGUE[kind] || ESPN_LEAGUE.test,
+        name: `${hName} – ${aName}`, home: hName, away: aName,
+        homeBadge: flagUrl("", hName) || home.team.logo || "",
+        awayBadge: flagUrl("", aName) || away.team.logo || "",
+        homeScore: state === "pre" ? null : hs, awayScore: state === "pre" ? null : as,
+        date: ev.date ? new Date(ev.date) : null,
+        venue: c.venue?.fullName || "",
+        status: st.type?.shortDetail || st.type?.description || "",
+        live: state === "in", finished: state === "post",
+        kind, group: null, stage: null, homeGoals: [], awayGoals: [], htScore: null,
       };
     }
 
@@ -565,26 +626,13 @@
           if (parsed.length) return parsed;
         } catch { /* nächste Quelle */ }
       }
-      // Fallback: TheSportsDB
-      try {
-        const out = [];
-        for (const u of [`${TSDB}/eventsseason.php?id=${WM_LEAGUE_TSDB}&s=2026`,
-                         `${TSDB}/eventsnextleague.php?id=${WM_LEAGUE_TSDB}`,
-                         `${TSDB}/eventspastleague.php?id=${WM_LEAGUE_TSDB}`]) {
-          try { const d = await fetchJSON(u, 1); (d.events || []).forEach(e => out.push(normalizeTSDB(e, "wm"))); } catch {}
-        }
-        return out;
-      } catch { return []; }
+      return [];
     }
 
+    // Testspiele: aktuelle/kommende Freundschaftsspiele von ESPN
     async function loadTests() {
-      const out = [];
-      for (const u of [`${TSDB}/eventsseason.php?id=${TEST_LEAGUE}&s=${TEST_SEASON}`,
-                       `${TSDB}/eventsnextleague.php?id=${TEST_LEAGUE}`,
-                       `${TSDB}/eventspastleague.php?id=${TEST_LEAGUE}`]) {
-        try { const d = await fetchJSON(u, 1); (d.events || []).forEach(e => out.push(normalizeTSDB(e, "test"))); } catch {}
-      }
-      return out;
+      const evs = await espnScoreboard(ESPN_LEAGUE.test);
+      return evs.map(e => normalizeESPN(e, "test")).filter(Boolean);
     }
 
     async function loadAll() {
@@ -858,10 +906,7 @@
           ${ht ? `<div class="k">Halbzeit</div><div class="v">${m.htScore[0]}:${m.htScore[1]}</div>` : ""}
         </div>`;
 
-      const note = `<div class="md-h">Aufstellung &amp; Statistik</div>
-        <div class="md-note">⚠️ <b>Startelf</b>, <b>Vorlagen</b> und Detail-Statistiken
-        (Ballbesitz, Schüsse) sind in der freien Datenquelle nicht enthalten.</div>`;
-
+      const token = ++openToken;
       $modalBody.innerHTML = `
         <div class="md-stage">${esc(phase)}</div>
         <div class="md-meta">${fullDate(m.date)}${m.venue ? " · " + esc(m.venue) : ""}</div>
@@ -873,9 +918,118 @@
         ${ht}
         ${goalsBlock}
         ${facts}
-        ${note}`;
+        <div id="espn-extra"></div>`;
       $modal.hidden = false;
       document.body.style.overflow = "hidden";
+      loadEspnDetails(m, token);
+    }
+
+    // ====== ESPN-Detail: Aufstellung, Bank, Statistik, Tore/Vorlagen =========
+    let openToken = 0;
+
+    async function findEspnEvent(m) {
+      if (m.espnId) return { id: m.espnId, league: m.espnLeague };
+      if (!m.date) return null;
+      const league = ESPN_LEAGUE[m.kind] || ESPN_LEAGUE.wm;
+      const hc = espnCanon(m.home), ac = espnCanon(m.away);
+      for (const off of [0, -1, 1]) {                 // Zeitzonen-Toleranz
+        const d = new Date(m.date); d.setDate(d.getDate() + off);
+        const evs = await espnScoreboard(league, ymd(d));
+        const hit = evs.find(e => {
+          const cs = e.competitions?.[0]?.competitors || [];
+          const names = cs.map(x => espnCanon(x.team?.displayName || x.team?.name));
+          return names.includes(hc) && names.includes(ac);
+        });
+        if (hit) return { id: hit.id, league };
+      }
+      return null;
+    }
+
+    async function loadEspnDetails(m, token) {
+      const box = () => document.getElementById("espn-extra");
+      const set = html => { if (token === openToken && box()) box().innerHTML = html; };
+      set(`<div class="md-h">Aufstellung &amp; Statistik</div><div class="gnote">Lade Live-Daten …</div>`);
+      try {
+        const ev = await findEspnEvent(m);
+        if (!ev) return set(`<div class="md-h">Aufstellung &amp; Statistik</div>
+          <div class="md-note">Für dieses Spiel liegen bei ESPN noch keine Daten vor
+          (z. B. K.-o.-Spiel ohne feststehende Teams oder noch nicht angesetzt).</div>`);
+        const sum = await espnJson(`${ESPN_BASE}/${ev.league}/summary?event=${ev.id}`);
+        if (token !== openToken) return;
+        const parts = [renderEspnGoals(sum), renderEspnLineups(sum), renderEspnStats(sum)].filter(Boolean);
+        set(parts.length ? parts.join("")
+          : `<div class="md-h">Aufstellung &amp; Statistik</div>
+             <div class="md-note">Aufstellungen &amp; Statistiken erscheinen meist erst
+             ~1 Std. vor Anstoß bzw. während des Spiels.</div>`);
+      } catch (e) {
+        set(`<div class="md-h">Aufstellung &amp; Statistik</div>
+          <div class="md-note">ESPN-Daten gerade nicht verfügbar (${esc(e.message)}).</div>`);
+      }
+    }
+
+    function renderEspnGoals(sum) {
+      const teamName = id => (sum.boxscore?.teams || []).find(t => t.team?.id === id)?.team?.displayName || "";
+      const evs = (sum.keyEvents || []).filter(e => e.scoringPlay || /goal/i.test(e.type?.text || ""));
+      if (!evs.length) return "";
+      const rows = evs.map(e => {
+        const min = e.clock?.displayValue || e.time?.displayValue || "";
+        const pts = e.participants || [];
+        const scorer = pts[0]?.athlete?.displayName || e.athlete?.displayName || "";
+        const assist = pts[1]?.athlete?.displayName;
+        const det = e.penaltyKick ? " (Elfmeter)" : e.ownGoal ? " (Eigentor)" : "";
+        const tn = e.team?.displayName || teamName(e.team?.id);
+        return `<div class="goal">⚽ <span class="min">${esc(min)}</span> ${esc(scorer)}
+          ${tn ? `<span class="gnote">(${esc(tn)})</span>` : ""}${det}
+          ${assist ? `<span class="gnote">Vorlage: ${esc(assist)}</span>` : ""}</div>`;
+      }).join("");
+      return `<div class="md-h">Tore &amp; Vorlagen</div><div class="side">${rows}</div>`;
+    }
+
+    function renderEspnLineups(sum) {
+      const rs = sum.rosters || [];
+      if (!rs.length || !rs.some(r => (r.roster || []).length)) return "";
+      const li = p => {
+        const num = p.jersey ?? p.athlete?.jersey ?? "";
+        const pos = p.position?.abbreviation || p.position?.name || "";
+        return `<li><span class="num">${esc(num)}</span>${esc(p.athlete?.displayName || "")}
+          <span class="pos">${esc(pos)}</span></li>`;
+      };
+      const team = r => {
+        const pl = r.roster || [];
+        const xi = pl.filter(p => p.starter).map(li).join("");
+        const bench = pl.filter(p => !p.starter).map(p => esc(p.athlete?.displayName || "")).join(", ");
+        return `<div class="af-team">
+          <div class="af-team-h">${esc(r.team?.displayName || "")}${r.formation ? ` · <span class="form-txt">${esc(r.formation)}</span>` : ""}</div>
+          <ol class="lineup">${xi || "<li>–</li>"}</ol>
+          ${bench ? `<div class="af-subs"><b>Bank:</b> ${bench}</div>` : ""}
+        </div>`;
+      };
+      return `<div class="md-h">Startelf</div><div class="af-lineups">${rs.map(team).join("")}</div>`;
+    }
+
+    function renderEspnStats(sum) {
+      const teams = sum.boxscore?.teams || [];
+      if (teams.length < 2) return "";
+      const map = t => { const o = {}; (t.statistics || []).forEach(s =>
+        o[s.name || s.label] = { label: s.label || s.name, val: s.displayValue ?? s.value }); return o; };
+      const A = map(teams[0]), B = map(teams[1]);
+      const keys = [...new Set([...Object.keys(A), ...Object.keys(B)])];
+      const num = v => { const n = parseFloat(String(v ?? "").replace(/[^\d.]/g, "")); return isNaN(n) ? 0 : n; };
+      const rows = keys.map(k => {
+        const la = A[k], lb = B[k]; const label = (la || lb).label || k;
+        const av = la ? la.val : "–", bv = lb ? lb.val : "–";
+        const an = num(av), bn = num(bv), tot = an + bn || 1;
+        return `<div class="stat-row">
+          <span class="sv">${esc(String(av))}</span>
+          <span class="sl">
+            <span class="bar"><i style="width:${(an / tot * 100).toFixed(0)}%"></i></span>
+            ${esc(label)}
+            <span class="bar r"><i style="width:${(bn / tot * 100).toFixed(0)}%"></i></span>
+          </span>
+          <span class="sv">${esc(String(bv))}</span>
+        </div>`;
+      }).join("");
+      return rows ? `<div class="md-h">Statistik</div><div class="af-stats">${rows}</div>` : "";
     }
 
     function closeModal() { $modal.hidden = true; document.body.style.overflow = ""; }

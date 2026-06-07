@@ -33,7 +33,7 @@ self.addEventListener("activate", event => {
 });
 
 function isData(url) {
-  return /githubusercontent\.com|jsdelivr\.net|flagcdn\.com|thesportsdb\.com/.test(url);
+  return /githubusercontent\.com|jsdelivr\.net|flagcdn\.com|api\.espn\.com/.test(url);
 }
 
 self.addEventListener("fetch", event => {

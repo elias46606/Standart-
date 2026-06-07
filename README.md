@@ -18,25 +18,10 @@ Tabellen und Testspielen.
 - Klickbare Spiele mit Detailansicht: Torschützen (Minute, Elfmeter, Eigentor),
   Halbzeitstand und Fakten
 - Torschützenliste des Turniers (aktualisiert sich automatisch)
-- Internationale Testspiele rund um das Turnier
-
-> Hinweis: Startelf, Vorlagen und Detail-Statistiken (Ballbesitz/Schüsse) sind in
-> der kostenlosen, gemeinfreien Datenquelle nicht enthalten. Sie lassen sich
-> **optional** über einen eigenen API-Football-Key freischalten.
-
-### Optional: Startelf, Statistik & Vorlagen (API-Football)
-
-Über den Footer-Button **„🔑 API-Key"** kann ein kostenloser Key von
-[api-football.com](https://www.api-football.com) hinterlegt werden (wird nur lokal
-im Browser gespeichert). Danach zeigt die Spiel-Detailansicht zusätzlich:
-
-- **Startelf** beider Teams inkl. Formation, Bank und Trainer
-- **Spielstatistiken** (Ballbesitz, Schüsse, Ecken, Karten, xG …) als Vergleichsbalken
-- **Tore mit Vorlagengeber**
-
-Ohne Key bleibt die Seite voll funktionsfähig; das Feature ist dann einfach inaktiv.
-Hinweis: Der Gratis-Tarif ist limitiert (ca. 100 Anfragen/Tag) und der Key ist im
-Browser sichtbar.
+- Internationale Testspiele rund um das Turnier (via ESPN)
+- **Startelf, Bank, Statistiken und Vorlagen** in der Spiel-Detailansicht –
+  kostenlos und ohne Key über die offene ESPN-API (erscheinen, sobald ESPN für
+  das Spiel Daten bereitstellt, i. d. R. ab ~1 Std. vor Anstoß bzw. live)
 - Filter (Alle / Gruppen / WM-Endrunde / Testspiele / Live / Kommend) und Suche
 - Nationalflaggen für jedes Team
 - Deutschland-Spiele hervorgehoben (DFB-Touch)
@@ -47,8 +32,9 @@ Browser sichtbar.
 ## Datenquellen
 
 - WM-Daten: [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json)
-  (gemeinfrei, ohne API-Key), mit jsDelivr- und TheSportsDB-Fallback
-- Testspiele & Live: [TheSportsDB](https://www.thesportsdb.com)
+  (gemeinfrei, ohne API-Key), mit jsDelivr-Fallback
+- Testspiele, Aufstellungen & Statistik: offene [ESPN](https://www.espn.com)-API
+  (kostenlos, ohne Key)
 - Flaggen: [flagcdn](https://flagcdn.com)
 
 Alle Daten werden direkt im Browser geladen – kein eigener Server nötig,
