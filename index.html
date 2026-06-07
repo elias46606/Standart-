@@ -261,7 +261,6 @@
     const WM_SOURCES = [
       "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
       "https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master/2026/worldcup.json",
-      "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/cup.json",
     ];
     // Testspiele (A-Länderspiele) + Live-Notfall-Fallback: TheSportsDB
     const TSDB = "https://www.thesportsdb.com/api/v1/json/123";
@@ -301,7 +300,8 @@
       "turkey":"tr","türkei":"tr","türkiye":"tr","greece":"gr","griechenland":"gr","hungary":"hu",
       "ungarn":"hu","romania":"ro","rumänien":"ro","slovakia":"sk","slowakei":"sk","slovenia":"si",
       "slowenien":"si","ireland":"ie","irland":"ie","iceland":"is","island":"is","finland":"fi",
-      "finnland":"fi","albania":"al","albanien":"al",
+      "finnland":"fi","albania":"al","albanien":"al","bosnia & herzegovina":"ba",
+      "bosnia and herzegovina":"ba","bosnien":"ba",
       "brazil":"br","brasilien":"br","argentina":"ar","argentinien":"ar","uruguay":"uy",
       "colombia":"co","kolumbien":"co","chile":"cl","peru":"pe","ecuador":"ec","paraguay":"py",
       "venezuela":"ve","bolivia":"bo","bolivien":"bo",
@@ -312,6 +312,7 @@
       "ghana":"gh","egypt":"eg","ägypten":"eg","algeria":"dz","algerien":"dz","tunisia":"tn",
       "tunesien":"tn","ivory coast":"ci","cote d'ivoire":"ci","elfenbeinküste":"ci","mali":"ml",
       "south africa":"za","südafrika":"za","cape verde":"cv","kap verde":"cv",
+      "dr congo":"cd","dr kongo":"cd","congo dr":"cd",
       "japan":"jp","south korea":"kr","korea republic":"kr","südkorea":"kr","iran":"ir",
       "saudi arabia":"sa","saudi-arabien":"sa","australia":"au","australien":"au","qatar":"qa",
       "katar":"qa","iraq":"iq","irak":"iq","uzbekistan":"uz","usbekistan":"uz","jordan":"jo",
@@ -370,31 +371,46 @@
     const teamName = t => typeof t === "string" ? t : (t?.name || t?.key || "");
     const teamCode = t => typeof t === "object" ? (t.code || t.fifa || "") : "";
 
+    // Anstoßzeit inkl. Zeitzone parsen, z. B. "13:00 UTC-6" oder "19:00"
+    function parseKickoff(dateStr, timeStr) {
+      if (!dateStr) return null;
+      if (!timeStr) return new Date(`${dateStr}T00:00:00`);
+      const m = String(timeStr).match(/(\d{1,2}):(\d{2})\s*(?:UTC\s*([+-]\d{1,2})(?::?(\d{2}))?)?/i);
+      if (!m) return new Date(`${dateStr}T00:00:00`);
+      const hh = m[1].padStart(2, "0"), mm = m[2];
+      if (m[3] != null) {
+        const sign = m[3][0];
+        const oh = String(Math.abs(parseInt(m[3], 10))).padStart(2, "0");
+        const om = (m[4] || "00").padStart(2, "0");
+        return new Date(`${dateStr}T${hh}:${mm}:00${sign}${oh}:${om}`);
+      }
+      return new Date(`${dateStr}T${hh}:${mm}:00`);
+    }
+
     function parseOpenFootball(data) {
       // Spiele flach sammeln (Format mit "matches" ODER "rounds[].matches")
       let list = [];
       if (Array.isArray(data.matches)) list = data.matches.map(m => ({ ...m }));
       else if (Array.isArray(data.rounds))
-        list = data.rounds.flatMap(r => (r.matches || []).map(m => ({ ...m, _round: r.name })));
+        list = data.rounds.flatMap(r => (r.matches || []).map(m => ({ ...m, round: m.round || r.name })));
       else return [];
 
       return list.map((m, i) => {
-        const groupRaw = m.group || m._round || "";
-        const group = parseGroup(m.group) || parseGroup(m._round);
-        const stage = group ? null : detectStage(m._round || m.round || m.group);
+        const group = parseGroup(m.group);
+        const stage = group ? null : detectStage(m.round || m.group);
         const h = teamName(m.team1), a = teamName(m.team2);
         const hc = teamCode(m.team1), ac = teamCode(m.team2);
         // Score: {ft:[a,b]} ODER score1/score2
         let hs = null, as = null;
         if (m.score && Array.isArray(m.score.ft)) { hs = m.score.ft[0]; as = m.score.ft[1]; }
         else if (m.score1 != null && m.score2 != null) { hs = m.score1; as = m.score2; }
-        const time = m.time || "00:00";
-        const date = m.date ? new Date(`${m.date}T${time.length === 5 ? time : "00:00"}:00`) : null;
+        const date = parseKickoff(m.date, m.time);
         const finished = hs != null && as != null;
         return {
           id: "of-" + (m.num ?? `${m.date}-${h}-${a}-${i}`), name: `${h} – ${a}`,
           home: h, away: a, homeBadge: flagUrl(hc, h), awayBadge: flagUrl(ac, a),
-          homeScore: hs, awayScore: as, date, venue: (m.stadium?.name || m.city || ""),
+          homeScore: hs, awayScore: as, date,
+          venue: (m.ground || m.stadium?.name || m.city || ""),
           status: "", live: false, finished, kind: "wm", group, stage,
         };
       });
