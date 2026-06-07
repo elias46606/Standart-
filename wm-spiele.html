@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WM 2026 · Live Spielplan</title>
+  <title>WM 2026 · Live Spielplan &amp; Gruppen</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #05060f;
-      --bg2: #0a0e1f;
       --glass: rgba(20, 28, 56, 0.45);
-      --glass-strong: rgba(28, 38, 74, 0.65);
+      --glass-strong: rgba(28, 38, 74, 0.7);
       --line: rgba(120, 160, 255, 0.16);
       --line-bright: rgba(120, 200, 255, 0.45);
       --text: #eaf2ff;
@@ -24,22 +23,13 @@
       --live: #ff2e63;
       --green: #2bffb0;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
-
     body {
-      min-height: 100vh;
-      background: var(--bg);
-      font-family: "Rajdhani", system-ui, sans-serif;
-      color: var(--text);
-      padding: 28px 16px 80px;
-      position: relative;
-      overflow-x: hidden;
+      min-height: 100vh; background: var(--bg);
+      font-family: "Rajdhani", system-ui, sans-serif; color: var(--text);
+      padding: 28px 16px 80px; position: relative; overflow-x: hidden;
     }
-
-    /* Animated futuristic background */
     .bg-fx {
       position: fixed; inset: 0; z-index: -2; overflow: hidden;
       background:
@@ -54,53 +44,41 @@
         linear-gradient(rgba(120,160,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(120,160,255,0.05) 1px, transparent 1px);
       background-size: 46px 46px;
-      transform: perspective(600px) rotateX(60deg);
-      transform-origin: top center;
+      transform: perspective(600px) rotateX(60deg); transform-origin: top center;
       animation: drift 24s linear infinite;
       mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
     }
     @keyframes drift { from { background-position: 0 0; } to { background-position: 0 46px; } }
 
-    .wrap { max-width: 940px; margin: 0 auto; position: relative; }
+    .wrap { max-width: 960px; margin: 0 auto; position: relative; }
 
-    /* Header */
     header { text-align: center; margin-bottom: 30px; }
     .kicker {
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.72rem; letter-spacing: 5px; text-transform: uppercase;
-      color: var(--cyan); margin-bottom: 10px;
+      font-family: "Orbitron", sans-serif; font-size: 0.72rem; letter-spacing: 5px;
+      text-transform: uppercase; color: var(--cyan); margin-bottom: 10px;
       text-shadow: 0 0 16px rgba(34,224,255,0.6);
     }
     h1 {
-      font-family: "Orbitron", sans-serif;
-      font-size: clamp(1.8rem, 5.5vw, 3.1rem);
+      font-family: "Orbitron", sans-serif; font-size: clamp(1.8rem, 5.5vw, 3.1rem);
       font-weight: 900; line-height: 1.05;
       background: linear-gradient(100deg, #fff 10%, var(--cyan) 45%, var(--magenta) 90%);
       -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 24px rgba(34,224,255,0.25));
     }
-    .subtitle { color: var(--muted); margin-top: 12px; font-size: 1.02rem; font-weight: 500; letter-spacing: 0.3px; }
-
+    .subtitle { color: var(--muted); margin-top: 12px; font-size: 1.02rem; font-weight: 500; }
     .status-bar {
       display: inline-flex; align-items: center; gap: 10px; margin-top: 16px;
-      font-size: 0.85rem; color: var(--muted);
-      padding: 7px 16px; border-radius: 999px;
+      font-size: 0.82rem; color: var(--muted); padding: 7px 16px; border-radius: 999px;
       background: var(--glass); border: 1px solid var(--line);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       font-family: "Orbitron", sans-serif; letter-spacing: 1px;
     }
-    .dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      background: var(--green); box-shadow: 0 0 12px var(--green);
-      animation: pulse 1.8s infinite;
-    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 12px var(--green); animation: pulse 1.8s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
 
-    /* Controls */
-    .controls {
-      display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
-      justify-content: space-between; margin-bottom: 22px;
-    }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; margin-bottom: 22px; }
     .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
     .tab {
       background: var(--glass); border: 1px solid var(--line); color: var(--muted);
@@ -110,52 +88,41 @@
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     .tab:hover { color: var(--text); border-color: var(--line-bright); transform: translateY(-1px); }
-    .tab.active {
-      color: #04101a; border-color: transparent;
+    .tab.active { color: #04101a; border-color: transparent;
       background: linear-gradient(100deg, var(--cyan), var(--violet));
-      box-shadow: 0 0 22px rgba(34,224,255,0.45);
-    }
+      box-shadow: 0 0 22px rgba(34,224,255,0.45); }
 
     input[type="search"] {
       background: var(--glass); border: 1px solid var(--line); color: var(--text);
       padding: 10px 16px; border-radius: 12px; font-size: 0.95rem;
       font-family: "Rajdhani", sans-serif; font-weight: 500;
-      min-width: 180px; flex: 1 1 180px; max-width: 280px;
+      min-width: 170px; flex: 1 1 170px; max-width: 260px;
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     input[type="search"]::placeholder { color: var(--muted); }
     input[type="search"]:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 16px rgba(34,224,255,0.3); }
 
-    /* Month heading */
     .month-head {
-      margin: 28px 0 12px; font-family: "Orbitron", sans-serif;
-      font-size: 0.82rem; font-weight: 700; letter-spacing: 3px;
-      text-transform: uppercase; color: var(--gold);
-      display: flex; align-items: center; gap: 14px;
-      text-shadow: 0 0 14px rgba(255,210,74,0.4);
+      margin: 28px 0 12px; font-family: "Orbitron", sans-serif; font-size: 0.82rem;
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+      display: flex; align-items: center; gap: 14px; text-shadow: 0 0 14px rgba(255,210,74,0.4);
     }
     .month-head::after { content: ""; flex: 1; height: 1px;
       background: linear-gradient(90deg, var(--line-bright), transparent); }
 
-    /* Match card */
     .match {
       position: relative; background: var(--glass); border: 1px solid var(--line);
       border-radius: 16px; padding: 16px 18px; margin-bottom: 12px;
       display: grid; grid-template-columns: 82px 1fr auto; gap: 16px; align-items: center;
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; overflow: hidden;
     }
-    .match::before {
-      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-      background: linear-gradient(var(--cyan), var(--violet)); opacity: 0.5;
-    }
+    .match::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(var(--cyan), var(--violet)); opacity: 0.5; }
     .match.is-wm::before { background: linear-gradient(var(--gold), var(--magenta)); }
     .match.is-live::before { background: var(--live); opacity: 1; box-shadow: 0 0 16px var(--live); }
-    .match:hover {
-      transform: translateY(-2px); border-color: var(--line-bright);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 24px rgba(34,224,255,0.12);
-    }
+    .match:hover { transform: translateY(-2px); border-color: var(--line-bright);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 24px rgba(34,224,255,0.12); }
 
     .when { text-align: center; font-size: 0.74rem; color: var(--muted);
       line-height: 1.45; font-weight: 600; letter-spacing: 0.5px; }
@@ -181,16 +148,46 @@
       font-family: "Orbitron", sans-serif; }
     .tag.live { background: var(--live); color: #fff; box-shadow: 0 0 14px rgba(255,46,99,0.6); animation: pulse 1.4s infinite; }
     .tag.ft { background: rgba(120,160,255,0.12); color: var(--muted); }
-    .tag.wm { background: rgba(255,210,74,0.14); color: var(--gold); border: 1px solid rgba(255,210,74,0.3); }
+    .tag.grp { background: rgba(255,210,74,0.16); color: var(--gold); border: 1px solid rgba(255,210,74,0.35); }
+    .tag.ko { background: rgba(255,77,216,0.14); color: var(--magenta); border: 1px solid rgba(255,77,216,0.35); }
     .tag.test { background: rgba(34,224,255,0.12); color: var(--cyan); border: 1px solid rgba(34,224,255,0.3); }
 
-    /* States */
+    /* ===== Gruppentabellen ===== */
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .group-card {
+      background: var(--glass); border: 1px solid var(--line); border-radius: 16px;
+      padding: 16px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+    .group-title { font-family: "Orbitron", sans-serif; font-size: 1rem; font-weight: 700;
+      letter-spacing: 2px; color: var(--gold); margin-bottom: 12px; text-shadow: 0 0 14px rgba(255,210,74,0.4); }
+    table.standings { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    table.standings th { color: var(--muted); font-weight: 600; font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.5px; text-align: center; padding: 4px 3px; }
+    table.standings th.t { text-align: left; }
+    table.standings td { padding: 6px 3px; text-align: center; border-top: 1px solid var(--line);
+      font-variant-numeric: tabular-nums; }
+    table.standings td.t { text-align: left; font-weight: 600; }
+    table.standings td.pts { font-family: "Orbitron", sans-serif; font-weight: 700; color: var(--cyan); }
+    .rankcell { display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;
+      background: rgba(120,160,255,0.12); margin-right: 6px; }
+    tr.qualified .rankcell { background: rgba(43,255,176,0.18); color: var(--green); }
+    .team-cell { display: inline-flex; align-items: center; gap: 7px; }
+    .team-cell img { width: 18px; height: 18px; object-fit: contain; }
+    .form { display: inline-flex; gap: 3px; }
+    .form span { width: 14px; height: 14px; border-radius: 3px; font-size: 0.58rem;
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 700; color: #04101a; }
+    .form .w { background: var(--green); }
+    .form .d { background: var(--gold); }
+    .form .l { background: var(--live); color: #fff; }
+    .legend { text-align: center; color: var(--muted); font-size: 0.78rem; margin: 6px 0 18px; }
+    .legend b { color: var(--green); }
+
     .empty, .loading, .error { text-align: center; color: var(--muted);
       padding: 56px 16px; font-size: 1rem; font-weight: 500; }
     .error { color: #ff9b9b; }
-    .spinner { width: 34px; height: 34px; margin: 0 auto 16px;
-      border: 3px solid var(--line); border-top-color: var(--cyan);
-      border-radius: 50%; animation: spin 0.8s linear infinite;
+    .spinner { width: 34px; height: 34px; margin: 0 auto 16px; border: 3px solid var(--line);
+      border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite;
       box-shadow: 0 0 18px rgba(34,224,255,0.3); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -200,8 +197,8 @@
 
     @media (max-width: 520px) {
       .match { grid-template-columns: 62px 1fr auto; gap: 11px; padding: 13px; }
-      .team { font-size: 0.94rem; }
-      .score { font-size: 1.25rem; }
+      .team { font-size: 0.94rem; } .score { font-size: 1.25rem; }
+      .groups-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -213,60 +210,51 @@
     <header>
       <div class="kicker">FIFA World Cup · USA · Canada · Mexico</div>
       <h1>WM 2026 LIVE</h1>
-      <div class="subtitle">Alle Spiele der A-Nationalmannschaften – Endrunde &amp; Vorbereitungs-Länderspiele</div>
-      <div class="status-bar">
-        <span class="dot"></span>
-        <span id="status">Lade Spiele…</span>
-      </div>
+      <div class="subtitle">A-Nationalmannschaften – Endrunde, Gruppen &amp; Vorbereitungs-Länderspiele</div>
+      <div class="status-bar"><span class="dot"></span><span id="status">Lade Spiele…</span></div>
     </header>
 
     <div class="controls">
       <div class="tabs">
         <button class="tab active" data-filter="all">Alle</button>
+        <button class="tab" data-filter="groups">Gruppen</button>
         <button class="tab" data-filter="wm">WM-Endrunde</button>
         <button class="tab" data-filter="test">Länderspiele</button>
         <button class="tab" data-filter="live">Live</button>
         <button class="tab" data-filter="upcoming">Kommend</button>
       </div>
-      <input type="search" id="search" placeholder="Team suchen…" autocomplete="off">
+      <input type="search" id="search" placeholder="Team / Gruppe suchen…" autocomplete="off">
     </div>
 
-    <div id="list">
-      <div class="loading"><div class="spinner"></div>Spiele werden geladen…</div>
-    </div>
+    <div id="list"><div class="loading"><div class="spinner"></div>Spiele werden geladen…</div></div>
 
     <footer>
       Daten von <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> ·
-      Auto-Update alle 60&nbsp;Sekunden ·
-      Stand: <span id="updated">–</span>
+      Auto-Update alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span>
     </footer>
   </div>
 
   <script>
     // ====== Konfiguration ======================================================
-    // Kostenloser Test-API-Schlüssel. Für mehr Anfragen einen eigenen (kostenlosen)
-    // Schlüssel auf thesportsdb.com holen und hier eintragen.
-    const API_KEY = "123";
+    const API_KEY = "123"; // kostenloser Test-Key; eigenen Key auf thesportsdb.com holen
     const BASE = `https://www.thesportsdb.com/api/v1/json/${API_KEY}`;
 
-    // Zeitfenster "rund um die WM" – Vorbereitungsspiele bis Turnierende.
-    // (WM 2026: 11.06. – 19.07.2026; davor Test-Länderspiele ab ca. Mitte Mai.)
+    const WM_LEAGUE = "4429";   // FIFA World Cup (Endrunde)
+    const TEST_LEAGUE = "4562"; // International Friendlies (A-Länderspiele)
+    const WM_SEASON = "2026";
+    const TEST_SEASON = "2026";
+
+    // Zeitfenster rund um die WM (WM 2026: 11.06.–19.07.2026; Vorbereitung ab Mitte Mai)
     const WINDOW_START = new Date("2026-05-15T00:00:00Z");
     const WINDOW_END   = new Date("2026-07-31T23:59:59Z");
 
-    // Nur A-Nationalmannschaften (Herren-Seniorenteams):
-    //  4429 = FIFA World Cup (Endrunde)
-    //  4562 = International Friendlies (A-Länderspiele)
-    const SOURCES = [
-      { id: "4429", season: "2026", kind: "wm",   label: "WM-Endrunde" },
-      { id: "4562", season: "2026", kind: "test", label: "Länderspiel" },
-    ];
-
     const REFRESH_MS = 60_000;
-    const CACHE_KEY = "wm2026-cache";
+    const CACHE_KEY = "wm2026-cache-v2";
 
     // ====== Status ============================================================
     let allMatches = [];
+    let standingsRows = [];   // offizielle Tabelle (lookuptable), falls vorhanden
+    let teamGroup = {};       // Teamname -> Gruppenbuchstabe
     let currentFilter = "all";
     let searchTerm = "";
 
@@ -275,7 +263,7 @@
     const $updated = document.getElementById("updated");
     const $search = document.getElementById("search");
 
-    // ====== Daten laden =======================================================
+    // ====== Helpers ===========================================================
     async function fetchJSON(url, tries = 3) {
       for (let i = 0; i < tries; i++) {
         try {
@@ -288,89 +276,184 @@
         }
       }
     }
+    const pad = n => String(n).padStart(2, "0");
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    function isLiveStatus(s) { return s ? /^(1h|2h|ht|et|live|in play|\d{1,3}'?)$/i.test(s.trim()) : false; }
 
-    function isLiveStatus(s) {
-      if (!s) return false;
-      return /^(1h|2h|ht|et|live|in play|\d{1,3}'?)$/i.test(s.trim());
+    // Gruppenbuchstabe (A–L) aus rohem Feld extrahieren
+    function parseGroup(raw) {
+      if (raw == null) return null;
+      const str = String(raw).trim();
+      let m = str.match(/\b([A-L])\b/i);          // "Group A", "A"
+      if (m) return m[1].toUpperCase();
+      if (/^\d+$/.test(str)) {                    // numerische Gruppe 1..12 -> A..L
+        const n = +str; if (n >= 1 && n <= 12) return String.fromCharCode(64 + n);
+      }
+      return null;
+    }
+    // K.-o.-Phase aus Text ableiten (nur wenn klar erkennbar)
+    function detectStage(ev) {
+      const s = `${ev.strGroup||""} ${ev.strEvent||""} ${ev.strRound||""}`.toLowerCase();
+      if (/third|3rd|play.?off.*3|platz 3/.test(s)) return "Spiel um Platz 3";
+      if (/final/.test(s) && !/semi|quarter/.test(s)) return "Finale";
+      if (/semi/.test(s)) return "Halbfinale";
+      if (/quarter/.test(s)) return "Viertelfinale";
+      if (/round of 16|last 16|achtel/.test(s)) return "Achtelfinale";
+      if (/round of 32/.test(s)) return "Sechzehntelfinale";
+      return null;
     }
 
-    function normalize(ev, source) {
+    function normalize(ev, kind) {
       const ts = ev.strTimestamp ? new Date(ev.strTimestamp.replace(" ", "T") + "Z")
                : ev.dateEvent ? new Date(ev.dateEvent + "T" + (ev.strTime || "00:00:00") + "Z")
                : null;
       const status = (ev.strStatus || "").trim();
       const live = isLiveStatus(status);
-      const finished = /finish|ft|aet|full|after/i.test(status) ||
+      const finished = /finish|ft|aet|full|after|pen/i.test(status) ||
                        (ev.intHomeScore != null && ev.intAwayScore != null && !live && ts && ts < new Date());
       return {
         id: ev.idEvent, name: ev.strEvent,
-        home: ev.strHomeTeam, away: ev.strAwayTeam,
+        home: (ev.strHomeTeam||"").trim(), away: (ev.strAwayTeam||"").trim(),
         homeBadge: ev.strHomeTeamBadge || "", awayBadge: ev.strAwayTeamBadge || "",
         homeScore: ev.intHomeScore, awayScore: ev.intAwayScore,
-        date: ts, venue: ev.strVenue || "", status, live, finished,
-        kind: source.kind, league: source.label,
+        date: ts, venue: ev.strVenue || "", status, live, finished, kind,
+        group: kind === "wm" ? parseGroup(ev.strGroup) : null,
+        stage: kind === "wm" ? detectStage(ev) : null,
       };
     }
 
-    function inWindow(m) {
-      if (!m.date) return false;
-      return m.date >= WINDOW_START && m.date <= WINDOW_END;
-    }
+    const inWindow = m => m.date && m.date >= WINDOW_START && m.date <= WINDOW_END;
 
+    // ====== Laden =============================================================
     async function loadAll() {
-      try {
-        const results = await Promise.allSettled(
-          SOURCES.map(src =>
-            fetchJSON(`${BASE}/eventsseason.php?id=${src.id}&s=${src.season}`)
-              .then(data => (data.events || []).map(ev => normalize(ev, src)))
-          )
-        );
+      const tasks = [
+        { url: `${BASE}/eventsseason.php?id=${WM_LEAGUE}&s=${WM_SEASON}`, type: "events", kind: "wm" },
+        { url: `${BASE}/eventsseason.php?id=${TEST_LEAGUE}&s=${TEST_SEASON}`, type: "events", kind: "test" },
+        { url: `${BASE}/eventsnextleague.php?id=${WM_LEAGUE}`, type: "events", kind: "wm" },
+        { url: `${BASE}/eventspastleague.php?id=${WM_LEAGUE}`, type: "events", kind: "wm" },
+        { url: `${BASE}/eventsnextleague.php?id=${TEST_LEAGUE}`, type: "events", kind: "test" },
+        { url: `${BASE}/eventspastleague.php?id=${TEST_LEAGUE}`, type: "events", kind: "test" },
+        { url: `${BASE}/lookuptable.php?l=${WM_LEAGUE}&s=${WM_SEASON}`, type: "table" },
+      ];
 
-        let merged = [];
-        let anyOk = false;
-        results.forEach(r => {
-          if (r.status === "fulfilled") { merged = merged.concat(r.value); anyOk = true; }
-        });
+      try {
+        const results = await Promise.allSettled(tasks.map(t =>
+          fetchJSON(t.url).then(data => ({ t, data }))));
+
+        let merged = [], rows = [], anyOk = false;
+        for (const r of results) {
+          if (r.status !== "fulfilled") continue;
+          const { t, data } = r.value;
+          if (t.type === "events" && data && data.events) {
+            merged = merged.concat(data.events.map(ev => normalize(ev, t.kind)));
+            anyOk = true;
+          } else if (t.type === "table" && data && data.table) {
+            rows = data.table; anyOk = true;
+          }
+        }
         if (!anyOk) throw new Error("Keine Quelle erreichbar");
 
-        // Nur Spiele im WM-Zeitfenster behalten
+        // Fenster + Dubletten
         merged = merged.filter(inWindow);
-
-        // Duplikate entfernen + chronologisch sortieren
         const seen = new Set();
         merged = merged.filter(m => m.id && !seen.has(m.id) && seen.add(m.id));
         merged.sort((a, b) => (a.date?.getTime() || Infinity) - (b.date?.getTime() || Infinity));
 
-        allMatches = merged;
-        localStorage.setItem(CACHE_KEY, JSON.stringify(merged.map(serialize)));
-        render();
-        setUpdated();
+        // Gruppen-Zuordnung aufbauen (aus Spielen + offizieller Tabelle)
+        const map = {};
+        for (const m of merged) if (m.kind === "wm" && m.group) { map[m.home] = m.group; map[m.away] = m.group; }
+        for (const row of rows) {
+          const g = parseGroup(row.strGroup) || parseGroup(row.intGroup);
+          if (g && row.strTeam) map[row.strTeam.trim()] = g;
+        }
+        // Spielen ohne erkannte Gruppe nachträglich Gruppe geben (über Team-Map)
+        for (const m of merged) if (m.kind === "wm" && !m.group && !m.stage) {
+          m.group = map[m.home] || map[m.away] || null;
+        }
+
+        allMatches = merged; standingsRows = rows; teamGroup = map;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          matches: merged.map(s => ({ ...s, date: s.date ? s.date.toISOString() : null })),
+          rows, map
+        }));
+        render(); setUpdated();
         $status.textContent = `${allMatches.length} SPIELE`;
       } catch (err) {
-        const cached = loadCache();
-        if (cached.length) {
-          allMatches = cached; render();
-          $status.textContent = "OFFLINE · CACHE";
-        } else {
-          $list.innerHTML = `<div class="error">⚠️ Spiele konnten nicht geladen werden.<br>
-            Bitte später erneut versuchen. (${err.message})</div>`;
-          $status.textContent = "FEHLER";
-        }
+        const c = loadCache();
+        if (c) { allMatches = c.matches; standingsRows = c.rows; teamGroup = c.map; render();
+          $status.textContent = "OFFLINE · CACHE"; }
+        else { $list.innerHTML = `<div class="error">⚠️ Spiele konnten nicht geladen werden.<br>
+          Bitte später erneut versuchen. (${esc(err.message)})</div>`; $status.textContent = "FEHLER"; }
       }
     }
-
-    function serialize(m) { return { ...m, date: m.date ? m.date.toISOString() : null }; }
     function loadCache() {
       try {
-        return JSON.parse(localStorage.getItem(CACHE_KEY) || "[]")
-          .map(m => ({ ...m, date: m.date ? new Date(m.date) : null }));
-      } catch { return []; }
+        const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+        if (!c) return null;
+        c.matches = c.matches.map(m => ({ ...m, date: m.date ? new Date(m.date) : null }));
+        return c;
+      } catch { return null; }
     }
 
-    // ====== Filter & Suche ====================================================
+    // ====== Gruppentabellen aus Ergebnissen berechnen =========================
+    function computeGroups() {
+      const groups = {}; // Buchstabe -> { teams: {name -> stat} }
+      const ensure = (g, name, badge) => {
+        groups[g] = groups[g] || { teams: {} };
+        groups[g].teams[name] = groups[g].teams[name] ||
+          { team: name, badge: badge||"", p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,form:[] };
+        if (badge && !groups[g].teams[name].badge) groups[g].teams[name].badge = badge;
+        return groups[g].teams[name];
+      };
+      // Teams je Gruppe registrieren (auch ohne gespielte Partie)
+      for (const m of allMatches) {
+        if (m.kind !== "wm" || !m.group) continue;
+        ensure(m.group, m.home, m.homeBadge);
+        ensure(m.group, m.away, m.awayBadge);
+      }
+      // Ergebnisse einrechnen
+      const finished = allMatches.filter(m => m.kind === "wm" && m.group && m.finished
+        && m.homeScore != null && m.awayScore != null)
+        .sort((a,b) => (a.date?.getTime()||0) - (b.date?.getTime()||0));
+      for (const m of finished) {
+        const h = ensure(m.group, m.home, m.homeBadge), a = ensure(m.group, m.away, m.awayBadge);
+        const hs = +m.homeScore, as = +m.awayScore;
+        h.p++; a.p++; h.gf += hs; h.ga += as; a.gf += as; a.ga += hs;
+        if (hs > as) { h.w++; a.l++; h.pts += 3; h.form.push("w"); a.form.push("l"); }
+        else if (hs < as) { a.w++; h.l++; a.pts += 3; a.form.push("w"); h.form.push("l"); }
+        else { h.d++; a.d++; h.pts++; a.pts++; h.form.push("d"); a.form.push("d"); }
+      }
+      // sortieren
+      const out = {};
+      for (const g of Object.keys(groups).sort()) {
+        out[g] = Object.values(groups[g].teams).sort((x, y) =>
+          y.pts - x.pts || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf || x.team.localeCompare(y.team));
+      }
+      return out;
+    }
+
+    // ====== Rendering =========================================================
+    const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli",
+                    "August","September","Oktober","November","Dezember"];
+    const WEEKDAYS = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+
+    function render() {
+      if (currentFilter === "groups") return renderGroups();
+      const matches = allMatches.filter(applyFilter);
+      if (!matches.length) { $list.innerHTML = `<div class="empty">Keine Spiele für diese Auswahl.</div>`; return; }
+      let html = "", lastMonth = "";
+      for (const m of matches) {
+        const monthKey = m.date ? `${MONTHS[m.date.getMonth()]} ${m.date.getFullYear()}` : "Termin offen";
+        if (monthKey !== lastMonth) { html += `<div class="month-head">${monthKey}</div>`; lastMonth = monthKey; }
+        html += renderMatch(m);
+      }
+      $list.innerHTML = html;
+    }
+
     function applyFilter(m) {
       if (searchTerm) {
-        const hay = `${m.home} ${m.away} ${m.name}`.toLowerCase();
+        const hay = `${m.home} ${m.away} ${m.name} ${m.group ? "gruppe "+m.group : ""}`.toLowerCase();
         if (!hay.includes(searchTerm)) return false;
       }
       switch (currentFilter) {
@@ -382,24 +465,11 @@
       }
     }
 
-    // ====== Rendering =========================================================
-    const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli",
-                    "August","September","Oktober","November","Dezember"];
-    const WEEKDAYS = ["So","Mo","Di","Mi","Do","Fr","Sa"];
-
-    function render() {
-      const matches = allMatches.filter(applyFilter);
-      if (!matches.length) {
-        $list.innerHTML = `<div class="empty">Keine Spiele für diese Auswahl.</div>`;
-        return;
-      }
-      let html = "", lastMonth = "";
-      for (const m of matches) {
-        const monthKey = m.date ? `${MONTHS[m.date.getMonth()]} ${m.date.getFullYear()}` : "Termin offen";
-        if (monthKey !== lastMonth) { html += `<div class="month-head">${monthKey}</div>`; lastMonth = monthKey; }
-        html += renderMatch(m);
-      }
-      $list.innerHTML = html;
+    function badge(url, big) {
+      const size = big ? "" : "/tiny";
+      return url
+        ? `<img src="${esc(url)}${size}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;badge-fallback&quot;></span>'">`
+        : `<span class="badge-fallback"></span>`;
     }
 
     function renderMatch(m) {
@@ -407,22 +477,21 @@
       const when = d
         ? `<div class="day">${d.getDate()}</div>${WEEKDAYS[d.getDay()]}<br>${pad(d.getHours())}:${pad(d.getMinutes())}`
         : `<div class="day">?</div>offen`;
-
       const hasScore = m.homeScore != null && m.awayScore != null;
       const homeWin = hasScore && +m.homeScore > +m.awayScore;
       const awayWin = hasScore && +m.awayScore > +m.homeScore;
-
       const result = m.live
-        ? `<div class="score">${m.homeScore ?? 0}:${m.awayScore ?? 0}</div><span class="tag live">● ${esc(m.status) || "LIVE"}</span>`
-        : m.finished && hasScore
+        ? `<div class="score">${m.homeScore ?? 0}:${m.awayScore ?? 0}</div><span class="tag live">● ${esc(m.status)||"LIVE"}</span>`
+        : (m.finished && hasScore)
           ? `<div class="score">${m.homeScore}:${m.awayScore}</div><span class="tag ft">Beendet</span>`
           : `<div class="vs">VS</div>`;
 
-      const kindTag = m.kind === "wm"
-        ? `<span class="tag wm">WM</span>` : `<span class="tag test">Test</span>`;
+      let kindTag;
+      if (m.kind === "wm" && m.group) kindTag = `<span class="tag grp">Gruppe ${m.group}</span>`;
+      else if (m.kind === "wm")       kindTag = `<span class="tag ko">${esc(m.stage) || "K.-o.-Phase"}</span>`;
+      else                            kindTag = `<span class="tag test">Test</span>`;
 
       const cls = `match ${m.kind === "wm" ? "is-wm" : ""} ${m.live ? "is-live" : ""}`;
-
       return `
         <div class="${cls}">
           <div class="when">${when}</div>
@@ -435,16 +504,47 @@
         </div>`;
     }
 
-    function badge(url) {
-      return url
-        ? `<img src="${esc(url)}/tiny" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;badge-fallback&quot;></span>'">`
-        : `<span class="badge-fallback"></span>`;
+    function renderGroups() {
+      const groups = computeGroups();
+      let keys = Object.keys(groups);
+      if (searchTerm) keys = keys.filter(g => `gruppe ${g}`.includes(searchTerm) ||
+        groups[g].some(t => t.team.toLowerCase().includes(searchTerm)));
+      if (!keys.length) {
+        $list.innerHTML = `<div class="empty">Gruppentabellen noch nicht verfügbar.<br>
+          Sobald die Gruppenspiele in der Datenbank stehen, erscheinen sie hier automatisch.</div>`;
+        return;
+      }
+      let html = `<div class="legend">Pro Gruppe ziehen die <b>ersten beiden</b> sicher weiter (sowie die besten Gruppendritten).</div>`;
+      html += `<div class="groups-grid">`;
+      for (const g of keys) {
+        const rows = groups[g].map((t, i) => {
+          const qualified = i < 2 ? "qualified" : "";
+          const form = t.form.slice(-5).map(r =>
+            `<span class="${r}">${r === "w" ? "S" : r === "d" ? "U" : "N"}</span>`).join("");
+          return `<tr class="${qualified}">
+            <td><span class="rankcell">${i+1}</span></td>
+            <td class="t"><span class="team-cell">${badge(t.badge)}<span>${esc(t.team)}</span></span></td>
+            <td>${t.p}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td>
+            <td>${t.gf}:${t.ga}</td><td>${t.gf - t.ga > 0 ? "+" : ""}${t.gf - t.ga}</td>
+            <td class="pts">${t.pts}</td>
+            <td><span class="form">${form}</span></td>
+          </tr>`;
+        }).join("");
+        html += `<div class="group-card">
+          <div class="group-title">Gruppe ${g}</div>
+          <table class="standings">
+            <thead><tr>
+              <th></th><th class="t">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th>
+              <th>Tore</th><th>Diff</th><th>Pkt</th><th>Form</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+      html += `</div>`;
+      $list.innerHTML = html;
     }
-    function pad(n) { return String(n).padStart(2, "0"); }
-    function esc(s) {
-      return String(s ?? "").replace(/[&<>"']/g, c =>
-        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    }
+
     function setUpdated() {
       const n = new Date();
       $updated.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
@@ -459,7 +559,6 @@
         render();
       });
     });
-
     let searchTimer;
     $search.addEventListener("input", e => {
       clearTimeout(searchTimer);
