@@ -242,6 +242,72 @@
     footer a { color: var(--gold-soft); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    /* ===== klickbare Karte ===== */
+    .match { cursor: pointer; }
+    .match .chevron { position: absolute; right: 12px; bottom: 10px; color: var(--muted);
+      font-size: 0.9rem; opacity: 0.5; transition: opacity .2s, transform .2s; }
+    .match:hover .chevron { opacity: 1; transform: translateX(2px); }
+
+    /* ===== Torschützenliste ===== */
+    .scorers { background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+      padding: 8px 16px 12px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    table.scorers-tbl { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    table.scorers-tbl th { color: var(--muted); font-weight: 600; font-size: 0.68rem;
+      text-transform: uppercase; letter-spacing: 0.5px; text-align: center; padding: 8px 4px; }
+    table.scorers-tbl th.t { text-align: left; }
+    table.scorers-tbl td { padding: 9px 4px; text-align: center; border-top: 1px solid var(--line);
+      font-variant-numeric: tabular-nums; }
+    table.scorers-tbl td.t { text-align: left; font-weight: 600; }
+    table.scorers-tbl td.g { font-family: "Cinzel", serif; font-weight: 700; color: var(--gold-soft); font-size: 1.05rem; }
+
+    /* ===== Modal ===== */
+    .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center;
+      justify-content: center; padding: 16px; }
+    .modal[hidden] { display: none; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(4,5,9,0.72);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: fade .2s ease; }
+    @keyframes fade { from { opacity: 0; } }
+    .modal-card { position: relative; width: min(560px, 100%); max-height: 88vh; overflow-y: auto;
+      background: linear-gradient(160deg, #14161d, #0c0d12); border: 1px solid var(--line-bright);
+      border-radius: 18px; padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: pop .22s cubic-bezier(.2,.8,.2,1); }
+    @keyframes pop { from { transform: translateY(12px) scale(.98); opacity: 0; } }
+    .modal-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px;
+      border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--text);
+      cursor: pointer; font-size: 0.9rem; }
+    .modal-close:hover { border-color: var(--line-bright); }
+
+    .md-stage { text-align: center; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--gold-soft); font-weight: 700; }
+    .md-meta { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 4px; }
+    .md-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+      margin: 18px 0 6px; }
+    .md-team { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+    .md-team .flag, .md-team .flag-fallback { width: 56px; height: 38px; }
+    .md-team span { font-weight: 600; font-size: 1.02rem; }
+    .md-result { font-family: "Cinzel", serif; font-size: 2.2rem; font-weight: 700; color: var(--silver-2);
+      text-align: center; font-variant-numeric: tabular-nums; }
+    .md-ht { text-align: center; color: var(--muted); font-size: 0.8rem; margin-bottom: 14px; }
+    .md-h { font-family: "Cinzel", serif; font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--silver-2); margin: 18px 0 8px; display: flex; align-items: center; gap: 10px; }
+    .md-h::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-bright), transparent); }
+    .goals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+    .goals .side { display: flex; flex-direction: column; gap: 6px; }
+    .goals .side.away { text-align: right; }
+    .goal { font-size: 0.92rem; color: var(--text); }
+    .goal .min { color: var(--gold-soft); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .goal .gnote { color: var(--muted); font-size: 0.78rem; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 0.9rem; }
+    .facts .k { color: var(--muted); }
+    .facts .v { font-weight: 600; text-align: right; }
+    .md-note { background: rgba(216,185,100,0.08); border: 1px solid rgba(216,185,100,0.22);
+      color: var(--muted); border-radius: 10px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; }
+    .md-note b { color: var(--gold-soft); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+    }
+
     @media (max-width: 520px) {
       .match { grid-template-columns: 64px 1fr auto; gap: 11px; padding: 13px; }
       .team { font-size: 0.95rem; } .score { font-size: 1.3rem; }
@@ -268,6 +334,7 @@
       <div class="tabs">
         <button class="tab active" data-filter="all">Alle</button>
         <button class="tab" data-filter="groups">Gruppen</button>
+        <button class="tab" data-filter="scorers">Torschützen</button>
         <button class="tab" data-filter="wm">WM-Endrunde</button>
         <button class="tab" data-filter="test">Testspiele</button>
         <button class="tab" data-filter="live">Live</button>
@@ -284,6 +351,15 @@
       Flaggen: <a href="https://flagcdn.com" target="_blank" rel="noopener">flagcdn</a><br>
       Automatische Aktualisierung alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span>
     </footer>
+  </div>
+
+  <!-- Spiel-Detail-Overlay -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Spieldetails">
+      <button class="modal-close" data-close aria-label="Schließen">✕</button>
+      <div id="modal-body"></div>
+    </div>
   </div>
 
   <script>
@@ -441,10 +517,16 @@
         else if (m.score1 != null && m.score2 != null) { hs = m.score1; as = m.score2; }
         const date = parseKickoff(m.date, m.time);
         const finished = hs != null && as != null;
+        const norm = arr => (Array.isArray(arr) ? arr : []).map(g => ({
+          name: g.name || g.player || "", minute: g.minute ?? g.offset ?? null,
+          penalty: !!g.penalty, owngoal: !!(g.owngoal || g.og), assist: g.assist || null,
+        }));
         return {
           id: "of-" + (m.num ?? `${m.date}-${h}-${a}-${i}`), name: `${h} – ${a}`,
           home: h, away: a, homeBadge: flagUrl(hc, h), awayBadge: flagUrl(ac, a),
           homeScore: hs, awayScore: as, date,
+          htScore: (m.score && Array.isArray(m.score.ht)) ? m.score.ht : null,
+          homeGoals: norm(m.goals1), awayGoals: norm(m.goals2),
           venue: (m.ground || m.stadium?.name || m.city || ""),
           status: "", live: false, finished, kind: "wm", group, stage,
         };
@@ -573,6 +655,56 @@
       return out;
     }
 
+    // ====== Torschützenliste ==================================================
+    function computeScorers() {
+      const map = {}; // "name|team" -> stat
+      const add = (g, team, badge) => {
+        if (!g.name || g.owngoal) return; // Eigentore zählen nicht für den Schützen
+        const key = g.name + "|" + team;
+        const s = map[key] || (map[key] = { name: g.name, team, badge, goals: 0, pens: 0, assists: 0 });
+        s.goals++; if (g.penalty) s.pens++;
+      };
+      const addAssist = (g, team, badge) => {
+        if (!g.assist) return;
+        const key = g.assist + "|" + team;
+        const s = map[key] || (map[key] = { name: g.assist, team, badge, goals: 0, pens: 0, assists: 0 });
+        s.assists++;
+      };
+      for (const m of allMatches) {
+        if (m.kind !== "wm") continue;
+        (m.homeGoals || []).forEach(g => { add(g, m.home, m.homeBadge); addAssist(g, m.home, m.homeBadge); });
+        (m.awayGoals || []).forEach(g => { add(g, m.away, m.awayBadge); addAssist(g, m.away, m.awayBadge); });
+      }
+      return Object.values(map).sort((a, b) =>
+        b.goals - a.goals || b.assists - a.assists || a.name.localeCompare(b.name));
+    }
+
+    function renderScorers() {
+      let list = computeScorers();
+      if (searchTerm) list = list.filter(s =>
+        s.name.toLowerCase().includes(searchTerm) || s.team.toLowerCase().includes(searchTerm));
+      const anyAssist = list.some(s => s.assists > 0);
+      if (!list.length) {
+        $list.innerHTML = `<div class="empty">Noch keine Tore.<br>
+          Die Torschützenliste füllt sich automatisch, sobald gespielt wird.</div>`;
+        return;
+      }
+      const rows = list.slice(0, 100).map((s, i) => `
+        <tr>
+          <td><span class="rankcell">${i + 1}</span></td>
+          <td class="t"><span class="team-cell">${flag(s.badge)}<span>${esc(s.name)}${isFav(s.team) ? ' <span class="fav-star">★</span>' : ""}</span></span></td>
+          <td class="t" style="color:var(--muted)">${esc(s.team)}</td>
+          <td class="g">${s.goals}</td>
+          <td>${s.pens || ""}</td>
+          <td>${anyAssist ? (s.assists || "") : "–"}</td>
+        </tr>`).join("");
+      $list.innerHTML = `<div class="scorers"><table class="scorers-tbl">
+        <thead><tr><th></th><th class="t">Spieler</th><th class="t">Team</th>
+          <th>Tore</th><th>11m</th><th>Vorlagen</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+        ${anyAssist ? "" : `<div class="legend" style="margin-top:12px">Vorlagen sind in der freien Datenquelle nicht enthalten (Spalte bleibt leer).</div>`}`;
+    }
+
     // ====== Rendering =========================================================
     const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli",
                     "August","September","Oktober","November","Dezember"];
@@ -580,6 +712,7 @@
 
     function render() {
       if (currentFilter === "groups") return renderGroups();
+      if (currentFilter === "scorers") return renderScorers();
       const matches = allMatches.filter(applyFilter);
       if (!matches.length) { $list.innerHTML = `<div class="empty">Keine Spiele für diese Auswahl.</div>`; return; }
       let html = "", lastMonth = "";
@@ -629,7 +762,7 @@
       const star = `<span class="fav-star" title="Deutschland">★</span>`;
       const cls = `match ${m.kind === "wm" ? "is-wm" : ""} ${m.live ? "is-live" : ""} ${favH || favA ? "is-fav" : ""}`;
       return `
-        <div class="${cls}">
+        <div class="${cls}" data-id="${esc(m.id)}" role="button" tabindex="0">
           <div class="when">${when}</div>
           <div class="teams">
             <div class="team ${homeWin ? "winner" : ""}">${flag(m.homeBadge)}<span>${esc(m.home)}</span>${favH ? star : ""}</div>
@@ -637,6 +770,7 @@
             <div class="meta">${kindTag}${m.venue ? `<span>📍 ${esc(m.venue)}</span>` : ""}</div>
           </div>
           <div class="result">${result}</div>
+          <span class="chevron">›</span>
         </div>`;
     }
     function renderGroups() {
@@ -674,6 +808,78 @@
       $updated.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
     }
 
+    // ====== Spiel-Detail (Modal) =============================================
+    const $modal = document.getElementById("modal");
+    const $modalBody = document.getElementById("modal-body");
+
+    function fullDate(d) {
+      if (!d) return "Termin offen";
+      return `${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())} Uhr`;
+    }
+    function goalLine(g) {
+      const notes = [];
+      if (g.penalty) notes.push("Elfmeter");
+      if (g.owngoal) notes.push("Eigentor");
+      const note = notes.length ? ` <span class="gnote">(${notes.join(", ")})</span>` : "";
+      const min = g.minute != null ? `<span class="min">${g.minute}'</span> ` : "";
+      return `<div class="goal">⚽ ${min}${esc(g.name)}${note}</div>`;
+    }
+
+    function openMatch(id) {
+      const m = allMatches.find(x => String(x.id) === String(id));
+      if (!m) return;
+      const hasScore = m.homeScore != null && m.awayScore != null;
+      const phase = m.kind !== "wm" ? "Testspiel"
+        : m.group ? `Gruppe ${m.group}` : (m.stage || "K.-o.-Phase");
+      const hg = m.homeGoals || [], ag = m.awayGoals || [];
+      const hasGoals = hg.length || ag.length;
+
+      const scoreBlock = hasScore
+        ? `<div class="md-result">${m.homeScore} : ${m.awayScore}</div>`
+        : `<div class="md-result" style="font-size:1.4rem;color:var(--muted)">${m.date && m.date > new Date() ? "Anstoß " + pad(m.date.getHours()) + ":" + pad(m.date.getMinutes()) : "VS"}</div>`;
+      const ht = (m.htScore && hasScore) ? `<div class="md-ht">Halbzeit: ${m.htScore[0]}:${m.htScore[1]}</div>` : "";
+
+      const goalsBlock = hasGoals ? `
+        <div class="md-h">Tore</div>
+        <div class="goals">
+          <div class="side home">${hg.map(goalLine).join("") || '<span class="gnote">–</span>'}</div>
+          <div class="side away">${ag.map(goalLine).join("") || '<span class="gnote">–</span>'}</div>
+        </div>` : (hasScore ? `<div class="md-h">Tore</div><div class="gnote">Keine Torschützen-Daten.</div>` : "");
+
+      const facts = `
+        <div class="md-h">Fakten</div>
+        <div class="facts">
+          <div class="k">Wettbewerb</div><div class="v">${m.kind === "wm" ? "WM 2026" : "Länderspiel"}</div>
+          <div class="k">Phase</div><div class="v">${esc(phase)}</div>
+          <div class="k">Anstoß</div><div class="v">${fullDate(m.date)}</div>
+          <div class="k">Ort</div><div class="v">${esc(m.venue) || "–"}</div>
+          ${hasScore ? `<div class="k">Endstand</div><div class="v">${m.homeScore}:${m.awayScore}</div>` : ""}
+          ${ht ? `<div class="k">Halbzeit</div><div class="v">${m.htScore[0]}:${m.htScore[1]}</div>` : ""}
+        </div>`;
+
+      const note = `<div class="md-h">Aufstellung &amp; Statistik</div>
+        <div class="md-note">⚠️ <b>Startelf</b>, <b>Vorlagen</b> und Detail-Statistiken (Ballbesitz, Schüsse)
+        sind in der kostenlosen, gemeinfreien Datenquelle nicht enthalten und werden daher nicht angezeigt.</div>`;
+
+      $modalBody.innerHTML = `
+        <div class="md-stage">${esc(phase)}</div>
+        <div class="md-meta">${fullDate(m.date)}${m.venue ? " · " + esc(m.venue) : ""}</div>
+        <div class="md-score">
+          <div class="md-team">${flag(m.homeBadge)}<span>${esc(m.home)}</span></div>
+          ${scoreBlock}
+          <div class="md-team">${flag(m.awayBadge)}<span>${esc(m.away)}</span></div>
+        </div>
+        ${ht}
+        ${goalsBlock}
+        ${facts}
+        ${note}`;
+      $modal.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+    function closeModal() { $modal.hidden = true; document.body.style.overflow = ""; }
+    $modal.addEventListener("click", e => { if (e.target.hasAttribute("data-close")) closeModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$modal.hidden) closeModal(); });
+
     // ====== Sterne (Deko) =====================================================
     (function () {
       const c = document.getElementById("stars");
@@ -694,6 +900,16 @@
     $search.addEventListener("input", e => {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => { searchTerm = e.target.value.trim().toLowerCase(); render(); }, 200);
+    });
+    // Klick/Tastatur auf eine Spielkarte -> Detailansicht (Delegation)
+    $list.addEventListener("click", e => {
+      const card = e.target.closest(".match[data-id]");
+      if (card) openMatch(card.dataset.id);
+    });
+    $list.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const card = e.target.closest(".match[data-id]");
+      if (card) { e.preventDefault(); openMatch(card.dataset.id); }
     });
 
     // ====== Start & Auto-Refresh =============================================

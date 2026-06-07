@@ -15,7 +15,14 @@ Tabellen und Testspielen.
   Turnierphase (Achtelfinale, Finale …)
 - Gruppentabellen (A–L), live aus den Ergebnissen berechnet (Punkte, Tore,
   Differenz, Form)
+- Klickbare Spiele mit Detailansicht: Torschützen (Minute, Elfmeter, Eigentor),
+  Halbzeitstand und Fakten
+- Torschützenliste des Turniers (aktualisiert sich automatisch)
 - Internationale Testspiele rund um das Turnier
+
+> Hinweis: Startelf, Vorlagen und Detail-Statistiken (Ballbesitz/Schüsse) sind in
+> der kostenlosen, gemeinfreien Datenquelle nicht enthalten und werden daher nicht
+> angezeigt.
 - Filter (Alle / Gruppen / WM-Endrunde / Testspiele / Live / Kommend) und Suche
 - Nationalflaggen für jedes Team
 - Deutschland-Spiele hervorgehoben (DFB-Touch)
