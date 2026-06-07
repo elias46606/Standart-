@@ -3,201 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WM 2026 &amp; Testspiele – Live</title>
+  <title>WM 2026 · Live Spielplan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0e1a;
-      --card: #131a2e;
-      --card-hover: #1b2540;
-      --line: #243150;
-      --text: #eef2ff;
-      --muted: #93a0c0;
-      --accent: #3ea6ff;
-      --gold: #ffcc33;
-      --live: #ff4757;
-      --green: #2ed573;
+      --bg: #05060f;
+      --bg2: #0a0e1f;
+      --glass: rgba(20, 28, 56, 0.45);
+      --glass-strong: rgba(28, 38, 74, 0.65);
+      --line: rgba(120, 160, 255, 0.16);
+      --line-bright: rgba(120, 200, 255, 0.45);
+      --text: #eaf2ff;
+      --muted: #8ea0c8;
+      --cyan: #22e0ff;
+      --magenta: #ff4dd8;
+      --violet: #8b5cff;
+      --gold: #ffd24a;
+      --live: #ff2e63;
+      --green: #2bffb0;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html { scroll-behavior: smooth; }
+
     body {
       min-height: 100vh;
-      background: radial-gradient(1200px 600px at 50% -10%, #16224a 0%, var(--bg) 60%);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      font-family: "Rajdhani", system-ui, sans-serif;
       color: var(--text);
-      padding: 24px 16px 64px;
+      padding: 28px 16px 80px;
+      position: relative;
+      overflow-x: hidden;
     }
 
-    .wrap { max-width: 920px; margin: 0 auto; }
+    /* Animated futuristic background */
+    .bg-fx {
+      position: fixed; inset: 0; z-index: -2; overflow: hidden;
+      background:
+        radial-gradient(60vw 60vw at 15% -10%, rgba(34,224,255,0.12), transparent 60%),
+        radial-gradient(55vw 55vw at 95% 10%, rgba(255,77,216,0.12), transparent 60%),
+        radial-gradient(70vw 70vw at 50% 120%, rgba(139,92,255,0.14), transparent 60%),
+        var(--bg);
+    }
+    .grid-fx {
+      position: fixed; inset: -50%; z-index: -1;
+      background-image:
+        linear-gradient(rgba(120,160,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120,160,255,0.05) 1px, transparent 1px);
+      background-size: 46px 46px;
+      transform: perspective(600px) rotateX(60deg);
+      transform-origin: top center;
+      animation: drift 24s linear infinite;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+    }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 0 46px; } }
 
-    header { text-align: center; margin-bottom: 28px; }
+    .wrap { max-width: 940px; margin: 0 auto; position: relative; }
 
+    /* Header */
+    header { text-align: center; margin-bottom: 30px; }
+    .kicker {
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.72rem; letter-spacing: 5px; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 10px;
+      text-shadow: 0 0 16px rgba(34,224,255,0.6);
+    }
     h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      letter-spacing: 0.5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(1.8rem, 5.5vw, 3.1rem);
+      font-weight: 900; line-height: 1.05;
+      background: linear-gradient(100deg, #fff 10%, var(--cyan) 45%, var(--magenta) 90%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 24px rgba(34,224,255,0.25));
     }
-    h1 .ball { font-size: 1.1em; }
-
-    .subtitle { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+    .subtitle { color: var(--muted); margin-top: 12px; font-size: 1.02rem; font-weight: 500; letter-spacing: 0.3px; }
 
     .status-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 14px;
-      font-size: 0.85rem;
-      color: var(--muted);
-      flex-wrap: wrap;
+      display: inline-flex; align-items: center; gap: 10px; margin-top: 16px;
+      font-size: 0.85rem; color: var(--muted);
+      padding: 7px 16px; border-radius: 999px;
+      background: var(--glass); border: 1px solid var(--line);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      font-family: "Orbitron", sans-serif; letter-spacing: 1px;
     }
     .dot {
       width: 9px; height: 9px; border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 2s infinite;
+      background: var(--green); box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.8s infinite;
     }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
 
+    /* Controls */
     .controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; margin-bottom: 22px;
     }
     .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
     .tab {
-      background: var(--card);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      padding: 8px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.15s;
+      background: var(--glass); border: 1px solid var(--line); color: var(--muted);
+      padding: 9px 16px; border-radius: 12px; cursor: pointer;
+      font-family: "Rajdhani", sans-serif; font-weight: 600; font-size: 0.92rem;
+      letter-spacing: 0.5px; transition: all 0.2s;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
-    .tab:hover { background: var(--card-hover); color: var(--text); }
+    .tab:hover { color: var(--text); border-color: var(--line-bright); transform: translateY(-1px); }
     .tab.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #06101f;
-      font-weight: 600;
+      color: #04101a; border-color: transparent;
+      background: linear-gradient(100deg, var(--cyan), var(--violet));
+      box-shadow: 0 0 22px rgba(34,224,255,0.45);
     }
 
     input[type="search"] {
-      background: var(--card);
-      border: 1px solid var(--line);
-      color: var(--text);
-      padding: 9px 14px;
-      border-radius: 999px;
-      font-size: 0.9rem;
-      min-width: 180px;
-      flex: 1 1 180px;
-      max-width: 280px;
+      background: var(--glass); border: 1px solid var(--line); color: var(--text);
+      padding: 10px 16px; border-radius: 12px; font-size: 0.95rem;
+      font-family: "Rajdhani", sans-serif; font-weight: 500;
+      min-width: 180px; flex: 1 1 180px; max-width: 280px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     input[type="search"]::placeholder { color: var(--muted); }
-    input[type="search"]:focus { outline: none; border-color: var(--accent); }
+    input[type="search"]:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 16px rgba(34,224,255,0.3); }
 
+    /* Month heading */
     .month-head {
-      margin: 24px 0 10px;
-      color: var(--gold);
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: capitalize;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 6px;
+      margin: 28px 0 12px; font-family: "Orbitron", sans-serif;
+      font-size: 0.82rem; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+      display: flex; align-items: center; gap: 14px;
+      text-shadow: 0 0 14px rgba(255,210,74,0.4);
     }
+    .month-head::after { content: ""; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--line-bright), transparent); }
 
+    /* Match card */
     .match {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      display: grid;
-      grid-template-columns: 76px 1fr auto;
-      gap: 14px;
-      align-items: center;
-      transition: background 0.15s, transform 0.15s;
+      position: relative; background: var(--glass); border: 1px solid var(--line);
+      border-radius: 16px; padding: 16px 18px; margin-bottom: 12px;
+      display: grid; grid-template-columns: 82px 1fr auto; gap: 16px; align-items: center;
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      overflow: hidden;
     }
-    .match:hover { background: var(--card-hover); transform: translateY(-1px); }
+    .match::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(var(--cyan), var(--violet)); opacity: 0.5;
+    }
+    .match.is-wm::before { background: linear-gradient(var(--gold), var(--magenta)); }
+    .match.is-live::before { background: var(--live); opacity: 1; box-shadow: 0 0 16px var(--live); }
+    .match:hover {
+      transform: translateY(-2px); border-color: var(--line-bright);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 24px rgba(34,224,255,0.12);
+    }
 
-    .when { text-align: center; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
-    .when .day { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .when { text-align: center; font-size: 0.74rem; color: var(--muted);
+      line-height: 1.45; font-weight: 600; letter-spacing: 0.5px; }
+    .when .day { font-family: "Orbitron", sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text); }
 
-    .teams { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    .team {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.98rem;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .team.winner { font-weight: 700; }
-    .team img { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
-    .badge-fallback {
-      width: 20px; height: 20px; border-radius: 4px;
-      background: var(--line); flex-shrink: 0;
-    }
-    .meta { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+    .teams { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+    .team { display: flex; align-items: center; gap: 9px; font-size: 1.04rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team.winner { font-weight: 700; color: #fff; }
+    .team img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0;
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.5)); }
+    .badge-fallback { width: 22px; height: 22px; border-radius: 5px;
+      background: linear-gradient(135deg, var(--line-bright), transparent); flex-shrink: 0; }
+    .meta { font-size: 0.76rem; color: var(--muted); margin-top: 3px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-weight: 500; }
 
-    .result { text-align: right; min-width: 64px; }
-    .score {
-      font-size: 1.35rem; font-weight: 800; letter-spacing: 1px;
-      font-variant-numeric: tabular-nums;
-    }
-    .vs { color: var(--muted); font-size: 0.95rem; }
-    .tag {
-      display: inline-block;
-      font-size: 0.66rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 2px 7px;
-      border-radius: 5px;
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-    .tag.live { background: var(--live); color: #fff; animation: pulse 1.4s infinite; }
-    .tag.ft { background: var(--line); color: var(--muted); }
-    .tag.wm { background: rgba(255,204,51,0.15); color: var(--gold); }
-    .tag.test { background: rgba(62,166,255,0.15); color: var(--accent); }
+    .result { text-align: right; min-width: 70px; }
+    .score { font-family: "Orbitron", sans-serif; font-size: 1.5rem; font-weight: 700;
+      letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+    .vs { color: var(--muted); font-size: 0.95rem; font-family: "Orbitron", sans-serif; letter-spacing: 2px; }
+    .tag { display: inline-block; font-size: 0.64rem; font-weight: 700; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 6px; margin-top: 5px; text-transform: uppercase;
+      font-family: "Orbitron", sans-serif; }
+    .tag.live { background: var(--live); color: #fff; box-shadow: 0 0 14px rgba(255,46,99,0.6); animation: pulse 1.4s infinite; }
+    .tag.ft { background: rgba(120,160,255,0.12); color: var(--muted); }
+    .tag.wm { background: rgba(255,210,74,0.14); color: var(--gold); border: 1px solid rgba(255,210,74,0.3); }
+    .tag.test { background: rgba(34,224,255,0.12); color: var(--cyan); border: 1px solid rgba(34,224,255,0.3); }
 
-    .league-line { display: flex; gap: 6px; flex-wrap: wrap; }
-
-    .empty, .loading, .error {
-      text-align: center;
-      color: var(--muted);
-      padding: 48px 16px;
-      font-size: 0.95rem;
-    }
-    .error { color: #ff8a8a; }
-    .spinner {
-      width: 28px; height: 28px; margin: 0 auto 14px;
-      border: 3px solid var(--line);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
+    /* States */
+    .empty, .loading, .error { text-align: center; color: var(--muted);
+      padding: 56px 16px; font-size: 1rem; font-weight: 500; }
+    .error { color: #ff9b9b; }
+    .spinner { width: 34px; height: 34px; margin: 0 auto 16px;
+      border: 3px solid var(--line); border-top-color: var(--cyan);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      box-shadow: 0 0 18px rgba(34,224,255,0.3); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 36px; }
-    footer a { color: var(--accent); text-decoration: none; }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 44px; font-weight: 500; }
+    footer a { color: var(--cyan); text-decoration: none; }
+    footer a:hover { text-shadow: 0 0 10px rgba(34,224,255,0.6); }
 
     @media (max-width: 520px) {
-      .match { grid-template-columns: 60px 1fr auto; gap: 10px; padding: 12px; }
-      .team { font-size: 0.9rem; }
-      .score { font-size: 1.15rem; }
+      .match { grid-template-columns: 62px 1fr auto; gap: 11px; padding: 13px; }
+      .team { font-size: 0.94rem; }
+      .score { font-size: 1.25rem; }
     }
   </style>
 </head>
 <body>
+  <div class="bg-fx"></div>
+  <div class="grid-fx"></div>
+
   <div class="wrap">
     <header>
-      <h1><span class="ball">⚽</span> WM 2026 &amp; Testspiele</h1>
-      <div class="subtitle">Alle Spiele der Weltmeisterschaft und internationale Freundschaftsspiele</div>
+      <div class="kicker">FIFA World Cup · USA · Canada · Mexico</div>
+      <h1>WM 2026 LIVE</h1>
+      <div class="subtitle">Alle Spiele der A-Nationalmannschaften – Endrunde &amp; Vorbereitungs-Länderspiele</div>
       <div class="status-bar">
         <span class="dot"></span>
         <span id="status">Lade Spiele…</span>
@@ -207,8 +223,8 @@
     <div class="controls">
       <div class="tabs">
         <button class="tab active" data-filter="all">Alle</button>
-        <button class="tab" data-filter="wm">WM 2026</button>
-        <button class="tab" data-filter="test">Testspiele</button>
+        <button class="tab" data-filter="wm">WM-Endrunde</button>
+        <button class="tab" data-filter="test">Länderspiele</button>
         <button class="tab" data-filter="live">Live</button>
         <button class="tab" data-filter="upcoming">Kommend</button>
       </div>
@@ -221,26 +237,33 @@
 
     <footer>
       Daten von <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> ·
-      Aktualisiert sich automatisch alle 60&nbsp;Sekunden ·
-      Letzte Aktualisierung: <span id="updated">–</span>
+      Auto-Update alle 60&nbsp;Sekunden ·
+      Stand: <span id="updated">–</span>
     </footer>
   </div>
 
   <script>
     // ====== Konfiguration ======================================================
-    // Kostenloser Test-API-Schlüssel von TheSportsDB. Für mehr Anfragen einen
-    // eigenen (kostenlosen) Schlüssel auf thesportsdb.com holen und hier eintragen.
+    // Kostenloser Test-API-Schlüssel. Für mehr Anfragen einen eigenen (kostenlosen)
+    // Schlüssel auf thesportsdb.com holen und hier eintragen.
     const API_KEY = "123";
     const BASE = `https://www.thesportsdb.com/api/v1/json/${API_KEY}`;
 
-    const SEASON_YEAR = new Date().getFullYear(); // aktuelles Jahr für Testspiele
+    // Zeitfenster "rund um die WM" – Vorbereitungsspiele bis Turnierende.
+    // (WM 2026: 11.06. – 19.07.2026; davor Test-Länderspiele ab ca. Mitte Mai.)
+    const WINDOW_START = new Date("2026-05-15T00:00:00Z");
+    const WINDOW_END   = new Date("2026-07-31T23:59:59Z");
+
+    // Nur A-Nationalmannschaften (Herren-Seniorenteams):
+    //  4429 = FIFA World Cup (Endrunde)
+    //  4562 = International Friendlies (A-Länderspiele)
     const SOURCES = [
-      { id: "4429", season: "2026", kind: "wm",   label: "WM 2026" },          // FIFA World Cup
-      { id: "4562", season: String(SEASON_YEAR), kind: "test", label: "Testspiel" }, // International Friendlies
+      { id: "4429", season: "2026", kind: "wm",   label: "WM-Endrunde" },
+      { id: "4562", season: "2026", kind: "test", label: "Länderspiel" },
     ];
 
-    const REFRESH_MS = 60_000;          // Auto-Refresh-Intervall
-    const CACHE_KEY = "wm-spiele-cache"; // letzte erfolgreiche Daten
+    const REFRESH_MS = 60_000;
+    const CACHE_KEY = "wm2026-cache";
 
     // ====== Status ============================================================
     let allMatches = [];
@@ -261,9 +284,14 @@
           return await res.json();
         } catch (err) {
           if (i === tries - 1) throw err;
-          await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Backoff
+          await new Promise(r => setTimeout(r, 1000 * (i + 1)));
         }
       }
+    }
+
+    function isLiveStatus(s) {
+      if (!s) return false;
+      return /^(1h|2h|ht|et|live|in play|\d{1,3}'?)$/i.test(s.trim());
     }
 
     function normalize(ev, source) {
@@ -271,32 +299,22 @@
                : ev.dateEvent ? new Date(ev.dateEvent + "T" + (ev.strTime || "00:00:00") + "Z")
                : null;
       const status = (ev.strStatus || "").trim();
-      const finished = /finish|ft|aet|full|after/i.test(status) ||
-                       (ev.intHomeScore != null && ev.intAwayScore != null && !isLiveStatus(status) && ts && ts < new Date());
       const live = isLiveStatus(status);
+      const finished = /finish|ft|aet|full|after/i.test(status) ||
+                       (ev.intHomeScore != null && ev.intAwayScore != null && !live && ts && ts < new Date());
       return {
-        id: ev.idEvent,
-        name: ev.strEvent,
-        home: ev.strHomeTeam,
-        away: ev.strAwayTeam,
-        homeBadge: ev.strHomeTeamBadge || "",
-        awayBadge: ev.strAwayTeamBadge || "",
-        homeScore: ev.intHomeScore,
-        awayScore: ev.intAwayScore,
-        date: ts,
-        round: ev.intRound,
-        venue: ev.strVenue || "",
-        status,
-        live,
-        finished,
-        kind: source.kind,
-        league: source.label,
+        id: ev.idEvent, name: ev.strEvent,
+        home: ev.strHomeTeam, away: ev.strAwayTeam,
+        homeBadge: ev.strHomeTeamBadge || "", awayBadge: ev.strAwayTeamBadge || "",
+        homeScore: ev.intHomeScore, awayScore: ev.intAwayScore,
+        date: ts, venue: ev.strVenue || "", status, live, finished,
+        kind: source.kind, league: source.label,
       };
     }
 
-    function isLiveStatus(s) {
-      if (!s) return false;
-      return /^(1h|2h|ht|et|live|in play|\d{1,3}'?)$/i.test(s.trim());
+    function inWindow(m) {
+      if (!m.date) return false;
+      return m.date >= WINDOW_START && m.date <= WINDOW_END;
     }
 
     async function loadAll() {
@@ -313,32 +331,30 @@
         results.forEach(r => {
           if (r.status === "fulfilled") { merged = merged.concat(r.value); anyOk = true; }
         });
-
         if (!anyOk) throw new Error("Keine Quelle erreichbar");
 
-        // Duplikate (gleiche idEvent) entfernen
+        // Nur Spiele im WM-Zeitfenster behalten
+        merged = merged.filter(inWindow);
+
+        // Duplikate entfernen + chronologisch sortieren
         const seen = new Set();
         merged = merged.filter(m => m.id && !seen.has(m.id) && seen.add(m.id));
-
-        // chronologisch sortieren (Spiele ohne Datum ans Ende)
         merged.sort((a, b) => (a.date?.getTime() || Infinity) - (b.date?.getTime() || Infinity));
 
         allMatches = merged;
         localStorage.setItem(CACHE_KEY, JSON.stringify(merged.map(serialize)));
         render();
         setUpdated();
-        $status.textContent = `${allMatches.length} Spiele geladen`;
+        $status.textContent = `${allMatches.length} SPIELE`;
       } catch (err) {
-        // Auf Cache zurückfallen, damit die Seite nie leer ist
         const cached = loadCache();
         if (cached.length) {
-          allMatches = cached;
-          render();
-          $status.textContent = "Offline – zeige gespeicherte Daten";
+          allMatches = cached; render();
+          $status.textContent = "OFFLINE · CACHE";
         } else {
           $list.innerHTML = `<div class="error">⚠️ Spiele konnten nicht geladen werden.<br>
             Bitte später erneut versuchen. (${err.message})</div>`;
-          $status.textContent = "Fehler beim Laden";
+          $status.textContent = "FEHLER";
         }
       }
     }
@@ -346,8 +362,8 @@
     function serialize(m) { return { ...m, date: m.date ? m.date.toISOString() : null }; }
     function loadCache() {
       try {
-        const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
-        return raw.map(m => ({ ...m, date: m.date ? new Date(m.date) : null }));
+        return JSON.parse(localStorage.getItem(CACHE_KEY) || "[]")
+          .map(m => ({ ...m, date: m.date ? new Date(m.date) : null }));
       } catch { return []; }
     }
 
@@ -377,15 +393,10 @@
         $list.innerHTML = `<div class="empty">Keine Spiele für diese Auswahl.</div>`;
         return;
       }
-
-      let html = "";
-      let lastMonth = "";
+      let html = "", lastMonth = "";
       for (const m of matches) {
         const monthKey = m.date ? `${MONTHS[m.date.getMonth()]} ${m.date.getFullYear()}` : "Termin offen";
-        if (monthKey !== lastMonth) {
-          html += `<div class="month-head">${monthKey}</div>`;
-          lastMonth = monthKey;
-        }
+        if (monthKey !== lastMonth) { html += `<div class="month-head">${monthKey}</div>`; lastMonth = monthKey; }
         html += renderMatch(m);
       }
       $list.innerHTML = html;
@@ -402,22 +413,23 @@
       const awayWin = hasScore && +m.awayScore > +m.homeScore;
 
       const result = m.live
-        ? `<div class="score">${m.homeScore ?? 0}:${m.awayScore ?? 0}</div><span class="tag live">● ${m.status || "Live"}</span>`
+        ? `<div class="score">${m.homeScore ?? 0}:${m.awayScore ?? 0}</div><span class="tag live">● ${esc(m.status) || "LIVE"}</span>`
         : m.finished && hasScore
           ? `<div class="score">${m.homeScore}:${m.awayScore}</div><span class="tag ft">Beendet</span>`
-          : `<div class="vs">vs</div>`;
+          : `<div class="vs">VS</div>`;
 
       const kindTag = m.kind === "wm"
-        ? `<span class="tag wm">WM 2026</span>`
-        : `<span class="tag test">Testspiel</span>`;
+        ? `<span class="tag wm">WM</span>` : `<span class="tag test">Test</span>`;
+
+      const cls = `match ${m.kind === "wm" ? "is-wm" : ""} ${m.live ? "is-live" : ""}`;
 
       return `
-        <div class="match">
+        <div class="${cls}">
           <div class="when">${when}</div>
           <div class="teams">
             <div class="team ${homeWin ? "winner" : ""}">${badge(m.homeBadge)}<span>${esc(m.home)}</span></div>
             <div class="team ${awayWin ? "winner" : ""}">${badge(m.awayBadge)}<span>${esc(m.away)}</span></div>
-            <div class="meta league-line">${kindTag}${m.venue ? `<span>${esc(m.venue)}</span>` : ""}</div>
+            <div class="meta">${kindTag}${m.venue ? `<span>📍 ${esc(m.venue)}</span>` : ""}</div>
           </div>
           <div class="result">${result}</div>
         </div>`;
@@ -428,15 +440,14 @@
         ? `<img src="${esc(url)}/tiny" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;badge-fallback&quot;></span>'">`
         : `<span class="badge-fallback"></span>`;
     }
-
     function pad(n) { return String(n).padStart(2, "0"); }
     function esc(s) {
       return String(s ?? "").replace(/[&<>"']/g, c =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
     function setUpdated() {
-      const now = new Date();
-      $updated.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} Uhr`;
+      const n = new Date();
+      $updated.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
     }
 
     // ====== Events ============================================================
@@ -452,19 +463,13 @@
     let searchTimer;
     $search.addEventListener("input", e => {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        searchTerm = e.target.value.trim().toLowerCase();
-        render();
-      }, 200);
+      searchTimer = setTimeout(() => { searchTerm = e.target.value.trim().toLowerCase(); render(); }, 200);
     });
 
     // ====== Start & Auto-Refresh =============================================
     loadAll();
     setInterval(loadAll, REFRESH_MS);
-    // Beim Zurückkehren auf den Tab sofort aktualisieren
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) loadAll();
-    });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) loadAll(); });
   </script>
 </body>
 </html>
