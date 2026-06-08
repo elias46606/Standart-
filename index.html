@@ -293,6 +293,233 @@
     /* Score number transition (opacity flip on re-render) */
     .mlc-score { transition: color 0.3s ease; }
 
+    /* ===== Upcoming Match Card ===== */
+    .match-upcoming {
+      position: relative; cursor: pointer; overflow: hidden;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 20px; padding: 16px 16px 14px; margin-bottom: 8px;
+      transition: transform 0.18s, border-color 0.18s;
+    }
+    .match-upcoming::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--gold); opacity: 0.45; border-radius: 3px 0 0 3px;
+    }
+    .match-upcoming.is-fav::before { background: linear-gradient(var(--gold-soft), var(--gold)); opacity: 1; }
+    .match-upcoming:hover { transform: translateY(-1px); border-color: var(--line-bright); }
+
+    .muc-topbar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    }
+    .muc-phase { font-size: 0.63rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+    .muc-body { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+    .muc-team { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .muc-flag { width: 44px; height: 30px; object-fit: cover; border-radius: 6px; }
+    .muc-flag-fb { width: 44px; height: 30px; border-radius: 6px; background: var(--card-2); }
+    .muc-name { font-size: 0.82rem; font-weight: 600; color: var(--text); max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+
+    .muc-center { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .muc-time { font-family: "Cinzel", serif; font-size: 1.8rem; font-weight: 900; color: var(--text); letter-spacing: 1px; line-height: 1; }
+    .muc-date { font-size: 0.66rem; font-weight: 600; color: var(--muted); }
+    .muc-vs { font-size: 0.7rem; font-weight: 600; color: var(--muted-2); letter-spacing: 1px; }
+    .muc-countdown { font-size: 0.72rem; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; margin-top: 2px; }
+    .muc-countdown.soon { color: var(--live); animation: pulse 1.2s infinite; }
+
+    .muc-footer { text-align: center; font-size: 0.66rem; color: var(--muted-2); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+    /* ===== Finished Match Card ===== */
+    .match-finished {
+      position: relative; cursor: pointer; overflow: hidden;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 18px; padding: 13px 16px 12px; margin-bottom: 8px;
+      transition: transform 0.18s;
+    }
+    .match-finished::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
+    .match-finished.res-home::before { background: var(--green); }
+    .match-finished.res-draw::before { background: var(--gold); }
+    .match-finished.res-away::before { background: var(--muted); }
+    .match-finished:hover { transform: translateY(-1px); }
+    .match-finished.is-fav { border-color: rgba(216,185,100,0.2); }
+
+    .mfc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .mfc-phase { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted-2); }
+    .mfc-ft { font-size: 0.6rem; font-weight: 700; color: var(--muted-2); }
+
+    .mfc-body { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+    .mfc-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .mfc-team.away { flex-direction: row-reverse; }
+    .mfc-tflag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+    .mfc-tflag-fb { width: 24px; height: 16px; border-radius: 3px; flex-shrink: 0; background: var(--card-2); }
+    .mfc-tname { font-size: 0.88rem; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mfc-tname.winner { color: var(--text); font-weight: 700; }
+
+    .mfc-score-block { text-align: center; }
+    .mfc-score { font-family: "Cinzel", serif; font-size: 1.5rem; font-weight: 900; color: var(--text); letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+
+    .mfc-result-bar { display: flex; height: 3px; border-radius: 2px; overflow: hidden; margin-top: 10px; }
+    .mfc-bar-h { background: var(--green); }
+    .mfc-bar-d { background: var(--gold); flex: 1; }
+    .mfc-bar-a { background: var(--muted-2); }
+
+    .mfc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .mfc-venue { font-size: 0.62rem; color: var(--muted-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mfc-stats-btn {
+      flex-shrink: 0; background: none; border: 1px solid var(--line);
+      color: var(--muted-2); border-radius: 8px; padding: 4px 10px;
+      font-family: "Inter", sans-serif; font-size: 0.65rem; font-weight: 600;
+      cursor: default; transition: border-color 0.15s, color 0.15s; pointer-events: none;
+    }
+    .match-finished:hover .mfc-stats-btn { border-color: var(--line-bright); color: var(--muted); }
+
+    /* ===== Match Detail Screen (inside bottom-sheet modal) ===== */
+    .mds-sh {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .mds-sh::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    .mds-header { text-align: center; margin-bottom: 4px; }
+    .mds-phase-line { font-size: 0.63rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-soft); margin-bottom: 5px; }
+    .mds-meta-line { font-size: 0.7rem; color: var(--muted); margin-bottom: 16px; }
+
+    .mds-team-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .mds-team { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .mds-team-flag { width: 52px; height: 36px; object-fit: cover; border-radius: 8px; }
+    .mds-team-flag-fb { width: 52px; height: 36px; border-radius: 8px; background: var(--card-2); }
+    .mds-team-name { font-size: 0.88rem; font-weight: 700; color: var(--text); text-align: center; max-width: 80px; }
+    .mds-score-center { text-align: center; }
+    .mds-main-score { font-family: "Cinzel", serif; font-size: 2.8rem; font-weight: 900; color: var(--text); letter-spacing: 4px; font-variant-numeric: tabular-nums; line-height: 1; }
+    .mds-status-row { margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .mds-chip { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; }
+    .mds-chip.live { background: rgba(255,77,94,0.15); color: var(--live); border: 1px solid rgba(255,77,94,0.3); }
+    .mds-chip.ft   { background: var(--card-2); color: var(--muted-2); border: 1px solid var(--line); }
+    .mds-chip.pre  { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+    .mds-ht { font-size: 0.68rem; color: var(--muted-2); }
+    .mds-live-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: pulse 1.2s infinite; }
+
+    /* Timeline (vertical, in detail screen) */
+    .mds-events { display: flex; flex-direction: column; gap: 2px; }
+    .mds-ev {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 8px; border-radius: 10px; font-size: 0.83rem;
+      transition: background 0.15s;
+    }
+    .mds-ev:hover { background: var(--card-2); }
+    .mds-ev.ev-away { flex-direction: row-reverse; }
+    .mds-ev-min { font-size: 0.65rem; font-weight: 700; color: var(--muted); min-width: 28px; font-variant-numeric: tabular-nums; }
+    .mds-ev.ev-away .mds-ev-min { text-align: left; }
+    .mds-ev-icon { width: 24px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
+    .mds-ev-body { flex: 1; min-width: 0; }
+    .mds-ev-name { font-weight: 600; color: var(--text); }
+    .mds-ev-sub  { font-size: 0.7rem; color: var(--muted); }
+    .mds-ev.ev-away .mds-ev-body { text-align: right; }
+    .mds-ev-sep { display: flex; align-items: center; gap: 8px; color: var(--muted-2); font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; margin: 6px 0; }
+    .mds-ev-sep::before, .mds-ev-sep::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    /* Stats */
+    .mds-stats { display: flex; flex-direction: column; gap: 12px; }
+    .mds-stat { display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; gap: 10px; font-size: 0.8rem; }
+    .mds-sv { font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; color: var(--text); }
+    .mds-sv:last-child { }
+    .mds-smid { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .mds-slabel { font-size: 0.6rem; color: var(--muted-2); }
+    .mds-sbars { display: flex; height: 4px; border-radius: 2px; overflow: hidden; width: 100%; gap: 2px; }
+    .mds-sb-h { background: var(--text); border-radius: 2px 0 0 2px; }
+    .mds-sb-a { background: var(--muted-2); border-radius: 0 2px 2px 0; }
+
+    /* Lineups */
+    .mds-lineups { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mds-lu-head { font-weight: 700; font-size: 0.78rem; color: var(--silver-2); margin-bottom: 8px; }
+    .mds-lu-form { color: var(--gold-soft); font-weight: 600; font-size: 0.72rem; }
+    .mds-player { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
+    .mds-player:last-child { border-bottom: none; }
+    .mds-pnum { min-width: 20px; height: 20px; border-radius: 5px; background: var(--card-2); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: var(--muted); }
+    .mds-ppos { margin-left: auto; font-size: 0.6rem; color: var(--muted-2); }
+    .mds-bench { font-size: 0.7rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .mds-bench b { color: var(--muted-2); font-weight: 600; }
+
+    /* Standings impact */
+    .mds-impact { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .mds-impact-box { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; text-align: center; }
+    .mds-impact-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 6px; }
+    .mds-impact-row { font-size: 0.72rem; color: var(--muted); line-height: 1.6; }
+    .mds-impact-row strong { color: var(--gold-soft); font-weight: 700; }
+
+    /* Match facts table */
+    .mds-facts { }
+    .mds-fact { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.82rem; }
+    .mds-fact:last-child { border-bottom: none; }
+    .mds-fact-k { color: var(--muted); }
+    .mds-fact-v { font-weight: 600; color: var(--text); text-align: right; }
+
+    /* ===== Notification Panel + Cards ===== */
+    .notif-panel {
+      position: fixed; top: 70px; right: 16px; z-index: 300;
+      width: min(360px, calc(100vw - 32px));
+      background: var(--card); border: 1px solid var(--line-bright);
+      border-radius: 18px; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      animation: popDown 0.18s ease;
+    }
+    .notif-panel[hidden] { display: none; }
+    @keyframes popDown { from { opacity: 0; transform: translateY(-8px) scale(0.97); } }
+    .notif-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px 11px; border-bottom: 1px solid var(--line); }
+    .notif-panel-title { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    .notif-clear-btn { font-size: 0.68rem; color: var(--muted); background: none; border: none; cursor: pointer; font-family: "Inter", sans-serif; }
+    .notif-clear-btn:hover { color: var(--text); }
+    .notif-list { max-height: 420px; overflow-y: auto; padding: 8px; }
+    .notif-empty { text-align: center; color: var(--muted-2); font-size: 0.8rem; padding: 28px 16px; }
+
+    /* Notification card (large by default) */
+    .notif-card {
+      display: flex; align-items: center; gap: 11px;
+      background: var(--card-2); border: 1px solid var(--line);
+      border-radius: 13px; padding: 11px 13px; margin-bottom: 6px;
+      cursor: pointer; transition: border-color 0.15s; position: relative; overflow: hidden;
+    }
+    .notif-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
+    .notif-card:hover { border-color: var(--line-bright); }
+    .notif-card.nt-goal::before  { background: var(--green); }
+    .notif-card.nt-yellow::before{ background: #FACC15; }
+    .notif-card.nt-red::before   { background: #EF4444; }
+    .notif-card.nt-var::before   { background: #3B82F6; }
+    .notif-card.nt-pen::before   { background: #F97316; }
+
+    .ni-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+    .ni-body { flex: 1; min-width: 0; }
+    .ni-type { font-size: 0.58rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .notif-card.nt-goal .ni-type  { color: var(--green); }
+    .notif-card.nt-yellow .ni-type{ color: #FACC15; }
+    .notif-card.nt-red .ni-type   { color: #EF4444; }
+    .notif-card.nt-var .ni-type   { color: #60A5FA; }
+    .notif-card.nt-pen .ni-type   { color: #F97316; }
+    .ni-title { font-size: 0.86rem; font-weight: 700; color: var(--text); line-height: 1.25; margin-top: 1px; }
+    .ni-detail { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+    .ni-time { font-size: 0.6rem; color: var(--muted-2); flex-shrink: 0; align-self: flex-start; }
+
+    /* Compact variant */
+    .notif-card.compact { padding: 8px 11px; border-radius: 10px; gap: 8px; }
+    .notif-card.compact .ni-icon { width: 28px; height: 28px; font-size: 0.9rem; border-radius: 7px; }
+    .notif-card.compact .ni-title { font-size: 0.78rem; }
+
+    /* Toast */
+    .notif-toast {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+      z-index: 400; pointer-events: none;
+      animation: toastIn 0.22s ease, toastOut 0.28s ease 3.2s both;
+    }
+    @keyframes toastIn  { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+    @keyframes toastOut { to   { opacity: 0; transform: translateX(-50%) translateY(-6px); } }
+    .notif-toast-inner {
+      background: var(--card-2); border: 1px solid var(--line-bright); border-radius: 12px;
+      padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; font-weight: 600; color: var(--text);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4); white-space: nowrap;
+    }
+    /* Bell badge */
+    .icon-btn { position: relative; }
+    .notif-badge { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--live); border: 2px solid var(--bg); }
+
     /* ===== Upcoming/Finished match card ===== */
     .month-head {
       margin: 16px 0 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
@@ -552,6 +779,18 @@
       Automatisch alle 60&nbsp;Sekunden · Stand: <span id="updated">–</span>
     </footer>
   </div>
+
+  <!-- Notification Panel -->
+  <div class="notif-panel" id="notifPanel" hidden>
+    <div class="notif-panel-head">
+      <span class="notif-panel-title">Benachrichtigungen</span>
+      <button class="notif-clear-btn" id="notifClear">Alle löschen</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div class="notif-empty">Keine neuen Benachrichtigungen</div>
+    </div>
+  </div>
+  <div id="notifToastArea"></div>
 
   <!-- Fixed Bottom Navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Hauptnavigation">
@@ -1086,37 +1325,107 @@
         </div>`;
     }
 
-    function renderMatch(m) {
+    function flagMed(url) {
+      return url
+        ? `<img class="muc-flag" src="${esc(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;muc-flag-fb&quot;></span>'">`
+        : `<span class="muc-flag-fb"></span>`;
+    }
+    function flagSm(url, cls = "mfc-tflag", fb = "mfc-tflag-fb") {
+      return url
+        ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;${fb}&quot;></span>'">`
+        : `<span class="${fb}"></span>`;
+    }
+
+    function renderUpcomingCard(m) {
       const d = m.date;
-      const when = d
-        ? `<div class="day">${d.getDate()}</div>${WEEKDAYS[d.getDay()]}<br>${pad(d.getHours())}:${pad(d.getMinutes())}`
-        : `<div class="day">?</div>offen`;
-      const hasScore = m.homeScore != null && m.awayScore != null;
-      const homeWin = hasScore && +m.homeScore > +m.awayScore;
-      const awayWin = hasScore && +m.awayScore > +m.homeScore;
-      const result = m.live
-        ? `<div class="score">${m.homeScore ?? 0}:${m.awayScore ?? 0}</div><span class="tag live">● ${esc(m.status) || "LIVE"}</span>`
-        : (m.finished && hasScore)
-          ? `<div class="score">${m.homeScore}:${m.awayScore}</div><span class="tag ft">Beendet</span>`
-          : `<div class="vs">VS</div>`;
-      let kindTag;
-      if (m.kind === "wm" && m.group) kindTag = `<span class="tag grp">Gruppe ${m.group}</span>`;
-      else if (m.kind === "wm")       kindTag = `<span class="tag ko">${esc(m.stage) || "K.-o.-Phase"}</span>`;
-      else                            kindTag = `<span class="tag test">Testspiel</span>`;
+      const phase = matchPhaseLabel(m);
       const favH = isFav(m.home), favA = isFav(m.away);
-      const star = `<span class="fav-star" title="Deutschland">★</span>`;
-      const cls = `match ${m.kind === "wm" ? "is-wm" : ""} ${m.live ? "is-live" : ""} ${favH || favA ? "is-fav" : ""}`;
+      const timeStr = d ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : "–:––";
+      const dateStr = d ? `${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}` : "Termin offen";
+      const kickoffMs = d ? d.getTime() : null;
+
+      let kindTag = "";
+      if (m.kind === "wm" && m.group) kindTag = `<span class="tag grp" style="margin-left:4px">Gruppe ${m.group}</span>`;
+      else if (m.kind === "wm")       kindTag = `<span class="tag ko" style="margin-left:4px">${esc(m.stage) || "WM"}</span>`;
+      else                            kindTag = `<span class="tag test" style="margin-left:4px">Testspiel</span>`;
+
       return `
-        <div class="${cls}" data-id="${esc(m.id)}" role="button" tabindex="0">
-          <div class="when">${when}</div>
-          <div class="teams">
-            <div class="team ${homeWin ? "winner" : ""}">${flag(m.homeBadge)}<span>${esc(m.home)}</span>${favH ? star : ""}</div>
-            <div class="team ${awayWin ? "winner" : ""}">${flag(m.awayBadge)}<span>${esc(m.away)}</span>${favA ? star : ""}</div>
-            <div class="meta">${kindTag}${m.venue ? `<span>📍 ${esc(m.venue)}</span>` : ""}</div>
+        <div class="match-upcoming ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+          <div class="muc-topbar">
+            <span class="muc-phase">${esc(phase)}</span>
+            ${kindTag}
           </div>
-          <div class="result">${result}</div>
-          <span class="chevron">›</span>
+          <div class="muc-body">
+            <div class="muc-team">
+              ${flagMed(m.homeBadge)}
+              <span class="muc-name">${esc(m.home)}${favH ? " ★" : ""}</span>
+            </div>
+            <div class="muc-center">
+              <div class="muc-time">${timeStr}</div>
+              <div class="muc-date">${dateStr}</div>
+              <div class="muc-vs">vs</div>
+              ${kickoffMs ? `<div class="muc-countdown" data-kickoff="${kickoffMs}">…</div>` : ""}
+            </div>
+            <div class="muc-team">
+              ${flagMed(m.awayBadge)}
+              <span class="muc-name">${esc(m.away)}${favA ? " ★" : ""}</span>
+            </div>
+          </div>
+          ${m.venue ? `<div class="muc-footer">📍 ${esc(m.venue)}</div>` : ""}
         </div>`;
+    }
+
+    function renderFinishedCard(m) {
+      const d = m.date;
+      const hs = +(m.homeScore), as = +(m.awayScore);
+      const homeWin = hs > as, awayWin = as > hs, draw = hs === as;
+      const resCls = homeWin ? "res-home" : awayWin ? "res-away" : "res-draw";
+      const phase = matchPhaseLabel(m);
+      const favH = isFav(m.home), favA = isFav(m.away);
+
+      // Result bar widths: home share of "dominance"
+      const tot = hs + as || 1;
+      const hPct = homeWin ? Math.max(55, (hs / tot * 100).toFixed(0)) : draw ? 50 : Math.min(45, (hs / tot * 100).toFixed(0));
+      const barHtml = homeWin
+        ? `<div class="mfc-bar-h" style="width:${hPct}%"></div><div class="mfc-bar-a" style="flex:1"></div>`
+        : awayWin
+        ? `<div class="mfc-bar-h" style="flex:1"></div><div class="mfc-bar-a" style="width:${100 - hPct}%"></div>`
+        : `<div class="mfc-bar-d" style="flex:1"></div>`;
+
+      const dateStr = d ? `${d.getDate()}. ${MONTHS[d.getMonth()]}` : "";
+
+      return `
+        <div class="match-finished ${resCls} ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+          <div class="mfc-header">
+            <span class="mfc-phase">${esc(phase)}${dateStr ? " · " + dateStr : ""}</span>
+            <span class="mfc-ft">FT</span>
+          </div>
+          <div class="mfc-body">
+            <div class="mfc-team home">
+              ${flagSm(m.homeBadge)}
+              <span class="mfc-tname ${homeWin ? "winner" : awayWin ? "" : ""}">${esc(m.home)}${favH ? " ★" : ""}</span>
+            </div>
+            <div class="mfc-score-block">
+              <div class="mfc-score">${hs} : ${as}</div>
+            </div>
+            <div class="mfc-team away">
+              ${flagSm(m.awayBadge)}
+              <span class="mfc-tname ${awayWin ? "winner" : ""}">${esc(m.away)}${favA ? " ★" : ""}</span>
+            </div>
+          </div>
+          <div class="mfc-result-bar">${barHtml}</div>
+          <div class="mfc-footer">
+            <span class="mfc-venue">${m.venue ? "📍 " + esc(m.venue) : ""}</span>
+            <button class="mfc-stats-btn">Statistiken →</button>
+          </div>
+        </div>`;
+    }
+
+    // Keep for fallback (live cards in non-"all" filter views)
+    function renderMatch(m) {
+      if (m.live) return renderLiveCard(m);
+      if (m.finished) return renderFinishedCard(m);
+      return renderUpcomingCard(m);
     }
 
     function render() {
@@ -1150,20 +1459,19 @@
         for (const m of upcoming) {
           const mk = m.date ? `${MONTHS[m.date.getMonth()]} ${m.date.getFullYear()}` : "Termin offen";
           if (mk !== lastMonth) { html += `<div class="month-head">${mk}</div>`; lastMonth = mk; }
-          html += renderMatch(m);
+          html += renderUpcomingCard(m);
         }
       }
 
       // 3. Finished section
       if (finished.length) {
         html += `<div class="section-head finished">Abgeschlossen</div>`;
-        // Show most recent first in finished
         const finishedDesc = [...finished].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
         let lastMonth = "";
         for (const m of finishedDesc) {
           const mk = m.date ? `${MONTHS[m.date.getMonth()]} ${m.date.getFullYear()}` : "–";
           if (mk !== lastMonth) { html += `<div class="month-head">${mk}</div>`; lastMonth = mk; }
-          html += renderMatch(m);
+          html += renderFinishedCard(m);
         }
       }
 
@@ -1237,49 +1545,126 @@
       return `<div class="goal">⚽ ${min}${esc(g.name)}${note}</div>`;
     }
 
+    function mdsFlag(url) {
+      return url
+        ? `<img class="mds-team-flag" src="${esc(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;mds-team-flag-fb&quot;></span>'">`
+        : `<span class="mds-team-flag-fb"></span>`;
+    }
+
+    function standingsImpact(m) {
+      if (m.kind !== "wm" || !m.group) return "";
+      const groups = computeGroups();
+      const grp = groups[m.group]; if (!grp) return "";
+
+      const project = (extraH, extraA) => {
+        return grp.map(t => {
+          let pts = t.pts, gf = t.gf, ga = t.ga;
+          if (t.team === m.home) { pts += extraH[0]; gf += extraH[1]; ga += extraH[2]; }
+          if (t.team === m.away) { pts += extraA[0]; gf += extraA[1]; ga += extraA[2]; }
+          return { ...t, pts, gf, ga, diff: gf - ga };
+        }).sort((a, b) => b.pts - a.pts || b.diff - a.diff || b.gf - a.gf);
+      };
+
+      const fmt = rows => rows.slice(0, 4).map((t, i) => {
+        const hi = t.team === m.home || t.team === m.away;
+        return `<div${hi ? ` style="color:var(--gold-soft)"` : ""}>${i + 1}. ${esc(t.team.length > 10 ? t.team.slice(0, 9) + "…" : t.team)} <strong>${t.pts}P</strong></div>`;
+      }).join("");
+
+      const hWin  = project([3,1,0], [0,0,1]);
+      const draw  = project([1,0,0], [1,0,0]);
+      const aWin  = project([0,0,1], [3,1,0]);
+
+      return `
+        <div class="mds-sh">Standings-Impact</div>
+        <div class="mds-impact">
+          <div class="mds-impact-box">
+            <div class="mds-impact-label">Heimsieg</div>
+            <div class="mds-impact-row">${fmt(hWin)}</div>
+          </div>
+          <div class="mds-impact-box">
+            <div class="mds-impact-label">Unentschieden</div>
+            <div class="mds-impact-row">${fmt(draw)}</div>
+          </div>
+          <div class="mds-impact-box">
+            <div class="mds-impact-label">Auswärtssieg</div>
+            <div class="mds-impact-row">${fmt(aWin)}</div>
+          </div>
+        </div>`;
+    }
+
     function openMatch(id) {
       const m = allMatches.find(x => String(x.id) === String(id));
       if (!m) return;
       const hasScore = m.homeScore != null && m.awayScore != null;
       const phase = m.kind !== "wm" ? "Testspiel"
         : m.group ? `Gruppe ${m.group}` : (m.stage || "K.-o.-Phase");
+
+      // Status chip
+      const now = new Date();
+      let chipCls = "pre", chipTxt = m.date ? `${pad(m.date.getHours())}:${pad(m.date.getMinutes())} Uhr` : "Geplant";
+      if (m.live)     { chipCls = "live"; chipTxt = m.status || "LIVE"; }
+      if (m.finished) { chipCls = "ft";   chipTxt = "Abgepfiffen"; }
+
+      // Score display
+      const scoreHtml = hasScore
+        ? `<div class="mds-main-score">${m.homeScore}&thinsp;:&thinsp;${m.awayScore}</div>`
+        : `<div class="mds-main-score" style="font-size:1.6rem;color:var(--muted)">–</div>`;
+      const htHtml = m.htScore && hasScore
+        ? `<span class="mds-ht">HZ ${m.htScore[0]}:${m.htScore[1]}</span>` : "";
+
+      // Event timeline from openfootball goal data
       const hg = m.homeGoals || [], ag = m.awayGoals || [];
-      const hasGoals = hg.length || ag.length;
+      const allEvs = [
+        ...hg.map(g => ({ ...g, side: "home", team: m.home })),
+        ...ag.map(g => ({ ...g, side: "away", team: m.away })),
+      ].filter(g => g.minute != null).sort((a, b) => a.minute - b.minute);
 
-      const scoreBlock = hasScore
-        ? `<div class="md-result">${m.homeScore} : ${m.awayScore}</div>`
-        : `<div class="md-result" style="font-size:1.4rem;color:var(--muted)">${m.date && m.date > new Date() ? "Anstoß " + pad(m.date.getHours()) + ":" + pad(m.date.getMinutes()) : "VS"}</div>`;
-      const ht = (m.htScore && hasScore) ? `<div class="md-ht">Halbzeit: ${m.htScore[0]}:${m.htScore[1]}</div>` : "";
-
-      const goalsBlock = hasGoals ? `
-        <div class="md-h">Tore</div>
-        <div class="goals">
-          <div class="side home">${hg.map(goalLine).join("") || '<span class="gnote">–</span>'}</div>
-          <div class="side away">${ag.map(goalLine).join("") || '<span class="gnote">–</span>'}</div>
-        </div>` : (hasScore ? `<div class="md-h">Tore</div><div class="gnote">Keine Torschützen-Daten.</div>` : "");
+      const evHtml = allEvs.length ? allEvs.map(g => {
+        const icon = g.owngoal ? "⚽" : g.penalty ? "⚽" : "⚽";
+        const note = g.owngoal ? " (ET)" : g.penalty ? " (E)" : "";
+        return `<div class="mds-ev ${g.side === "away" ? "ev-away" : ""}">
+          <span class="mds-ev-min">${g.minute}'</span>
+          <span class="mds-ev-icon">${icon}</span>
+          <div class="mds-ev-body">
+            <div class="mds-ev-name">${esc(g.name)}${note}</div>
+            <div class="mds-ev-sub">${esc(g.team)}</div>
+          </div>
+        </div>`;
+      }).join("") : `<div style="color:var(--muted-2);font-size:0.8rem;padding:6px 0">Keine Event-Daten</div>`;
 
       const facts = `
-        <div class="md-h">Fakten</div>
-        <div class="facts">
-          <div class="k">Wettbewerb</div><div class="v">${m.kind === "wm" ? "WM 2026" : "Länderspiel"}</div>
-          <div class="k">Phase</div><div class="v">${esc(phase)}</div>
-          <div class="k">Anstoß</div><div class="v">${fullDate(m.date)}</div>
-          <div class="k">Ort</div><div class="v">${esc(m.venue) || "–"}</div>
-          ${hasScore ? `<div class="k">Endstand</div><div class="v">${m.homeScore}:${m.awayScore}</div>` : ""}
-          ${ht ? `<div class="k">Halbzeit</div><div class="v">${m.htScore[0]}:${m.htScore[1]}</div>` : ""}
+        <div class="mds-sh">Match-Facts</div>
+        <div class="mds-facts">
+          <div class="mds-fact"><span class="mds-fact-k">Wettbewerb</span><span class="mds-fact-v">${m.kind === "wm" ? "WM 2026" : "Länderspiel"}</span></div>
+          <div class="mds-fact"><span class="mds-fact-k">Phase</span><span class="mds-fact-v">${esc(phase)}</span></div>
+          <div class="mds-fact"><span class="mds-fact-k">Anstoß</span><span class="mds-fact-v">${fullDate(m.date)}</span></div>
+          <div class="mds-fact"><span class="mds-fact-k">Stadion</span><span class="mds-fact-v">${esc(m.venue) || "–"}</span></div>
+          ${hasScore ? `<div class="mds-fact"><span class="mds-fact-k">Endstand</span><span class="mds-fact-v">${m.homeScore} : ${m.awayScore}</span></div>` : ""}
+          ${m.htScore && hasScore ? `<div class="mds-fact"><span class="mds-fact-k">Halbzeit</span><span class="mds-fact-v">${m.htScore[0]} : ${m.htScore[1]}</span></div>` : ""}
         </div>`;
+
+      const impact = !m.finished && !m.live ? standingsImpact(m) : "";
 
       const token = ++openToken;
       $modalBody.innerHTML = `
-        <div class="md-stage">${esc(phase)}</div>
-        <div class="md-meta">${fullDate(m.date)}${m.venue ? " · " + esc(m.venue) : ""}</div>
-        <div class="md-score">
-          <div class="md-team">${flag(m.homeBadge)}<span>${esc(m.home)}</span></div>
-          ${scoreBlock}
-          <div class="md-team">${flag(m.awayBadge)}<span>${esc(m.away)}</span></div>
+        <div class="mds-header">
+          <div class="mds-phase-line">${esc(phase)}</div>
+          <div class="mds-meta-line">${fullDate(m.date)}${m.venue ? " · " + esc(m.venue) : ""}</div>
         </div>
-        ${ht}
-        ${goalsBlock}
+        <div class="mds-team-row">
+          <div class="mds-team">${mdsFlag(m.homeBadge)}<span class="mds-team-name">${esc(m.home)}</span></div>
+          <div class="mds-score-center">
+            ${scoreHtml}
+            <div class="mds-status-row">
+              ${m.live ? `<span class="mds-live-pulse"></span>` : ""}
+              <span class="mds-chip ${chipCls}">${chipTxt}</span>
+            </div>
+            ${htHtml}
+          </div>
+          <div class="mds-team">${mdsFlag(m.awayBadge)}<span class="mds-team-name">${esc(m.away)}</span></div>
+        </div>
+        ${allEvs.length ? `<div class="mds-sh">Ereignisse</div><div class="mds-events">${evHtml}</div>` : ""}
+        ${impact}
         ${facts}
         <div id="espn-extra"></div>`;
       $modal.hidden = false;
@@ -1311,25 +1696,25 @@
     async function loadEspnDetails(m, token) {
       const box = () => document.getElementById("espn-extra");
       const set = html => { if (token === openToken && box()) box().innerHTML = html; };
-      set(`<div class="md-h">Aufstellung &amp; Statistik</div><div class="gnote">Lade Live-Daten …</div>`);
+      set(`<div class="mds-sh">Live-Daten</div><div style="color:var(--muted-2);font-size:0.8rem;padding:4px 0">Lade ESPN-Daten …</div>`);
       try {
         const ev = await findEspnEvent(m);
-        if (!ev) return set(`<div class="md-h">Aufstellung &amp; Statistik</div>
-          <div class="md-note">Für dieses Spiel liegen bei ESPN noch keine Daten vor.</div>`);
+        if (!ev) return set(`<div class="mds-sh">Aufstellung &amp; Statistik</div>
+          <div class="md-note">Noch keine ESPN-Daten (erscheinen ~1 Std. vor Anstoß).</div>`);
         const sum = await espnJson(`${ESPN_BASE}/${ev.league}/summary?event=${ev.id}`);
         if (token !== openToken) return;
-        const parts = [renderEspnGoals(sum), renderEspnLineups(sum), renderEspnStats(sum)].filter(Boolean);
+        const parts = [renderEspnGoals(sum), renderEspnStats(sum), renderEspnLineups(sum)].filter(Boolean);
         set(parts.length ? parts.join("")
-          : `<div class="md-h">Aufstellung &amp; Statistik</div>
-             <div class="md-note">Aufstellungen &amp; Statistiken erscheinen meist erst ~1 Std. vor Anstoß.</div>`);
+          : `<div class="mds-sh">Aufstellung &amp; Statistik</div>
+             <div class="md-note">Daten erscheinen meist ~1 Std. vor Anstoß bzw. live.</div>`);
       } catch (e) {
-        set(`<div class="md-h">Aufstellung &amp; Statistik</div>
-          <div class="md-note">ESPN-Daten gerade nicht verfügbar (${esc(e.message)}).</div>`);
+        set(`<div class="mds-sh">Aufstellung &amp; Statistik</div>
+          <div class="md-note">ESPN nicht verfügbar (${esc(e.message)}).</div>`);
       }
     }
 
     function renderEspnGoals(sum) {
-      const teamName = id => (sum.boxscore?.teams || []).find(t => t.team?.id === id)?.team?.displayName || "";
+      const tName = id => (sum.boxscore?.teams || []).find(t => t.team?.id === id)?.team?.displayName || "";
       const evs = (sum.keyEvents || []).filter(e => e.scoringPlay || /goal/i.test(e.type?.text || ""));
       if (!evs.length) return "";
       const rows = evs.map(e => {
@@ -1337,13 +1722,18 @@
         const pts = e.participants || [];
         const scorer = pts[0]?.athlete?.displayName || e.athlete?.displayName || "";
         const assist = pts[1]?.athlete?.displayName;
-        const det = e.penaltyKick ? " (Elfmeter)" : e.ownGoal ? " (Eigentor)" : "";
-        const tn = e.team?.displayName || teamName(e.team?.id);
-        return `<div class="goal">⚽ <span class="min">${esc(min)}</span> ${esc(scorer)}
-          ${tn ? `<span class="gnote">(${esc(tn)})</span>` : ""}${det}
-          ${assist ? `<span class="gnote">Vorlage: ${esc(assist)}</span>` : ""}</div>`;
+        const det = e.penaltyKick ? " (E)" : e.ownGoal ? " (ET)" : "";
+        const tn = e.team?.displayName || tName(e.team?.id);
+        return `<div class="mds-ev">
+          <span class="mds-ev-min">${esc(min)}</span>
+          <span class="mds-ev-icon">⚽</span>
+          <div class="mds-ev-body">
+            <div class="mds-ev-name">${esc(scorer)}${det}</div>
+            <div class="mds-ev-sub">${esc(tn)}${assist ? ` · Vorlage: ${esc(assist)}` : ""}</div>
+          </div>
+        </div>`;
       }).join("");
-      return `<div class="md-h">Tore &amp; Vorlagen</div><div class="side">${rows}</div>`;
+      return `<div class="mds-sh">Tore &amp; Vorlagen (ESPN)</div><div class="mds-events">${rows}</div>`;
     }
 
     function renderEspnLineups(sum) {
@@ -1352,20 +1742,23 @@
       const li = p => {
         const num = p.jersey ?? p.athlete?.jersey ?? "";
         const pos = p.position?.abbreviation || p.position?.name || "";
-        return `<li><span class="num">${esc(num)}</span>${esc(p.athlete?.displayName || "")}
-          <span class="pos">${esc(pos)}</span></li>`;
+        return `<div class="mds-player">
+          <span class="mds-pnum">${esc(num)}</span>
+          <span>${esc(p.athlete?.displayName || "")}</span>
+          <span class="mds-ppos">${esc(pos)}</span>
+        </div>`;
       };
       const team = r => {
         const pl = r.roster || [];
         const xi = pl.filter(p => p.starter).map(li).join("");
         const bench = pl.filter(p => !p.starter).map(p => esc(p.athlete?.displayName || "")).join(", ");
-        return `<div class="af-team">
-          <div class="af-team-h">${esc(r.team?.displayName || "")}${r.formation ? ` · <span class="form-txt">${esc(r.formation)}</span>` : ""}</div>
-          <ol class="lineup">${xi || "<li>–</li>"}</ol>
-          ${bench ? `<div class="af-subs"><b>Bank:</b> ${bench}</div>` : ""}
+        return `<div class="mds-lineup-team">
+          <div class="mds-lu-head">${esc(r.team?.displayName || "")}${r.formation ? ` <span class="mds-lu-form">· ${esc(r.formation)}</span>` : ""}</div>
+          ${xi || "<div style='color:var(--muted-2)'>–</div>"}
+          ${bench ? `<div class="mds-bench"><b>Bank:</b> ${bench}</div>` : ""}
         </div>`;
       };
-      return `<div class="md-h">Startelf</div><div class="af-lineups">${rs.map(team).join("")}</div>`;
+      return `<div class="mds-sh">Startelf</div><div class="mds-lineups">${rs.map(team).join("")}</div>`;
     }
 
     function renderEspnStats(sum) {
@@ -1380,17 +1773,20 @@
         const la = A[k], lb = B[k]; const label = (la || lb).label || k;
         const av = la ? la.val : "–", bv = lb ? lb.val : "–";
         const an = num(av), bn = num(bv), tot = an + bn || 1;
-        return `<div class="stat-row">
-          <span class="sv">${esc(String(av))}</span>
-          <span class="sl">
-            <span class="bar"><i style="width:${(an / tot * 100).toFixed(0)}%"></i></span>
-            ${esc(label)}
-            <span class="bar r"><i style="width:${(bn / tot * 100).toFixed(0)}%"></i></span>
-          </span>
-          <span class="sv">${esc(String(bv))}</span>
+        const hPct = (an / tot * 100).toFixed(0), aPct = (bn / tot * 100).toFixed(0);
+        return `<div class="mds-stat">
+          <span class="mds-sv">${esc(String(av))}</span>
+          <div class="mds-smid">
+            <div class="mds-sbars">
+              <div class="mds-sb-h" style="width:${hPct}%"></div>
+              <div class="mds-sb-a" style="width:${aPct}%"></div>
+            </div>
+            <span class="mds-slabel">${esc(label)}</span>
+          </div>
+          <span class="mds-sv">${esc(String(bv))}</span>
         </div>`;
       }).join("");
-      return rows ? `<div class="md-h">Statistik</div><div class="af-stats">${rows}</div>` : "";
+      return rows ? `<div class="mds-sh">Statistiken</div><div class="mds-stats">${rows}</div>` : "";
     }
 
     function closeModal() { $modal.hidden = true; document.body.style.overflow = ""; }
@@ -1414,9 +1810,110 @@
       else { searchTerm = ""; $search.value = ""; render(); }
     });
 
-    // Notification bell (placeholder)
-    document.getElementById("btnBell").addEventListener("click", () => {
-      document.getElementById("btnBell").classList.toggle("active");
+    // ====== Countdown timer (updates every second) ============================
+    function fmtCountdown(ms) {
+      if (ms <= 0) return "Jetzt live";
+      const s = Math.floor(ms / 1000) % 60;
+      const mi = Math.floor(ms / 60000) % 60;
+      const h = Math.floor(ms / 3600000) % 24;
+      const d = Math.floor(ms / 86400000);
+      if (d > 0) return `${d}T ${pad(h)}:${pad(mi)}:${pad(s)}`;
+      return `${pad(h)}:${pad(mi)}:${pad(s)}`;
+    }
+    setInterval(() => {
+      const now = Date.now();
+      document.querySelectorAll(".muc-countdown[data-kickoff]").forEach(el => {
+        const diff = +el.dataset.kickoff - now;
+        el.textContent = fmtCountdown(diff);
+        el.classList.toggle("soon", diff > 0 && diff < 3_600_000);
+      });
+    }, 1000);
+
+    // ====== Notification system ===============================================
+    const notifications = [];
+    const $notifPanel  = document.getElementById("notifPanel");
+    const $notifList   = document.getElementById("notifList");
+    const $notifClear  = document.getElementById("notifClear");
+    const $bellBtn     = document.getElementById("btnBell");
+    const $toastArea   = document.getElementById("notifToastArea");
+
+    const NOTIF_META = {
+      goal:   { icon: "⚽", cls: "nt-goal",   label: "GOAL" },
+      yellow: { icon: "🟨", cls: "nt-yellow", label: "GELBE KARTE" },
+      red:    { icon: "🟥", cls: "nt-red",    label: "ROTE KARTE" },
+      var:    { icon: "🔵", cls: "nt-var",    label: "VAR CHECK" },
+      pen:    { icon: "🟠", cls: "nt-pen",    label: "ELFMETER" },
+    };
+
+    function addNotification(type, title, detail, matchId) {
+      const meta = NOTIF_META[type] || NOTIF_META.goal;
+      const n = { type, title, detail, matchId, meta, time: new Date() };
+      notifications.unshift(n);
+      if (notifications.length > 30) notifications.pop();
+      renderNotifPanel();
+      showBellBadge();
+      showToast(meta.icon + " " + title);
+    }
+
+    function renderNotifCard(n, compact = false) {
+      const t = `${pad(n.time.getHours())}:${pad(n.time.getMinutes())}`;
+      return `<div class="notif-card ${n.meta.cls}${compact ? " compact" : ""}" data-id="${esc(n.matchId || "")}">
+        <div class="ni-icon">${n.meta.icon}</div>
+        <div class="ni-body">
+          <div class="ni-type">${n.meta.label}</div>
+          <div class="ni-title">${esc(n.title)}</div>
+          ${n.detail ? `<div class="ni-detail">${esc(n.detail)}</div>` : ""}
+        </div>
+        <span class="ni-time">${t}</span>
+      </div>`;
+    }
+
+    function renderNotifPanel() {
+      if (!notifications.length) {
+        $notifList.innerHTML = `<div class="notif-empty">Keine neuen Benachrichtigungen</div>`;
+        return;
+      }
+      $notifList.innerHTML = notifications.map((n, i) => renderNotifCard(n, i > 2)).join("");
+      $notifList.querySelectorAll(".notif-card[data-id]").forEach(card => {
+        card.addEventListener("click", () => { if (card.dataset.id) openMatch(card.dataset.id); });
+      });
+    }
+
+    function showBellBadge() {
+      if (!$bellBtn.querySelector(".notif-badge")) {
+        const b = document.createElement("span"); b.className = "notif-badge";
+        $bellBtn.appendChild(b);
+      }
+    }
+    function clearBellBadge() {
+      $bellBtn.querySelector(".notif-badge")?.remove();
+    }
+
+    function showToast(text) {
+      const el = document.createElement("div"); el.className = "notif-toast";
+      el.innerHTML = `<div class="notif-toast-inner">${esc(text)}</div>`;
+      $toastArea.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    $notifClear.addEventListener("click", () => {
+      notifications.length = 0; renderNotifPanel(); clearBellBadge();
+    });
+
+    // Notification bell toggle
+    $bellBtn.addEventListener("click", () => {
+      const open = $notifPanel.toggleAttribute("hidden") === false;
+      // toggleAttribute returns true if attr was added (hidden), false if removed (visible)
+      // Actually: if panel was hidden, toggleAttribute removes it → visible
+      const isNowVisible = !$notifPanel.hasAttribute("hidden");
+      $bellBtn.classList.toggle("active", isNowVisible);
+      if (isNowVisible) { clearBellBadge(); }
+    });
+    // Close panel when clicking outside
+    document.addEventListener("click", e => {
+      if (!$notifPanel.hasAttribute("hidden") && !$notifPanel.contains(e.target) && e.target !== $bellBtn && !$bellBtn.contains(e.target)) {
+        $notifPanel.setAttribute("hidden", ""); $bellBtn.classList.remove("active");
+      }
     });
 
     let searchTimer;
