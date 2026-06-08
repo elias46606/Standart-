@@ -46,6 +46,34 @@
       --green: #34D399;
       --accent: #3B82F6;
     }
+    /* ===== Light Theme ===== */
+    body.theme-light {
+      --bg: #EEF1F6;
+      --card: #FFFFFF;
+      --card-2: #E6EAF1;
+      --line: rgba(15, 17, 21, 0.10);
+      --line-bright: rgba(15, 17, 21, 0.20);
+      --text: #131722;
+      --muted: #5B6573;
+      --muted-2: #8A93A1;
+      --silver-2: #2A3140;
+      --silver-3: #444C5C;
+      --gold: #C29A3A;
+      --gold-soft: #9A7A22;
+      --live: #E11D2E;
+      --green: #059669;
+      --accent: #2563EB;
+    }
+    body.theme-light .header-logo,
+    body.theme-light .auth-logo { box-shadow: 0 1px 3px rgba(15,17,21,0.08); }
+    body.theme-light .match,
+    body.theme-light .group-card,
+    body.theme-light .rank-row,
+    body.theme-light .match-live,
+    body.theme-light .match-upcoming,
+    body.theme-light .match-finished {
+      box-shadow: 0 1px 3px rgba(15,17,21,0.06);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -94,6 +122,12 @@
     }
     .icon-btn:hover { border-color: var(--line-bright); color: var(--text); }
     .icon-btn.active { border-color: var(--gold); color: var(--gold-soft); }
+    /* Theme-Toggle: zeigt im Dark-Mode die Sonne, im Light-Mode den Mond */
+    .theme-toggle .ic-sun { display: block; color: var(--gold-soft); }
+    .theme-toggle .ic-moon { display: none; }
+    body.theme-light .theme-toggle .ic-sun { display: none; }
+    body.theme-light .theme-toggle .ic-moon { display: block; color: var(--silver-2); }
+    .theme-toggle:hover { border-color: var(--gold); }
 
     /* ===== Search bar (collapsible) ===== */
     .search-wrap {
@@ -823,6 +857,10 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="icon-btn theme-toggle" id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Design umschalten">
+          <svg class="ic-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="ic-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="3.5" y1="3.5" x2="5.3" y2="5.3"/><line x1="18.7" y1="18.7" x2="20.5" y2="20.5"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="3.5" y1="20.5" x2="5.3" y2="18.7"/><line x1="18.7" y1="5.3" x2="20.5" y2="3.5"/></svg>
+        </button>
         <button class="icon-btn" id="btnSearch" title="Suchen" aria-label="Suche öffnen">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
@@ -2027,10 +2065,21 @@
           <div class="md-note">Noch keine ESPN-Daten (erscheinen ~1 Std. vor Anstoß).</div>`);
         const sum = await espnJson(`${ESPN_BASE}/${ev.league}/summary?event=${ev.id}`);
         if (token !== openToken) return;
-        const parts = [renderEspnGoals(sum), renderEspnStats(sum), renderEspnLineups(sum)].filter(Boolean);
+
+        // Hat das Spiel wirklich begonnen? Tore & Statistiken nur dann zeigen –
+        // sonst erscheinen bei noch nicht gespielten (Test-)Spielen Null-Werte.
+        const espnState = sum.header?.competitions?.[0]?.status?.type?.state; // pre | in | post
+        const futureMatch = m.date && m.date.getTime() > Date.now() && !m.live && !m.finished;
+        const started = !futureMatch && (espnState === "in" || espnState === "post" || m.live || m.finished);
+
+        const parts = started
+          ? [renderEspnGoals(sum), renderEspnStats(sum), renderEspnLineups(sum)].filter(Boolean)
+          : [renderEspnLineups(sum)].filter(Boolean); // vor Anstoß höchstens Aufstellung
         set(parts.length ? parts.join("")
           : `<div class="mds-sh">Aufstellung &amp; Statistik</div>
-             <div class="md-note">Daten erscheinen meist ~1 Std. vor Anstoß bzw. live.</div>`);
+             <div class="md-note">${started
+               ? "Daten erscheinen meist ~1 Std. vor Anstoß bzw. live."
+               : "Das Spiel hat noch nicht begonnen – Statistiken folgen ab Anpfiff."}</div>`);
       } catch (e) {
         set(`<div class="mds-sh">Aufstellung &amp; Statistik</div>
           <div class="md-note">ESPN nicht verfügbar (${esc(e.message)}).</div>`);
@@ -2118,6 +2167,23 @@
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !$modal.hidden) closeModal(); });
 
     // ====== Events ============================================================
+    // Theme toggle (Hell/Dunkel) – Auswahl in localStorage merken
+    const $btnTheme = document.getElementById("btnTheme");
+    const THEME_KEY = "wm2026-theme";
+    function applyTheme(theme) {
+      const light = theme === "light";
+      document.body.classList.toggle("theme-light", light);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", light ? "#EEF1F6" : "#0F1115");
+      if ($btnTheme) $btnTheme.title = light ? "Zu Dunkel wechseln" : "Zu Hell wechseln";
+    }
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+    $btnTheme?.addEventListener("click", () => {
+      const next = document.body.classList.contains("theme-light") ? "dark" : "light";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+
     // Filter tabs
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
       document.querySelector(".tab.active")?.classList.remove("active");
