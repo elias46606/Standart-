@@ -741,6 +741,12 @@
     .rank-name { font-size: 0.92rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .rank-pts { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); font-size: 0.92rem; }
     .rank-pts span { font-size: 0.6rem; font-weight: 600; color: var(--muted-2); margin-left: 3px; }
+    .rank-live-badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em;
+      background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3);
+      border-radius: 6px; padding: 2px 7px; vertical-align: middle; }
+    .rank-src-badge { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.03em;
+      background: rgba(160,167,181,0.1); color: var(--muted-2); border: 1px solid var(--line);
+      border-radius: 6px; padding: 2px 7px; vertical-align: middle; }
 
     /* ===== Profile: Login ===== */
     .auth-screen { max-width: 360px; margin: 30px auto 0; text-align: center; }
@@ -1581,47 +1587,97 @@
       $list.innerHTML = html + `</div>`;
     }
 
-    // ====== Teams: FIFA-Weltrangliste ========================================
-    // Statische FIFA-Weltrangliste (Punkte) – Flaggen via vorhandene flagUrl()-Logik.
-    const FIFA_RANKING = [
-      { code: "ARG", name: "Argentinien", pts: 1886 },
-      { code: "ESP", name: "Spanien",     pts: 1877 },
-      { code: "FRA", name: "Frankreich",  pts: 1870 },
-      { code: "ENG", name: "England",     pts: 1820 },
-      { code: "POR", name: "Portugal",    pts: 1779 },
-      { code: "NED", name: "Niederlande", pts: 1760 },
-      { code: "BRA", name: "Brasilien",   pts: 1758 },
-      { code: "BEL", name: "Belgien",     pts: 1740 },
-      { code: "ITA", name: "Italien",     pts: 1718 },
-      { code: "GER", name: "Deutschland", pts: 1716 },
-      { code: "CRO", name: "Kroatien",    pts: 1707 },
-      { code: "MAR", name: "Marokko",     pts: 1694 },
-      { code: "COL", name: "Kolumbien",   pts: 1690 },
-      { code: "URU", name: "Uruguay",     pts: 1677 },
-      { code: "USA", name: "USA",         pts: 1665 },
-      { code: "MEX", name: "Mexiko",      pts: 1655 },
-      { code: "SUI", name: "Schweiz",     pts: 1648 },
-      { code: "SEN", name: "Senegal",     pts: 1645 },
-      { code: "JPN", name: "Japan",       pts: 1638 },
-      { code: "DEN", name: "Dänemark",    pts: 1628 },
-      { code: "IRN", name: "Iran",        pts: 1618 },
-      { code: "KOR", name: "Südkorea",    pts: 1575 },
-      { code: "AUT", name: "Österreich",  pts: 1572 },
-      { code: "ECU", name: "Ecuador",     pts: 1567 },
-      { code: "UKR", name: "Ukraine",     pts: 1552 },
-      { code: "AUS", name: "Australien",  pts: 1530 },
-      { code: "CAN", name: "Kanada",      pts: 1528 },
-      { code: "POL", name: "Polen",       pts: 1517 },
-      { code: "EGY", name: "Ägypten",     pts: 1512 },
-      { code: "NOR", name: "Norwegen",    pts: 1508 },
-      { code: "WAL", name: "Wales",       pts: 1500 },
-      { code: "SRB", name: "Serbien",     pts: 1498 },
-    ];
-    const FAV_RANK_NAME = "Deutschland"; // dt. Anzeigename für DFB-Hervorhebung
+    // ====== Teams: FIFA-Weltrangliste (live) =====================================
+    let _fifaCache = null;
+    let _fifaIsLive = false;
 
-    function renderTeams() {
-      let list = FIFA_RANKING.map((t, i) => ({ ...t, rank: i + 1 }));
-      if (searchTerm) list = list.filter(t => t.name.toLowerCase().includes(searchTerm));
+    // Ländercodes → deutsche Namen
+    const TEAM_DE = {
+      ARG:"Argentinien", ESP:"Spanien",     FRA:"Frankreich",  ENG:"England",
+      POR:"Portugal",    NED:"Niederlande", BRA:"Brasilien",   BEL:"Belgien",
+      ITA:"Italien",     GER:"Deutschland", CRO:"Kroatien",    MAR:"Marokko",
+      COL:"Kolumbien",   URU:"Uruguay",     USA:"USA",         MEX:"Mexiko",
+      SUI:"Schweiz",     SEN:"Senegal",     JPN:"Japan",       DEN:"Dänemark",
+      IRN:"Iran",        KOR:"Südkorea",    AUT:"Österreich",  ECU:"Ecuador",
+      UKR:"Ukraine",     AUS:"Australien",  CAN:"Kanada",      POL:"Polen",
+      EGY:"Ägypten",     NOR:"Norwegen",    WAL:"Wales",       SRB:"Serbien",
+      SWE:"Schweden",    SCO:"Schottland",  CHI:"Chile",       PAR:"Paraguay",
+      PER:"Peru",        VEN:"Venezuela",   BOL:"Bolivien",    QAT:"Katar",
+      SAU:"Saudi-Arabien", KSA:"Saudi-Arabien", NGA:"Nigeria", CMR:"Kamerun",
+      GHA:"Ghana",       CIV:"Elfenbeinküste", TUN:"Tunesien", ALG:"Algerien",
+      TUR:"Türkei",      ROU:"Rumänien",    ROM:"Rumänien",    CZE:"Tschechien",
+      HUN:"Ungarn",      SVK:"Slowakei",    SVN:"Slowenien",   GRE:"Griechenland",
+      ISL:"Island",      FIN:"Finnland",    IRL:"Irland",      NZL:"Neuseeland",
+      RSA:"Südafrika",   GEO:"Georgien",    ARM:"Armenien",    CRC:"Costa Rica",
+      PAN:"Panama",      JAM:"Jamaika",     HON:"Honduras",    SLV:"El Salvador",
+    };
+
+    // Fallback: FIFA-Weltrangliste (Stand: Frühjahr 2025)
+    const _fifaFallback = [
+      {code:"ARG",pts:1893},{code:"ESP",pts:1876},{code:"FRA",pts:1859},
+      {code:"ENG",pts:1828},{code:"POR",pts:1790},{code:"BEL",pts:1770},
+      {code:"NED",pts:1754},{code:"BRA",pts:1741},{code:"COL",pts:1741},
+      {code:"ITA",pts:1730},{code:"GER",pts:1727},{code:"MAR",pts:1723},
+      {code:"CRO",pts:1709},{code:"URU",pts:1681},{code:"USA",pts:1665},
+      {code:"MEX",pts:1641},{code:"ECU",pts:1640},{code:"SEN",pts:1629},
+      {code:"JPN",pts:1623},{code:"DEN",pts:1615},{code:"SUI",pts:1613},
+      {code:"AUT",pts:1606},{code:"TUR",pts:1601},{code:"IRN",pts:1598},
+      {code:"UKR",pts:1591},{code:"AUS",pts:1561},{code:"SRB",pts:1556},
+      {code:"KOR",pts:1550},{code:"HUN",pts:1537},{code:"ROU",pts:1532},
+      {code:"SWE",pts:1530},{code:"SCO",pts:1522},{code:"CAN",pts:1517},
+      {code:"POL",pts:1514},{code:"ALG",pts:1504},{code:"NOR",pts:1502},
+      {code:"NGA",pts:1500},{code:"EGY",pts:1494},{code:"CMR",pts:1493},
+      {code:"CIV",pts:1490},{code:"CHI",pts:1488},{code:"GEO",pts:1482},
+      {code:"PAR",pts:1474},{code:"CZE",pts:1470},{code:"QAT",pts:1468},
+      {code:"GHA",pts:1466},{code:"SAU",pts:1462},{code:"PER",pts:1460},
+      {code:"TUN",pts:1456},{code:"SVK",pts:1452},
+    ].map((t,i) => ({ ...t, name: TEAM_DE[t.code] || t.code, rank: i+1 }));
+
+    async function loadFifaRanking() {
+      if (_fifaCache) return _fifaCache;
+      // ESPN Soccer Rankings API
+      const endpoints = [
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/rankings",
+        "https://site.web.api.espn.com/apis/site/v2/sports/soccer/rankings?limit=50",
+      ];
+      for (const url of endpoints) {
+        try {
+          const d = await espnJson(url);
+          const ranks = d?.rankings?.[0]?.ranks || d?.ranks || [];
+          if (ranks.length >= 10) {
+            const parsed = ranks.map((r, i) => {
+              const code = (r.team?.abbreviation || "").toUpperCase();
+              const engName = r.team?.displayName || r.team?.name || code;
+              return {
+                code,
+                name: TEAM_DE[code] || engName,
+                pts:  Math.round(r.points || r.value || 0),
+                rank: typeof r.current === "number" ? r.current : i + 1,
+              };
+            }).filter(t => t.code);
+            if (parsed.length >= 10) {
+              _fifaCache = parsed;
+              _fifaIsLive = true;
+              return _fifaCache;
+            }
+          }
+        } catch { /* try next */ }
+      }
+      _fifaCache = _fifaFallback;
+      _fifaIsLive = false;
+      return _fifaCache;
+    }
+
+    async function renderTeams() {
+      if (!_fifaCache) {
+        $list.innerHTML = `<div class="loading"><div class="spinner"></div>Weltrangliste wird geladen…</div>`;
+      }
+      const all = await loadFifaRanking();
+      // wenn zwischenzeitlich Tab gewechselt wurde, nicht überschreiben
+      if (currentFilter !== "teams") return;
+      let list = searchTerm
+        ? all.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.code.toLowerCase().includes(searchTerm.toLowerCase()))
+        : all;
       if (!list.length) {
         $list.innerHTML = `<div class="empty">Kein Team gefunden.</div>`; return;
       }
@@ -1630,15 +1686,18 @@
         const flagHtml = url
           ? `<img class="rank-flag" src="${esc(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;rank-flag-fb&quot;></span>'">`
           : `<span class="rank-flag-fb"></span>`;
-        const fav = t.name === FAV_RANK_NAME;
+        const fav = t.code === "GER" || t.name === "Deutschland";
         return `<div class="rank-row ${t.rank <= 3 ? "top3" : ""} ${fav ? "is-fav" : ""}">
           <span class="rank-pos">${t.rank}</span>
           ${flagHtml}
           <span class="rank-name">${esc(t.name)}${fav ? ' <span class="fav-star">★</span>' : ""}</span>
-          <span class="rank-pts">${t.pts}<span>Pkt</span></span>
+          <span class="rank-pts">${t.pts > 0 ? t.pts : "–"}<span>Pkt</span></span>
         </div>`;
       }).join("");
-      $list.innerHTML = `<div class="section-head">FIFA-Weltrangliste</div>
+      const badge = _fifaIsLive
+        ? `<span class="rank-live-badge">Live</span>`
+        : `<span class="rank-src-badge">Frühjahr 2025</span>`;
+      $list.innerHTML = `<div class="section-head">FIFA-Weltrangliste ${badge}</div>
         <div class="rank-intro">Aktuelle Platzierung der Nationalmannschaften nach FIFA-Punkten.</div>
         <div class="rank-list">${rows}</div>`;
     }
