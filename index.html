@@ -219,6 +219,80 @@
       text-align: center; min-height: 22px;
     }
 
+    /* ===== Event Timeline ===== */
+    .mlc-timeline {
+      display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none;
+      padding: 10px 0 2px; margin-top: 10px;
+      border-top: 1px solid var(--line);
+      -ms-overflow-style: none;
+    }
+    .mlc-timeline:empty { display: none; }
+    .mlc-timeline::-webkit-scrollbar { display: none; }
+    .tl-empty { font-size: 0.7rem; color: var(--muted-2); padding: 2px 0; }
+    .tl-ev {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;
+      background: var(--card-2); border: 1px solid var(--line);
+      border-radius: 8px; padding: 3px 8px;
+      font-size: 0.68rem; font-weight: 600; color: var(--muted);
+      white-space: nowrap;
+      animation: evSlideIn 0.22s ease both;
+    }
+    .tl-ev.ev-goal  { border-color: rgba(52,211,153,0.28); color: var(--green); }
+    .tl-ev.ev-og    { border-color: rgba(255,77,94,0.25); color: var(--live); }
+    .tl-ev.ev-pen   { border-color: rgba(52,211,153,0.28); color: var(--green); }
+    .tl-ev.ev-yellow{ border-color: rgba(250,204,21,0.3); color: #FACC15; }
+    .tl-ev.ev-red   { border-color: rgba(239,68,68,0.35); color: #EF4444; }
+    .tl-ev.ev-sub   { border-color: rgba(160,167,181,0.2); color: var(--muted); }
+    .tl-ev.ev-var   { border-color: rgba(59,130,246,0.3); color: #60A5FA; }
+    .tl-ev.ev-ht    { border-color: var(--line-bright); color: var(--muted-2); }
+    @keyframes evSlideIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== Card state variants ===== */
+    /* Goal flash: green glow on score */
+    .match-live.state-goal .mlc-score {
+      animation: scoreGoalFlash 1.8s ease-out both;
+    }
+    @keyframes scoreGoalFlash {
+      0%   { color: var(--green); text-shadow: 0 0 28px rgba(52,211,153,0.7); }
+      55%  { color: var(--green); text-shadow: 0 0 12px rgba(52,211,153,0.3); }
+      100% { color: var(--text);  text-shadow: none; }
+    }
+
+    /* Red card: red accent border + left stripe */
+    .match-live.state-redcard {
+      border-color: rgba(239,68,68,0.35);
+    }
+    .match-live.state-redcard::before { background: #EF4444; }
+    .match-live.state-redcard .mlc-status-pill { color: #EF4444; }
+    .match-live.state-redcard .mlc-pulse { background: #EF4444; }
+
+    /* VAR: blue glow + blue badge */
+    .match-live.state-var {
+      border-color: rgba(59,130,246,0.35);
+    }
+    .match-live.state-var::before {
+      background: #3B82F6;
+      box-shadow: 0 0 10px rgba(59,130,246,0.5);
+    }
+    .match-live.state-var .mlc-status-pill { color: #60A5FA; }
+    .match-live.state-var .mlc-pulse { background: #60A5FA; }
+    .mlc-var-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
+      color: #60A5FA; border-radius: 6px; padding: 2px 7px;
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.8px;
+      animation: varPulse 1s ease-in-out infinite alternate;
+    }
+    @keyframes varPulse {
+      from { opacity: 0.7; } to { opacity: 1; }
+    }
+
+    /* Score number transition (opacity flip on re-render) */
+    .mlc-score { transition: color 0.3s ease; }
+
     /* ===== Upcoming/Finished match card ===== */
     .month-head {
       margin: 16px 0 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
@@ -581,6 +655,9 @@
     const $updated = document.getElementById("updated"), $search = document.getElementById("search");
     const $currentPhase = document.getElementById("currentPhase");
 
+    // Previous scores for goal-flash detection (id -> "h-a" string)
+    const _prevScores = new Map();
+
     // ====== Helpers ===========================================================
     async function fetchJSON(url, tries = 2) {
       for (let i = 0; i < tries; i++) {
@@ -910,27 +987,86 @@
         : `<span class="mlc-flag-fb"></span>`;
     }
 
-    // Live Match Card: score is the biggest element
+    // ---- Live card helpers ---------------------------------------------------
+
+    function liveCardState(m) {
+      const statusText = (m.status || "").toUpperCase();
+      // VAR keyword in status
+      if (/\bVAR\b/.test(statusText)) return "state-var";
+      // Red card keyword in status (ESPN shortDetail can say "Red Card" etc.)
+      if (/RED\s*CARD|RC\b/.test(statusText)) return "state-redcard";
+      // Score changed since last render → goal flash
+      const key = m.id;
+      const curr = `${m.homeScore ?? ""}-${m.awayScore ?? ""}`;
+      const prev = _prevScores.get(key);
+      _prevScores.set(key, curr);
+      if (prev !== undefined && prev !== curr) return "state-goal";
+      return "";
+    }
+
+    function buildTimeline(m) {
+      // Collect all events from existing goal data
+      const evs = [];
+      const pushGoal = (g, side) => {
+        if (g.minute == null) return;
+        const cls  = g.owngoal ? "ev-og" : g.penalty ? "ev-pen" : "ev-goal";
+        const icon = g.owngoal ? "⚽🔴" : "⚽";
+        const suffix = g.owngoal ? " ET" : g.penalty ? " E" : "";
+        evs.push({ minute: g.minute, side, cls, icon, label: suffix, name: g.name });
+      };
+      (m.homeGoals || []).forEach(g => pushGoal(g, "home"));
+      (m.awayGoals  || []).forEach(g => pushGoal(g, "away"));
+
+      // liveEvents may exist on ESPN-enriched matches in future; handle if present
+      for (const e of (m.liveEvents || [])) {
+        if (e.minute == null) continue;
+        const typeMap = { yellow:"ev-yellow", red:"ev-red", sub:"ev-sub", var:"ev-var" };
+        const iconMap = { yellow:"🟨", red:"🟥", sub:"🔄", var:"🔵" };
+        const t = e.type || "";
+        evs.push({ minute: e.minute, side: e.side || "", cls: typeMap[t] || "ev-sub",
+          icon: iconMap[t] || "•", label: "", name: e.name || "" });
+      }
+
+      evs.sort((a, b) => a.minute - b.minute);
+
+      if (!evs.length) return "";
+
+      const chips = evs.map(e =>
+        `<span class="tl-ev ${e.cls}" title="${esc(e.name)}">${e.icon} ${e.minute}'${e.label}</span>`
+      ).join("");
+      return `<div class="mlc-timeline">${chips}</div>`;
+    }
+
+    // Live Match Card: score is the dominant element
     function renderLiveCard(m) {
       const hs = m.homeScore ?? 0, as = m.awayScore ?? 0;
       const phase = matchPhaseLabel(m);
       const minute = m.status ? esc(m.status) : "LIVE";
+      const state  = liveCardState(m);
 
-      // Last event: latest goal if available
+      // Right side of topbar: VAR badge or normal status pill
+      const isVar = state === "state-var";
+      const statusRight = isVar
+        ? `<span class="mlc-var-badge">🔵 VAR</span>`
+        : `<span class="mlc-status-pill"><span class="mlc-pulse"></span>${minute}</span>`;
+
+      // Last goal event summary (below score body)
       const allGoals = [
         ...(m.homeGoals || []).map(g => ({ ...g, team: m.home })),
         ...(m.awayGoals || []).map(g => ({ ...g, team: m.away })),
       ].filter(g => g.minute != null).sort((a, b) => b.minute - a.minute);
       const last = allGoals[0];
       const lastEventHtml = last
-        ? `⚽ ${last.minute}' <strong>${esc(last.name)}</strong> <span style="color:var(--muted)">(${esc(last.team)})</span>${last.penalty ? " <span style='color:var(--muted)'>(E)</span>" : ""}`
-        : `<span style="color:var(--line-bright)">–</span>`;
+        ? `⚽ ${last.minute}' <strong>${esc(last.name)}</strong><span style="color:var(--muted)"> · ${esc(last.team)}</span>${last.penalty ? `<span style="color:var(--muted-2)"> (E)</span>` : ""}`
+        : `<span style="color:var(--muted-2)">Kein Tor</span>`;
+
+      const timeline = buildTimeline(m);
 
       return `
-        <div class="match-live" data-id="${esc(m.id)}" role="button" tabindex="0">
+        <div class="match-live ${state}" data-id="${esc(m.id)}" role="button" tabindex="0">
           <div class="mlc-topbar">
             <span class="mlc-phase">${esc(phase)}</span>
-            <span class="mlc-status-pill"><span class="mlc-pulse"></span>${minute}</span>
+            ${statusRight}
           </div>
           <div class="mlc-body">
             <div class="mlc-team">
@@ -946,7 +1082,7 @@
               <span class="mlc-name">${esc(m.away)}</span>
             </div>
           </div>
-          <div class="mlc-last-event">${lastEventHtml}</div>
+          ${timeline || `<div class="mlc-last-event">${lastEventHtml}</div>`}
         </div>`;
     }
 
