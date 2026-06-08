@@ -1610,59 +1610,95 @@
       ISL:"Island",      FIN:"Finnland",    IRL:"Irland",      NZL:"Neuseeland",
       RSA:"Südafrika",   GEO:"Georgien",    ARM:"Armenien",    CRC:"Costa Rica",
       PAN:"Panama",      JAM:"Jamaika",     HON:"Honduras",    SLV:"El Salvador",
+      MLI:"Mali",        AGO:"Angola",      MOZ:"Mosambik",    ZIM:"Simbabwe",
+      UZB:"Usbekistan",  KGZ:"Kirgisistan", TJK:"Tadschikistan", VNM:"Vietnam",
+      IDN:"Indonesien",  THA:"Thailand",    CHN:"China",       IND:"Indien",
     };
 
-    // Fallback: FIFA-Weltrangliste (Stand: Frühjahr 2025)
+    // Fallback: FIFA-Weltrangliste (Stand: Juni 2025)
     const _fifaFallback = [
       {code:"ARG",pts:1893},{code:"ESP",pts:1876},{code:"FRA",pts:1859},
-      {code:"ENG",pts:1828},{code:"POR",pts:1790},{code:"BEL",pts:1770},
-      {code:"NED",pts:1754},{code:"BRA",pts:1741},{code:"COL",pts:1741},
-      {code:"ITA",pts:1730},{code:"GER",pts:1727},{code:"MAR",pts:1723},
-      {code:"CRO",pts:1709},{code:"URU",pts:1681},{code:"USA",pts:1665},
-      {code:"MEX",pts:1641},{code:"ECU",pts:1640},{code:"SEN",pts:1629},
-      {code:"JPN",pts:1623},{code:"DEN",pts:1615},{code:"SUI",pts:1613},
-      {code:"AUT",pts:1606},{code:"TUR",pts:1601},{code:"IRN",pts:1598},
-      {code:"UKR",pts:1591},{code:"AUS",pts:1561},{code:"SRB",pts:1556},
-      {code:"KOR",pts:1550},{code:"HUN",pts:1537},{code:"ROU",pts:1532},
-      {code:"SWE",pts:1530},{code:"SCO",pts:1522},{code:"CAN",pts:1517},
-      {code:"POL",pts:1514},{code:"ALG",pts:1504},{code:"NOR",pts:1502},
-      {code:"NGA",pts:1500},{code:"EGY",pts:1494},{code:"CMR",pts:1493},
-      {code:"CIV",pts:1490},{code:"CHI",pts:1488},{code:"GEO",pts:1482},
-      {code:"PAR",pts:1474},{code:"CZE",pts:1470},{code:"QAT",pts:1468},
-      {code:"GHA",pts:1466},{code:"SAU",pts:1462},{code:"PER",pts:1460},
-      {code:"TUN",pts:1456},{code:"SVK",pts:1452},
+      {code:"ENG",pts:1830},{code:"POR",pts:1790},{code:"BEL",pts:1769},
+      {code:"NED",pts:1754},{code:"BRA",pts:1748},{code:"COL",pts:1742},
+      {code:"ITA",pts:1731},{code:"GER",pts:1729},{code:"MAR",pts:1727},
+      {code:"CRO",pts:1710},{code:"URU",pts:1682},{code:"USA",pts:1668},
+      {code:"ECU",pts:1641},{code:"MEX",pts:1638},{code:"SEN",pts:1630},
+      {code:"JPN",pts:1624},{code:"DEN",pts:1616},{code:"SUI",pts:1613},
+      {code:"AUT",pts:1607},{code:"TUR",pts:1602},{code:"IRN",pts:1599},
+      {code:"UKR",pts:1592},{code:"AUS",pts:1563},{code:"SRB",pts:1558},
+      {code:"KOR",pts:1551},{code:"HUN",pts:1538},{code:"ROU",pts:1533},
+      {code:"SWE",pts:1531},{code:"SCO",pts:1524},{code:"CAN",pts:1518},
+      {code:"POL",pts:1515},{code:"ALG",pts:1505},{code:"NOR",pts:1503},
+      {code:"NGA",pts:1501},{code:"EGY",pts:1495},{code:"CMR",pts:1493},
+      {code:"CIV",pts:1491},{code:"CHI",pts:1489},{code:"GEO",pts:1483},
+      {code:"PAR",pts:1475},{code:"CZE",pts:1471},{code:"QAT",pts:1469},
+      {code:"GHA",pts:1467},{code:"SAU",pts:1463},{code:"PER",pts:1461},
+      {code:"TUN",pts:1457},{code:"SVK",pts:1453},
     ].map((t,i) => ({ ...t, name: TEAM_DE[t.code] || t.code, rank: i+1 }));
+
+    // Parst ESPN-Rankings-Antwort in einheitliches Format
+    function _parseEspnRanks(d) {
+      const ranks = d?.rankings?.[0]?.ranks || d?.rankings?.ranks
+                 || d?.ranks || d?.items || [];
+      if (ranks.length < 10) return null;
+      const list = ranks.map((r, i) => {
+        const code = (r.team?.abbreviation || r.abbreviation || "").toUpperCase();
+        const engName = r.team?.displayName || r.team?.name || r.displayName || code;
+        return { code, name: TEAM_DE[code] || engName, pts: Math.round(r.points || r.value || 0), rank: r.current ?? i+1 };
+      }).filter(t => t.code && t.code.length >= 2);
+      return list.length >= 10 ? list : null;
+    }
+
+    // Parst FIFA-API-Antwort (direkt oder via Proxy)
+    function _parseFifaRanks(raw) {
+      const arr = raw?.Ranking || raw?.ranking || raw?.data?.Ranking || [];
+      if (arr.length < 10) return null;
+      const list = arr.map((r, i) => {
+        const code = (r.CountryCode || r.FIFA3letterCode || r.countryCode || r.iso3 || "").toUpperCase();
+        const engName = r.CountryName || r.countryName || r.name || code;
+        return { code, name: TEAM_DE[code] || engName, pts: Math.round(r.Points || r.TotalPoints || r.points || 0), rank: r.Rank || r.rank || i+1 };
+      }).filter(t => t.code && t.code.length >= 2);
+      return list.length >= 10 ? list : null;
+    }
 
     async function loadFifaRanking() {
       if (_fifaCache) return _fifaCache;
-      // ESPN Soccer Rankings API
-      const endpoints = [
+
+      // Versuch 1: ESPN direkt (mehrere URL-Varianten)
+      const espnUrls = [
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/rankings?limit=100",
+        "https://site.web.api.espn.com/apis/site/v2/sports/soccer/rankings?limit=100",
         "https://site.api.espn.com/apis/site/v2/sports/soccer/rankings",
-        "https://site.web.api.espn.com/apis/site/v2/sports/soccer/rankings?limit=50",
       ];
-      for (const url of endpoints) {
+      for (const url of espnUrls) {
         try {
-          const d = await espnJson(url);
-          const ranks = d?.rankings?.[0]?.ranks || d?.ranks || [];
-          if (ranks.length >= 10) {
-            const parsed = ranks.map((r, i) => {
-              const code = (r.team?.abbreviation || "").toUpperCase();
-              const engName = r.team?.displayName || r.team?.name || code;
-              return {
-                code,
-                name: TEAM_DE[code] || engName,
-                pts:  Math.round(r.points || r.value || 0),
-                rank: typeof r.current === "number" ? r.current : i + 1,
-              };
-            }).filter(t => t.code);
-            if (parsed.length >= 10) {
-              _fifaCache = parsed;
-              _fifaIsLive = true;
-              return _fifaCache;
-            }
-          }
-        } catch { /* try next */ }
+          const parsed = _parseEspnRanks(await espnJson(url));
+          if (parsed) { _fifaCache = parsed; _fifaIsLive = true; return parsed; }
+        } catch {}
       }
+
+      // Versuch 2: FIFA-API via allorigins.win CORS-Proxy
+      try {
+        const fifaTarget = "https://api.fifa.com/api/v3/rankings/FIFA?locale=en&count=100&home=1";
+        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(fifaTarget);
+        const wrap = await espnJson(proxyUrl);
+        const raw = typeof wrap?.contents === "string" ? JSON.parse(wrap.contents) : wrap?.contents;
+        const parsed = _parseFifaRanks(raw);
+        if (parsed) { _fifaCache = parsed; _fifaIsLive = true; return parsed; }
+      } catch {}
+
+      // Versuch 3: FIFA-API via corsproxy.io
+      try {
+        const fifaTarget = "https://api.fifa.com/api/v3/rankings/FIFA?locale=en&count=100&home=1";
+        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(fifaTarget);
+        const r = await fetch(proxyUrl);
+        if (r.ok) {
+          const parsed = _parseFifaRanks(await r.json());
+          if (parsed) { _fifaCache = parsed; _fifaIsLive = true; return parsed; }
+        }
+      } catch {}
+
+      // Fallback: statische Daten (Juni 2025)
       _fifaCache = _fifaFallback;
       _fifaIsLive = false;
       return _fifaCache;
@@ -1696,7 +1732,7 @@
       }).join("");
       const badge = _fifaIsLive
         ? `<span class="rank-live-badge">Live</span>`
-        : `<span class="rank-src-badge">Frühjahr 2025</span>`;
+        : `<span class="rank-src-badge">Juni 2025</span>`;
       $list.innerHTML = `<div class="section-head">FIFA-Weltrangliste ${badge}</div>
         <div class="rank-intro">Aktuelle Platzierung der Nationalmannschaften nach FIFA-Punkten.</div>
         <div class="rank-list">${rows}</div>`;
