@@ -830,6 +830,16 @@
     .auth-note { margin-top: 20px; font-size: 0.7rem; color: var(--muted-2); line-height: 1.5; }
 
     /* ===== Profile: Einstellungen ===== */
+    /* Avatar */
+    .user-avatar { width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Cinzel", serif; font-size: 1.5rem; font-weight: 700; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+    /* Fehlerbox im Auth-Formular */
+    .auth-error { margin: -4px 0 10px; padding: 10px 13px; border-radius: 10px;
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);
+      color: #F87171; font-size: 0.82rem; line-height: 1.4; }
+    body.theme-light .auth-error { background: rgba(239,68,68,0.08); color: #B91C1C; }
     .settings-head { display: flex; align-items: center; gap: 14px; margin: 8px 0 22px; }
     .settings-head .auth-logo { margin: 0; width: 52px; height: 52px; font-size: 1.5rem; }
     .settings-title { font-family: "Cinzel", serif; font-size: 1.15rem; font-weight: 700; color: var(--text); }
@@ -1038,11 +1048,32 @@
     const CACHE_KEY = "wm2026-cache-v3";
 
     // ===== Nutzer-Einstellungen (localStorage) =====
-    const LS = { fav: "wm2026-fav", auth: "wm2026-auth", notifyGoals: "wm2026-notify-goals" };
-    let FAV_TEAM = localStorage.getItem(LS.fav) || "Germany";
-    let isLoggedIn = localStorage.getItem(LS.auth) === "1";
-    let notifyGoals = localStorage.getItem(LS.notifyGoals) !== "0"; // Standard: an
+    const LS = {
+      fav: "wm2026-fav", user: "wm2026-user",
+      session: "wm2026-session", notifyGoals: "wm2026-notify-goals",
+    };
+    let _userData   = JSON.parse(localStorage.getItem(LS.user) || "null"); // { name, hash }
+    let isLoggedIn  = !!_userData && localStorage.getItem(LS.session) === "1";
+    let FAV_TEAM    = localStorage.getItem(LS.fav) || "Germany";
+    let notifyGoals = localStorage.getItem(LS.notifyGoals) !== "0";
     const isFav = name => !!name && name === FAV_TEAM;
+
+    // Passwort-Hash via SubtleCrypto (SHA-256), Fallback base64
+    async function hashPw(pw) {
+      try {
+        const buf = await crypto.subtle.digest("SHA-256",
+          new TextEncoder().encode(pw + "·wm2026"));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+      } catch { return btoa(pw + "wm2026"); }
+    }
+
+    // Farbiger Avatar-Kreis aus erstem Buchstaben des Namens
+    function userAvatar(name) {
+      const colors = ["#3B82F6","#8B5CF6","#EC4899","#F97316","#10B981","#EF4444","#14B8A6"];
+      const idx = [...(name || "?")].reduce((a,c) => a + c.charCodeAt(0), 0) % colors.length;
+      const letter = (name || "?")[0].toUpperCase();
+      return `<div class="user-avatar" style="background:${colors[idx]}">${esc(letter)}</div>`;
+    }
 
     const FIFA2ISO = {
       USA:"us",CAN:"ca",MEX:"mx",
@@ -2076,48 +2107,115 @@
     }
 
     function renderProfile(force = false) {
-      // Login-Eingaben beim Auto-Refresh nicht überschreiben
-      if (!force && document.getElementById("authForm")) return;
+      if (!force && (document.getElementById("regForm") || document.getElementById("loginForm"))) return;
 
-      if (!isLoggedIn) {
+      if (!_userData) {
+        // ── Kein Konto: Registrierung ──────────────────────────────────────
         $list.innerHTML = `
           <div class="auth-screen">
             <div class="auth-logo">🏆</div>
-            <div class="auth-title">Willkommen</div>
-            <div class="auth-sub">Melde dich an, um dein Lieblingsteam &amp; Benachrichtigungen zu speichern.</div>
-            <form class="auth-form" id="authForm" autocomplete="off">
+            <div class="auth-title">Konto erstellen</div>
+            <div class="auth-sub">Wähle deinen Namen und ein Passwort. Keine E-Mail nötig.</div>
+            <form class="auth-form" id="regForm" autocomplete="off" novalidate>
               <div class="auth-field">
-                <label class="auth-label" for="authEmail">E-Mail</label>
-                <input class="auth-input" type="email" id="authEmail" placeholder="name@beispiel.de" required>
+                <label class="auth-label" for="regName">Dein Name</label>
+                <input class="auth-input" type="text" id="regName" placeholder="z.B. Max" autocomplete="username" minlength="2" maxlength="32" required>
               </div>
               <div class="auth-field">
-                <label class="auth-label" for="authPass">Passwort</label>
-                <input class="auth-input" type="password" id="authPass" placeholder="••••••••" required>
+                <label class="auth-label" for="regPass">Passwort</label>
+                <input class="auth-input" type="password" id="regPass" placeholder="Mindestens 6 Zeichen" autocomplete="new-password" minlength="6" required>
               </div>
-              <button class="auth-btn" type="submit">Anmelden</button>
+              <div class="auth-field">
+                <label class="auth-label" for="regPass2">Passwort bestätigen</label>
+                <input class="auth-input" type="password" id="regPass2" placeholder="Passwort wiederholen" autocomplete="new-password" required>
+              </div>
+              <div class="auth-error" id="regErr" hidden></div>
+              <button class="auth-btn" type="submit">Konto erstellen</button>
             </form>
-            <div class="auth-alt">Noch kein Konto? <a class="auth-link" id="authRegister">Registrieren</a></div>
-            <div class="auth-note">Demo-Oberfläche – es werden keine echten Daten gesendet.</div>
+            <div class="auth-alt">Bereits ein Konto? <a class="auth-link" id="toLogin">Anmelden</a></div>
           </div>`;
-        const finishLogin = () => {
-          isLoggedIn = true; localStorage.setItem(LS.auth, "1");
+
+        document.getElementById("toLogin")?.addEventListener("click", () => {
+          // Kein Konto → darf nicht passieren, aber zeige ein Hinweisfeld
+          document.getElementById("regErr").textContent = "Noch kein Konto vorhanden – bitte erstelle zuerst eines.";
+          document.getElementById("regErr").hidden = false;
+        });
+        document.getElementById("regForm")?.addEventListener("submit", async e => {
+          e.preventDefault();
+          const errEl = document.getElementById("regErr");
+          const name  = document.getElementById("regName").value.trim();
+          const pw    = document.getElementById("regPass").value;
+          const pw2   = document.getElementById("regPass2").value;
+          errEl.hidden = true;
+          const showErr = msg => { errEl.textContent = msg; errEl.hidden = false; };
+          if (name.length < 2)   return showErr("Name muss mindestens 2 Zeichen haben.");
+          if (pw.length < 6)     return showErr("Passwort muss mindestens 6 Zeichen lang sein.");
+          if (pw !== pw2)        return showErr("Passwörter stimmen nicht überein.");
+          const btn = e.target.querySelector("button[type=submit]");
+          btn.textContent = "Speichern …"; btn.disabled = true;
+          const hash = await hashPw(pw);
+          _userData = { name, hash };
+          localStorage.setItem(LS.user, JSON.stringify(_userData));
+          isLoggedIn = true; localStorage.setItem(LS.session, "1");
           const first = !localStorage.getItem(LS.fav);
           renderProfile(true);
-          if (first) openFavPicker(true); // erstmalig: Lieblingsteam wählen
-        };
-        document.getElementById("authForm")?.addEventListener("submit", e => { e.preventDefault(); finishLogin(); });
-        document.getElementById("authRegister")?.addEventListener("click", finishLogin);
+          if (first) openFavPicker(true);
+        });
         return;
       }
 
-      // ---- Eingeloggt: Einstellungen ----
+      if (!isLoggedIn) {
+        // ── Konto vorhanden, nicht eingeloggt: Login ───────────────────────
+        $list.innerHTML = `
+          <div class="auth-screen">
+            <div class="auth-logo">🏆</div>
+            <div class="auth-title">Willkommen zurück</div>
+            <div class="auth-sub">Hallo, <b>${esc(_userData.name)}</b> – gib dein Passwort ein.</div>
+            <form class="auth-form" id="loginForm" autocomplete="off" novalidate>
+              <div class="auth-field">
+                <label class="auth-label" for="loginPass">Passwort</label>
+                <input class="auth-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required autofocus>
+              </div>
+              <div class="auth-error" id="loginErr" hidden></div>
+              <button class="auth-btn" type="submit">Anmelden</button>
+            </form>
+            <div class="auth-alt">Nicht du? <a class="auth-link" id="switchAccount">Konto wechseln</a></div>
+          </div>`;
+
+        document.getElementById("switchAccount")?.addEventListener("click", () => {
+          if (!confirm(`Konto von „${_userData.name}" wirklich entfernen? Einstellungen bleiben gespeichert.`)) return;
+          _userData = null; localStorage.removeItem(LS.user);
+          isLoggedIn = false; localStorage.removeItem(LS.session);
+          renderProfile(true);
+        });
+        document.getElementById("loginForm")?.addEventListener("submit", async e => {
+          e.preventDefault();
+          const errEl = document.getElementById("loginErr");
+          const pw    = document.getElementById("loginPass").value;
+          errEl.hidden = true;
+          const btn = e.target.querySelector("button[type=submit]");
+          btn.textContent = "Prüfen …"; btn.disabled = true;
+          const hash = await hashPw(pw);
+          if (hash !== _userData.hash) {
+            btn.textContent = "Anmelden"; btn.disabled = false;
+            errEl.textContent = "Falsches Passwort."; errEl.hidden = false;
+            return;
+          }
+          isLoggedIn = true; localStorage.setItem(LS.session, "1");
+          renderProfile(true);
+        });
+        return;
+      }
+
+      // ── Eingeloggt: Einstellungen ──────────────────────────────────────────
       const light = document.body.classList.contains("theme-light");
+      const name  = _userData?.name || "Nutzer";
       $list.innerHTML = `
         <div class="settings-head">
-          <div class="auth-logo">👤</div>
+          ${userAvatar(name)}
           <div>
-            <div class="settings-title">Mein Profil</div>
-            <div class="settings-sub">Angemeldet (Demo)</div>
+            <div class="settings-title">${esc(name)}</div>
+            <div class="settings-sub">Angemeldet</div>
           </div>
         </div>
 
@@ -2130,15 +2228,24 @@
         <div class="settings-sh">Einstellungen</div>
         <div class="settings-row">
           <span class="settings-row-main">⚽ <span>Tor-Benachrichtigungen</span></span>
-          <span class="switch ${notifyGoals ? "on" : ""}" id="swGoals" role="switch" aria-checked="${notifyGoals}"><span class="switch-knob"></span></span>
+          <span class="switch ${notifyGoals ? "on" : ""}" id="swGoals" role="switch"><span class="switch-knob"></span></span>
         </div>
         <div class="settings-row">
           <span class="settings-row-main">${light ? "🌙" : "☀️"} <span>Heller Modus</span></span>
-          <span class="switch ${light ? "on" : ""}" id="swTheme" role="switch" aria-checked="${light}"><span class="switch-knob"></span></span>
+          <span class="switch ${light ? "on" : ""}" id="swTheme" role="switch"><span class="switch-knob"></span></span>
         </div>
 
+        <div class="settings-sh">Konto</div>
+        <button class="settings-row" id="btnChangeName">
+          <span class="settings-row-main">✏️ <span>Name ändern</span></span>
+          <span class="settings-row-act">›</span>
+        </button>
+        <button class="settings-row" id="btnChangePw">
+          <span class="settings-row-main">🔑 <span>Passwort ändern</span></span>
+          <span class="settings-row-act">›</span>
+        </button>
         <button class="settings-logout" id="btnLogout">Abmelden</button>
-        <div class="auth-note">Einstellungen werden lokal in deinem Browser gespeichert.</div>`;
+        <div class="auth-note" style="text-align:center;margin-top:10px">Deine Daten werden ausschließlich lokal auf diesem Gerät gespeichert.</div>`;
 
       document.getElementById("favRow")?.addEventListener("click", () => openFavPicker(false));
       document.getElementById("swGoals")?.addEventListener("click", () => {
@@ -2151,8 +2258,24 @@
         const next = document.body.classList.contains("theme-light") ? "dark" : "light";
         localStorage.setItem("wm2026-theme", next); applyTheme(next); renderProfile(true);
       });
+      document.getElementById("btnChangeName")?.addEventListener("click", () => {
+        const n = prompt("Neuer Name:", _userData.name);
+        if (!n || n.trim().length < 2) return;
+        _userData = { ..._userData, name: n.trim() };
+        localStorage.setItem(LS.user, JSON.stringify(_userData));
+        renderProfile(true); showToast("✓ Name geändert");
+      });
+      document.getElementById("btnChangePw")?.addEventListener("click", async () => {
+        const pw = prompt("Neues Passwort (min. 6 Zeichen):");
+        if (!pw || pw.length < 6) { if (pw !== null) showToast("❌ Zu kurz (min. 6 Zeichen)"); return; }
+        const pw2 = prompt("Passwort bestätigen:");
+        if (pw !== pw2) { showToast("❌ Passwörter stimmen nicht überein"); return; }
+        _userData = { ..._userData, hash: await hashPw(pw) };
+        localStorage.setItem(LS.user, JSON.stringify(_userData));
+        showToast("✓ Passwort geändert");
+      });
       document.getElementById("btnLogout")?.addEventListener("click", () => {
-        isLoggedIn = false; localStorage.removeItem(LS.auth);
+        isLoggedIn = false; localStorage.removeItem(LS.session);
         renderProfile(true);
       });
     }
