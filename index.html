@@ -2338,7 +2338,13 @@
         if (x.home && !m.has(x.home)) m.set(x.home, x.homeBadge);
         if (x.away && !m.has(x.away)) m.set(x.away, x.awayBadge);
       }
-      let list = [...m].map(([name, badge]) => ({ name, badge }));
+      // Platzhalter wie "1A", "2B", "W3", "L4", "TBD" herausfiltern
+      const isNation = (name, badge) => {
+        if (!name || name.length < 3) return false;
+        if (/^\d+[A-L]$|^[A-L]\d+$|^[WL]\d+$|^TBD$/i.test(name.trim())) return false;
+        return !!(badge || NAME2ISO[name.trim().toLowerCase()]);
+      };
+      let list = [...m].filter(([n, b]) => isNation(n, b)).map(([name, badge]) => ({ name, badge }));
       if (!list.length) list = _fifaFallback.map(t => ({ name: t.name, badge: flagUrl(t.code, t.name) }));
       return list.sort((a, b) => a.name.localeCompare(b.name));
     }
