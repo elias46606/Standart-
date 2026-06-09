@@ -937,40 +937,40 @@
     .tipps-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
       overflow: hidden; margin-bottom: 8px; }
     .tipps-card.locked { opacity: 0.85; }
-    /* Meta-Zeile oben */
+    /* Meta-Zeile oben — schmal halten */
     .tipps-meta { display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 13px; background: var(--card-2); border-bottom: 1px solid var(--line);
-      font-size: 0.72rem; color: var(--muted-2); gap: 8px; }
-    .tipps-meta-left { font-weight: 600; letter-spacing: 0.3px; }
-    .tipps-meta-right { text-align: right; }
-    /* Spielfeld-Zeile */
-    .tipps-match-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-      gap: 10px; padding: 12px 13px 10px; }
-    .tipps-side { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .tipps-side.right { align-items: center; }
-    .tipps-flag { width: 40px; height: 27px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-    .tipps-flag-fb { width: 40px; height: 27px; border-radius: 4px; background: var(--card-2); flex-shrink: 0; }
-    .tipps-tname { font-size: 0.82rem; font-weight: 700; color: var(--text); text-align: center;
-      max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+      padding: 4px 11px; background: var(--card-2); border-bottom: 1px solid var(--line);
+      font-size: 0.68rem; color: var(--muted-2); gap: 6px; }
+    .tipps-meta-left { font-weight: 600; }
+    /* Hauptzeile: Flag+Name | Inputs | Flag+Name — alles in einer Zeile */
+    .tipps-match-row { display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; gap: 8px; padding: 9px 11px; }
+    /* Team-Seite: Flagge und Name nebeneinander */
+    .tipps-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .tipps-side.right { flex-direction: row-reverse; justify-content: flex-start; }
+    .tipps-flag { width: 28px; height: 19px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+    .tipps-flag-fb { width: 28px; height: 19px; border-radius: 3px; background: var(--card-2); flex-shrink: 0; }
+    .tipps-tname { font-size: 0.8rem; font-weight: 700; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
     /* Eingabe-Mitte */
-    .tipps-center { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
-    .tipps-inputs { display: flex; align-items: center; gap: 5px; }
-    .tipps-input { width: 44px; height: 44px; padding: 0; text-align: center; background: var(--card-2);
-      border: 1.5px solid var(--line-bright); border-radius: 10px; color: var(--text);
-      font-family: "Inter", sans-serif; font-size: 1.2rem; font-weight: 700;
+    .tipps-center { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+    .tipps-inputs { display: flex; align-items: center; gap: 4px; }
+    .tipps-input { width: 38px; height: 38px; padding: 0; text-align: center; background: var(--card-2);
+      border: 1.5px solid var(--line-bright); border-radius: 9px; color: var(--text);
+      font-family: "Inter", sans-serif; font-size: 1.1rem; font-weight: 700;
       -moz-appearance: textfield; }
     .tipps-input::-webkit-outer-spin-button,
     .tipps-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .tipps-input:focus { outline: none; border-color: var(--accent); background: rgba(59,130,246,0.08); }
-    .tipps-colon { font-weight: 800; font-size: 1.3rem; color: var(--muted); line-height: 1; }
-    .tipps-score-disp { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; font-weight: 700; color: var(--muted-2); background: var(--card-2);
-      border: 1.5px solid var(--line); border-radius: 10px; }
-    .tipps-badge { font-size: 1.3rem; line-height: 1; }
+    .tipps-colon { font-weight: 800; font-size: 1.2rem; color: var(--muted); line-height: 1; }
+    .tipps-score-disp { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 700; color: var(--muted-2); background: var(--card-2);
+      border: 1.5px solid var(--line); border-radius: 9px; }
+    .tipps-badge { font-size: 1.1rem; line-height: 1; }
     /* Ergebnis-Zeile unten */
-    .tipps-footer { display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 7px 13px 9px; border-top: 1px solid var(--line);
-      font-size: 0.76rem; color: var(--muted-2); }
+    .tipps-footer { display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 5px 11px 7px; border-top: 1px solid var(--line);
+      font-size: 0.73rem; color: var(--muted-2); flex-wrap: wrap; }
     .tipps-real-score { font-weight: 700; color: var(--text); }
     body.theme-light .tipps-input { background: #f1f5f9; border-color: #cbd5e1; color: #1e293b; }
     body.theme-light .tipps-input:focus { background: rgba(59,130,246,0.06); }
@@ -2646,8 +2646,8 @@
           html += `
             <div class="tipps-card${locked ? " locked" : ""}" style="${gradStyle}">
               <div class="tipps-meta">
-                <span class="tipps-meta-left">Gruppe ${esc(g)}</span>
-                <span class="tipps-meta-right">${esc(dateStr)}</span>
+                <span class="tipps-meta-left">${m.live ? "🔴 Live" : m.finished ? "Abgepfiffen" : "Ausstehend"}</span>
+                <span>${esc(dateStr)}</span>
               </div>
               <div class="tipps-match-row">
                 <div class="tipps-side">
@@ -2656,9 +2656,9 @@
                 </div>
                 <div class="tipps-center">
                   <div class="tipps-inputs">${inputsHtml}</div>
-                  ${badge ? `<span class="tipps-badge">${badge}</span>` : `<span style="font-size:0.68rem;color:var(--muted-2)">${esc(statusStr)}</span>`}
+                  ${badge ? `<span class="tipps-badge">${badge}</span>` : ""}
                 </div>
-                <div class="tipps-side">
+                <div class="tipps-side right">
                   ${aFlag}
                   <span class="tipps-tname">${esc(m.away)}</span>
                 </div>
