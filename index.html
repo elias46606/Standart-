@@ -829,6 +829,86 @@
     .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
     .auth-note { margin-top: 20px; font-size: 0.7rem; color: var(--muted-2); line-height: 1.5; }
 
+    /* ===== Profile: Einstellungen ===== */
+    .settings-head { display: flex; align-items: center; gap: 14px; margin: 8px 0 22px; }
+    .settings-head .auth-logo { margin: 0; width: 52px; height: 52px; font-size: 1.5rem; }
+    .settings-title { font-family: "Cinzel", serif; font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .settings-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .settings-sh { font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--muted-2); margin: 18px 0 8px; }
+    .settings-row { width: 100%; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 13px 15px; margin-bottom: 8px; color: var(--text); font-family: "Inter", sans-serif;
+      font-size: 0.92rem; cursor: pointer; text-align: left; }
+    button.settings-row:hover { border-color: var(--line-bright); }
+    .settings-row-main { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .settings-row-main img.rank-flag { width: 28px; height: 19px; }
+    .settings-row-main > span:not(.rank-flag):not(.rank-flag-fb) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .settings-row-act { font-size: 0.82rem; color: var(--gold-soft); font-weight: 600; flex-shrink: 0; }
+    .settings-logout { width: 100%; margin-top: 18px; padding: 13px; border-radius: 14px;
+      background: none; border: 1px solid var(--line-bright); color: var(--live);
+      font-family: "Inter", sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    .settings-logout:hover { border-color: var(--live); }
+    /* Toggle-Switch */
+    .switch { width: 44px; height: 26px; border-radius: 14px; background: var(--card-2);
+      border: 1px solid var(--line-bright); position: relative; flex-shrink: 0; transition: background 0.18s, border-color 0.18s; cursor: pointer; }
+    .switch.on { background: var(--green); border-color: var(--green); }
+    .switch-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; transition: transform 0.18s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .switch.on .switch-knob { transform: translateX(18px); }
+
+    /* ===== Favoriten-Auswahl ===== */
+    .fav-pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow-y: auto; }
+    .fav-pick-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px;
+      color: var(--text); font-family: "Inter", sans-serif; font-size: 0.9rem; cursor: pointer; }
+    .fav-pick-row:hover { border-color: var(--line-bright); }
+    .fav-pick-row.sel { border-color: var(--gold); background: rgba(216,185,100,0.1); }
+    .fav-pick-row .rank-flag { width: 30px; height: 20px; border-radius: 3px; object-fit: cover; }
+    .fav-pick-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fav-pick-check { color: var(--gold-soft); font-weight: 700; }
+
+    /* ===== Turnierbaum ===== */
+    .bracket-empty { text-align: center; color: var(--muted); font-size: 0.86rem; line-height: 1.6;
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .bracket-scroll { overflow-x: auto; scrollbar-width: thin; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+    .bracket { display: inline-flex; gap: 16px; align-items: stretch; min-width: min-content; padding: 4px; }
+    .br-col { display: flex; flex-direction: column; justify-content: space-around; gap: 10px; min-width: 158px; }
+    .br-col-title { font-family: "Cinzel", serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--gold-soft); text-align: center; margin-bottom: 2px; }
+    .br-match { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
+    .br-match:hover { border-color: var(--gold); }
+    .br-match.skel { opacity: 0.4; cursor: default; }
+    .br-team { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+    .br-team + .br-team { border-top: 1px solid var(--line); }
+    .br-flag { width: 22px; height: 15px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .br-flag-fb { width: 22px; height: 15px; border-radius: 2px; background: var(--card-2); flex-shrink: 0; }
+    .br-name { flex: 1; min-width: 0; font-size: 0.82rem; font-weight: 600; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .br-team.win .br-name { color: var(--text); }
+    .br-team.fav .br-name { color: var(--gold-soft); }
+    .br-score { font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); flex-shrink: 0; }
+    .br-team.win .br-score { color: var(--green); }
+
+    /* ===== Aufstellung (Formation) ===== */
+    .lineups-wrap { display: flex; flex-direction: column; gap: 14px; }
+    .lineup-block { background: var(--card-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+    .lineup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
+    .lineup-team { font-size: 0.86rem; font-weight: 700; color: var(--text); }
+    .lineup-form { font-family: "Cinzel", serif; font-size: 0.78rem; font-weight: 700; color: var(--gold-soft);
+      background: rgba(216,185,100,0.12); border: 1px solid rgba(216,185,100,0.28); border-radius: 7px; padding: 2px 9px; }
+    .pitch { display: flex; flex-direction: column; gap: 6px; padding: 12px 6px;
+      background: linear-gradient(160deg, #14502f, #0e3d24);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); }
+    body.theme-light .pitch { background: linear-gradient(160deg, #2e8b57, #246b43); }
+    .pitch-row { display: flex; justify-content: space-around; gap: 4px; }
+    .pp { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 56px; }
+    .pp-shirt { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.95); color: #0e3d24;
+      display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; }
+    .pp-name { font-size: 0.62rem; font-weight: 600; color: #fff; text-align: center; line-height: 1.1;
+      max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
@@ -924,8 +1004,8 @@
       <span class="bnav-label">Standings</span>
     </button>
     <button class="bnav-item" data-nav="teams">
-      <span class="bnav-icon">🌍</span>
-      <span class="bnav-label">Teams</span>
+      <span class="bnav-icon">🗺️</span>
+      <span class="bnav-label">Baum</span>
     </button>
     <button class="bnav-item" data-nav="profile">
       <span class="bnav-icon">👤</span>
@@ -957,8 +1037,12 @@
     const REFRESH_MS = 60_000;
     const CACHE_KEY = "wm2026-cache-v3";
 
-    const FAV_TEAM = "Germany";
-    const isFav = name => name === FAV_TEAM;
+    // ===== Nutzer-Einstellungen (localStorage) =====
+    const LS = { fav: "wm2026-fav", auth: "wm2026-auth", notifyGoals: "wm2026-notify-goals" };
+    let FAV_TEAM = localStorage.getItem(LS.fav) || "Germany";
+    let isLoggedIn = localStorage.getItem(LS.auth) === "1";
+    let notifyGoals = localStorage.getItem(LS.notifyGoals) !== "0"; // Standard: an
+    const isFav = name => !!name && name === FAV_TEAM;
 
     const FIFA2ISO = {
       USA:"us",CAN:"ca",MEX:"mx",
@@ -1197,6 +1281,7 @@
         for (const m of merged) if (m.kind === "wm" && !m.group && !m.stage)
           m.group = map[m.home] || map[m.away] || null;
 
+        detectGoals(merged);
         allMatches = merged; teamGroup = map;
         localStorage.setItem(CACHE_KEY, JSON.stringify(
           merged.map(s => ({ ...s, date: s.date ? s.date.toISOString() : null }))));
@@ -1208,6 +1293,35 @@
         else { $list.innerHTML = `<div class="error">⚠️ Spiele konnten nicht geladen werden.<br>(${esc(err.message)})</div>`; $currentPhase.textContent = "FEHLER"; }
       }
     }
+    // Tor-Erkennung: vergleicht Spielstände zwischen zwei Aktualisierungen und
+    // erzeugt eine Benachrichtigung, wenn in einem Live-Spiel ein Tor fällt.
+    let _goalSnap = null;
+    function detectGoals(matches) {
+      const snap = new Map();
+      for (const m of matches) {
+        if (m.homeScore == null || m.awayScore == null) continue;
+        snap.set(m.id, `${m.homeScore}-${m.awayScore}`);
+      }
+      if (_goalSnap && notifyGoals) {
+        for (const m of matches) {
+          if (!m.live) continue;
+          const cur = snap.get(m.id), prev = _goalSnap.get(m.id);
+          if (!cur || !prev || cur === prev) continue;
+          const [ph, pa] = prev.split("-").map(Number);
+          const [ch, ca] = cur.split("-").map(Number);
+          if (ch + ca > ph + pa) {
+            const scorer = ch > ph ? m.home : m.away;
+            const fav = isFav(m.home) || isFav(m.away);
+            addNotification("goal",
+              `${m.home} ${ch}:${ca} ${m.away}`,
+              `${fav ? "★ " : ""}Tor für ${scorer}${m.status ? " · " + m.status : ""}`,
+              m.id);
+          }
+        }
+      }
+      _goalSnap = snap;
+    }
+
     function loadCache() {
       try {
         const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
@@ -1604,7 +1718,7 @@
     function render() {
       if (currentFilter === "groups") return renderGroups();
       if (currentFilter === "scorers") return renderScorers();
-      if (currentFilter === "teams") return renderTeams();
+      if (currentFilter === "teams") return renderBracket();
       if (currentFilter === "profile") return renderProfile();
 
       const now = new Date();
@@ -1851,37 +1965,195 @@
         <div class="rank-list">${rows}</div>`;
     }
 
-    // ====== Profile: Login (nur UI) ==========================================
-    function renderProfile() {
-      // Bereits sichtbar? Nicht neu rendern (sonst gehen Eingaben beim Auto-Refresh verloren).
-      if (document.getElementById("authForm")) return;
-      $list.innerHTML = `
-        <div class="auth-screen">
-          <div class="auth-logo">🏆</div>
-          <div class="auth-title">Willkommen</div>
-          <div class="auth-sub">Melde dich an, um Favoriten &amp; Benachrichtigungen zu speichern.</div>
-          <form class="auth-form" id="authForm" autocomplete="off">
-            <div class="auth-field">
-              <label class="auth-label" for="authEmail">E-Mail</label>
-              <input class="auth-input" type="email" id="authEmail" placeholder="name@beispiel.de" required>
-            </div>
-            <div class="auth-field">
-              <label class="auth-label" for="authPass">Passwort</label>
-              <input class="auth-input" type="password" id="authPass" placeholder="••••••••" required>
-            </div>
-            <button class="auth-btn" type="submit">Anmelden</button>
-          </form>
-          <div class="auth-alt">Noch kein Konto? <a class="auth-link" id="authRegister">Registrieren</a></div>
-          <div class="auth-divider">oder</div>
-          <div class="auth-note">Demo-Oberfläche – es werden keine Daten gesendet oder gespeichert.</div>
+    // ====== Turnierbaum (K.-o.-Phase) ========================================
+    const KO_ORDER = ["Sechzehntelfinale", "Achtelfinale", "Viertelfinale", "Halbfinale", "Spiel um Platz 3", "Finale"];
+
+    function bracketCard(m) {
+      const hs = m.homeScore, as = m.awayScore;
+      const done = hs != null && as != null;
+      const row = (name, badge, score, win, fav) => `
+        <div class="br-team${win ? " win" : ""}${fav ? " fav" : ""}">
+          ${badge ? `<img class="br-flag" src="${esc(badge)}" alt="" onerror="this.style.display='none'">` : `<span class="br-flag-fb"></span>`}
+          <span class="br-name">${esc(name || "—")}</span>
+          <span class="br-score">${score != null ? score : ""}</span>
         </div>`;
-      const form = document.getElementById("authForm");
-      form?.addEventListener("submit", e => {
-        e.preventDefault();
-        showToast("👤 Login-Demo – keine echte Anmeldung");
+      return `<div class="br-match" data-id="${esc(m.id)}" role="button" tabindex="0">
+        ${row(m.home, m.homeBadge, hs, done && hs > as, isFav(m.home))}
+        ${row(m.away, m.awayBadge, as, done && as > hs, isFav(m.away))}
+      </div>`;
+    }
+
+    function bracketSkeleton() {
+      const layout = [["Viertelfinale", 4], ["Halbfinale", 2], ["Finale", 1]];
+      const cols = layout.map(([s, n]) => {
+        const slots = Array.from({ length: n }).map(() =>
+          `<div class="br-match skel">
+            <div class="br-team"><span class="br-flag-fb"></span><span class="br-name">—</span></div>
+            <div class="br-team"><span class="br-flag-fb"></span><span class="br-name">—</span></div>
+          </div>`).join("");
+        return `<div class="br-col"><div class="br-col-title">${s}</div>${slots}</div>`;
+      }).join("");
+      return `<div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
+    }
+
+    function renderBracket() {
+      const ko = allMatches.filter(m => m.kind === "wm" && m.stage);
+      const byStage = {};
+      for (const m of ko) (byStage[m.stage] ||= []).push(m);
+      const stages = KO_ORDER.filter(s => byStage[s]);
+
+      if (!stages.length) {
+        $list.innerHTML = `<div class="section-head">Turnierbaum</div>
+          <div class="bracket-empty">🗺️ Der Turnierbaum wird mit dem Beginn der K.-o.-Phase gefüllt.<br>Aktuell läuft die Gruppenphase.</div>
+          ${bracketSkeleton()}`;
+        return;
+      }
+
+      const cols = stages.map(s => {
+        const games = byStage[s].slice().sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
+        return `<div class="br-col"><div class="br-col-title">${esc(s)}</div>${games.map(bracketCard).join("")}</div>`;
+      }).join("");
+
+      $list.innerHTML = `<div class="section-head">Turnierbaum</div>
+        <div class="rank-intro">Der Weg ins Finale – tippe ein Spiel für Details.</div>
+        <div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
+      $list.querySelectorAll(".br-match[data-id]").forEach(c =>
+        c.addEventListener("click", () => openMatch(c.dataset.id)));
+    }
+
+    // ====== Profile: Login + Einstellungen ===================================
+    // Einzigartige WM-Teams (Name + Flagge) für die Favoriten-Auswahl
+    function wmTeams() {
+      const m = new Map();
+      for (const x of allMatches) {
+        if (x.kind !== "wm") continue;
+        if (x.home && !m.has(x.home)) m.set(x.home, x.homeBadge);
+        if (x.away && !m.has(x.away)) m.set(x.away, x.awayBadge);
+      }
+      let list = [...m].map(([name, badge]) => ({ name, badge }));
+      if (!list.length) list = _fifaFallback.map(t => ({ name: t.name, badge: flagUrl(t.code, t.name) }));
+      return list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function favFlag(name) {
+      const t = wmTeams().find(x => x.name === name);
+      const url = t?.badge || flagUrl("", name);
+      return url
+        ? `<img class="rank-flag" src="${esc(url)}" alt="" onerror="this.style.display='none'">`
+        : `<span class="rank-flag-fb"></span>`;
+    }
+
+    // Favoriten-Auswahl als Bottom-Sheet (nutzt das vorhandene Modal)
+    function openFavPicker(firstTime = false) {
+      const build = (term = "") => {
+        const list = wmTeams().filter(t => t.name.toLowerCase().includes(term.toLowerCase()));
+        return list.map(t => `
+          <button class="fav-pick-row${t.name === FAV_TEAM ? " sel" : ""}" data-team="${esc(t.name)}">
+            ${t.badge ? `<img class="rank-flag" src="${esc(t.badge)}" alt="" onerror="this.style.display='none'">` : `<span class="rank-flag-fb"></span>`}
+            <span class="fav-pick-name">${esc(t.name)}</span>
+            ${t.name === FAV_TEAM ? '<span class="fav-pick-check">✓</span>' : ""}
+          </button>`).join("") || `<div class="empty">Kein Team gefunden.</div>`;
+      };
+      $modalBody.innerHTML = `
+        <div class="mds-sh">${firstTime ? "Wähle dein Lieblingsteam" : "Lieblingsteam ändern"}</div>
+        ${firstTime ? `<div class="rank-intro">Dein Team wird in Spielplan &amp; Tabellen hervorgehoben. Du kannst es jederzeit in den Einstellungen ändern.</div>` : ""}
+        <input class="search-input" id="favSearch" type="search" placeholder="Team suchen…" autocomplete="off" style="margin-bottom:10px">
+        <div class="fav-pick-list" id="favPickList">${build()}</div>`;
+      $modal.hidden = false;
+      document.body.style.overflow = "hidden";
+      const listEl = document.getElementById("favPickList");
+      const searchEl = document.getElementById("favSearch");
+      searchEl?.addEventListener("input", () => { listEl.innerHTML = build(searchEl.value.trim()); bind(); });
+      const bind = () => listEl.querySelectorAll(".fav-pick-row").forEach(b =>
+        b.addEventListener("click", () => {
+          FAV_TEAM = b.dataset.team;
+          localStorage.setItem(LS.fav, FAV_TEAM);
+          closeModal();
+          renderProfile(true); render();
+          showToast("★ Lieblingsteam: " + FAV_TEAM);
+        }));
+      bind();
+    }
+
+    function renderProfile(force = false) {
+      // Login-Eingaben beim Auto-Refresh nicht überschreiben
+      if (!force && document.getElementById("authForm")) return;
+
+      if (!isLoggedIn) {
+        $list.innerHTML = `
+          <div class="auth-screen">
+            <div class="auth-logo">🏆</div>
+            <div class="auth-title">Willkommen</div>
+            <div class="auth-sub">Melde dich an, um dein Lieblingsteam &amp; Benachrichtigungen zu speichern.</div>
+            <form class="auth-form" id="authForm" autocomplete="off">
+              <div class="auth-field">
+                <label class="auth-label" for="authEmail">E-Mail</label>
+                <input class="auth-input" type="email" id="authEmail" placeholder="name@beispiel.de" required>
+              </div>
+              <div class="auth-field">
+                <label class="auth-label" for="authPass">Passwort</label>
+                <input class="auth-input" type="password" id="authPass" placeholder="••••••••" required>
+              </div>
+              <button class="auth-btn" type="submit">Anmelden</button>
+            </form>
+            <div class="auth-alt">Noch kein Konto? <a class="auth-link" id="authRegister">Registrieren</a></div>
+            <div class="auth-note">Demo-Oberfläche – es werden keine echten Daten gesendet.</div>
+          </div>`;
+        const finishLogin = () => {
+          isLoggedIn = true; localStorage.setItem(LS.auth, "1");
+          const first = !localStorage.getItem(LS.fav);
+          renderProfile(true);
+          if (first) openFavPicker(true); // erstmalig: Lieblingsteam wählen
+        };
+        document.getElementById("authForm")?.addEventListener("submit", e => { e.preventDefault(); finishLogin(); });
+        document.getElementById("authRegister")?.addEventListener("click", finishLogin);
+        return;
+      }
+
+      // ---- Eingeloggt: Einstellungen ----
+      const light = document.body.classList.contains("theme-light");
+      $list.innerHTML = `
+        <div class="settings-head">
+          <div class="auth-logo">👤</div>
+          <div>
+            <div class="settings-title">Mein Profil</div>
+            <div class="settings-sub">Angemeldet (Demo)</div>
+          </div>
+        </div>
+
+        <div class="settings-sh">Lieblingsteam</div>
+        <button class="settings-row" id="favRow">
+          <span class="settings-row-main">${favFlag(FAV_TEAM)}<span>${esc(FAV_TEAM)}</span></span>
+          <span class="settings-row-act">Ändern ›</span>
+        </button>
+
+        <div class="settings-sh">Einstellungen</div>
+        <div class="settings-row">
+          <span class="settings-row-main">⚽ <span>Tor-Benachrichtigungen</span></span>
+          <span class="switch ${notifyGoals ? "on" : ""}" id="swGoals" role="switch" aria-checked="${notifyGoals}"><span class="switch-knob"></span></span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-main">${light ? "🌙" : "☀️"} <span>Heller Modus</span></span>
+          <span class="switch ${light ? "on" : ""}" id="swTheme" role="switch" aria-checked="${light}"><span class="switch-knob"></span></span>
+        </div>
+
+        <button class="settings-logout" id="btnLogout">Abmelden</button>
+        <div class="auth-note">Einstellungen werden lokal in deinem Browser gespeichert.</div>`;
+
+      document.getElementById("favRow")?.addEventListener("click", () => openFavPicker(false));
+      document.getElementById("swGoals")?.addEventListener("click", () => {
+        notifyGoals = !notifyGoals;
+        localStorage.setItem(LS.notifyGoals, notifyGoals ? "1" : "0");
+        renderProfile(true);
+        showToast(notifyGoals ? "🔔 Tor-Benachrichtigungen an" : "🔕 Tor-Benachrichtigungen aus");
       });
-      document.getElementById("authRegister")?.addEventListener("click", () => {
-        showToast("📝 Registrierung ist in dieser Demo nicht aktiv");
+      document.getElementById("swTheme")?.addEventListener("click", () => {
+        const next = document.body.classList.contains("theme-light") ? "dark" : "light";
+        localStorage.setItem("wm2026-theme", next); applyTheme(next); renderProfile(true);
+      });
+      document.getElementById("btnLogout")?.addEventListener("click", () => {
+        isLoggedIn = false; localStorage.removeItem(LS.auth);
+        renderProfile(true);
       });
     }
 
@@ -2112,26 +2384,39 @@
     function renderEspnLineups(sum) {
       const rs = sum.rosters || [];
       if (!rs.length || !rs.some(r => (r.roster || []).length)) return "";
-      const li = p => {
+      // Position → Linie: 0 = Torwart, 1 = Abwehr, 2 = Mittelfeld, 3 = Sturm
+      const lineOf = abbr => {
+        const a = (abbr || "").toUpperCase();
+        if (/^G/.test(a)) return 0;
+        if (/^(D|CB|LB|RB|LWB|RWB|SW)/.test(a)) return 1;
+        if (/^(F|S|CF|LW|RW|W)/.test(a)) return 3;
+        if (/^(M|CM|DM|AM|LM|RM)/.test(a)) return 2;
+        return 2;
+      };
+      const dot = p => {
         const num = p.jersey ?? p.athlete?.jersey ?? "";
-        const pos = p.position?.abbreviation || p.position?.name || "";
-        return `<div class="mds-player">
-          <span class="mds-pnum">${esc(num)}</span>
-          <span>${esc(p.athlete?.displayName || "")}</span>
-          <span class="mds-ppos">${esc(pos)}</span>
-        </div>`;
+        const nm = p.athlete?.displayName || p.athlete?.shortName || "";
+        const last = nm.split(" ").slice(-1)[0] || nm;
+        return `<div class="pp"><span class="pp-shirt">${esc(num)}</span><span class="pp-name">${esc(last)}</span></div>`;
       };
       const team = r => {
-        const pl = r.roster || [];
-        const xi = pl.filter(p => p.starter).map(li).join("");
-        const bench = pl.filter(p => !p.starter).map(p => esc(p.athlete?.displayName || "")).join(", ");
-        return `<div class="mds-lineup-team">
-          <div class="mds-lu-head">${esc(r.team?.displayName || "")}${r.formation ? ` <span class="mds-lu-form">· ${esc(r.formation)}</span>` : ""}</div>
-          ${xi || "<div style='color:var(--muted-2)'>–</div>"}
+        const xi = (r.roster || []).filter(p => p.starter);
+        if (!xi.length) return "";
+        const lines = [[], [], [], []];
+        xi.forEach(p => lines[lineOf(p.position?.abbreviation || p.position?.name)].push(p));
+        const formation = r.formation
+          || [lines[1].length, lines[2].length, lines[3].length].filter(Boolean).join("-");
+        const rows = [3, 2, 1, 0].map(i => lines[i].length
+          ? `<div class="pitch-row">${lines[i].map(dot).join("")}</div>` : "").join("");
+        const bench = (r.roster || []).filter(p => !p.starter)
+          .map(p => esc(p.athlete?.displayName || "")).filter(Boolean).join(", ");
+        return `<div class="lineup-block">
+          <div class="lineup-head"><span class="lineup-team">${esc(r.team?.displayName || "")}</span><span class="lineup-form">${esc(formation)}</span></div>
+          <div class="pitch">${rows}</div>
           ${bench ? `<div class="mds-bench"><b>Bank:</b> ${bench}</div>` : ""}
         </div>`;
       };
-      return `<div class="mds-sh">Startelf</div><div class="mds-lineups">${rs.map(team).join("")}</div>`;
+      return `<div class="mds-sh">Aufstellung</div><div class="lineups-wrap">${rs.map(team).join("")}</div>`;
     }
 
     function renderEspnStats(sum) {
