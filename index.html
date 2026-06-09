@@ -859,6 +859,9 @@
     .settings-row-main img.rank-flag { width: 28px; height: 19px; }
     .settings-row-main > span:not(.rank-flag):not(.rank-flag-fb) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .settings-row-act { font-size: 0.82rem; color: var(--gold-soft); font-weight: 600; flex-shrink: 0; }
+    .settings-hint { font-size: 0.7rem; color: var(--muted-2); margin-left: 2px; }
+    .night-badge { font-size: 0.82rem; line-height: 1; margin-right: 4px; opacity: 0.85;
+      vertical-align: middle; }
     .settings-logout { width: 100%; margin-top: 18px; padding: 13px; border-radius: 14px;
       background: none; border: 1px solid var(--line-bright); color: var(--live);
       font-family: "Inter", sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
@@ -1060,7 +1063,122 @@
     let isLoggedIn  = !!_userData && localStorage.getItem(LS.session) === "1";
     let FAV_TEAM    = localStorage.getItem(LS.fav) || "Germany";
     let notifyGoals = localStorage.getItem(LS.notifyGoals) !== "0";
+    let sleepMode   = localStorage.getItem("wm2026-sleep") === "1";
     const isFav = name => !!name && name === FAV_TEAM;
+
+    // ===== Nationalfarben aller 48 WM-2026-Teilnehmer =========================
+    // Schlüssel: Teamname lowercase (englisch & deutsch), Wert: Primärfarbe Hex
+    const TEAM_CLR = {
+      // CONCACAF
+      "usa":"#B22234","united states":"#B22234",
+      "canada":"#FF0000","kanada":"#FF0000",
+      "mexico":"#006847","mexiko":"#006847",
+      "panama":"#DA121A",
+      "honduras":"#0073CF",
+      "costa rica":"#003DA5",
+      "jamaica":"#000000","jamaika":"#000000",
+      "haiti":"#00209F",
+      "el salvador":"#0F47AF",
+      "cuba":"#002A8F",
+      // CONMEBOL
+      "argentina":"#74ACDF","argentinien":"#74ACDF",
+      "brazil":"#009C3B","brasilien":"#009C3B",
+      "colombia":"#FCD116","kolumbien":"#FCD116",
+      "uruguay":"#5AAAFF",
+      "ecuador":"#FFD100",
+      "chile":"#D52B1E",
+      "paraguay":"#D52B1E",
+      "venezuela":"#CF142B",
+      "bolivia":"#009A44","bolivien":"#009A44",
+      "peru":"#D91023",
+      // UEFA
+      "germany":"#000000","deutschland":"#000000",
+      "france":"#002395","frankreich":"#002395",
+      "spain":"#AA151B","spanien":"#AA151B",
+      "portugal":"#006600",
+      "england":"#CF111A",
+      "netherlands":"#FF6600","niederlande":"#FF6600",
+      "belgium":"#EF3340","belgien":"#EF3340",
+      "italy":"#0066CC","italien":"#0066CC",
+      "croatia":"#FF0000","kroatien":"#FF0000",
+      "austria":"#ED2939","österreich":"#ED2939",
+      "denmark":"#C60C30","dänemark":"#C60C30",
+      "switzerland":"#FF0000","schweiz":"#FF0000",
+      "turkey":"#E30A17","türkei":"#E30A17","türkiye":"#E30A17",
+      "ukraine":"#005BBB",
+      "serbia":"#C6363C","serbien":"#C6363C",
+      "hungary":"#CE2939","ungarn":"#CE2939",
+      "poland":"#DC143C","polen":"#DC143C",
+      "romania":"#002B7F","rumänien":"#002B7F",
+      "czech republic":"#D7141A","czechia":"#D7141A","tschechien":"#D7141A",
+      "scotland":"#003F87","schottland":"#003F87",
+      "wales":"#C8102E",
+      "georgia":"#FF0000","georgien":"#FF0000",
+      "slovakia":"#0B4EA2","slowakei":"#0B4EA2",
+      "slovenia":"#003DA5","slowenien":"#003DA5",
+      "albania":"#E41E20","albanien":"#E41E20",
+      "iceland":"#003897","island":"#003897",
+      "sweden":"#006AA7","schweden":"#006AA7",
+      "norway":"#EF2B2D","norwegen":"#EF2B2D",
+      "greece":"#0D5EAF","griechenland":"#0D5EAF",
+      "ireland":"#169B62","irland":"#169B62",
+      "northern ireland":"#012169",
+      "finland":"#003580","finnland":"#003580",
+      // CAF
+      "morocco":"#C1272D","marokko":"#C1272D",
+      "senegal":"#00853F",
+      "nigeria":"#008751",
+      "cameroon":"#007A5E","kamerun":"#007A5E",
+      "ghana":"#006B3F",
+      "ivory coast":"#F77F00","côte d'ivoire":"#F77F00","elfenbeinküste":"#F77F00",
+      "mali":"#14B53A",
+      "algeria":"#006233","algerien":"#006233",
+      "egypt":"#CE1126","ägypten":"#CE1126",
+      "south africa":"#007A4D","südafrika":"#007A4D",
+      "tunisia":"#E70013","tunesien":"#E70013",
+      "dr congo":"#007FFF","drcongo":"#007FFF",
+      "zambia":"#198A00","sambia":"#198A00",
+      "tanzania":"#1EB53A",
+      "mozambique":"#009A44","mosambik":"#009A44",
+      "uganda":"#FCDC04",
+      // AFC
+      "japan":"#BC002D",
+      "south korea":"#CD2E3A","südkorea":"#CD2E3A",
+      "iran":"#239F40",
+      "saudi arabia":"#006C35","saudi-arabien":"#006C35",
+      "australia":"#00843D","australien":"#00843D",
+      "qatar":"#8D1B3D","katar":"#8D1B3D",
+      "uae":"#00732F","united arab emirates":"#00732F",
+      "new zealand":"#000000","neuseeland":"#000000",
+      "uzbekistan":"#1EB53A","usbekistan":"#1EB53A",
+      "indonesia":"#CE1126","indonesien":"#CE1126",
+      "china":"#DE2910",
+      "thailand":"#A51931",
+      "india":"#FF9933","indien":"#FF9933",
+      "vietnam":"#DA251D",
+      "philippines":"#0038A8","philippinen":"#0038A8",
+      "tajikistan":"#CC0000","tadschikistan":"#CC0000",
+    };
+
+    // Hex → rgba(r,g,b,alpha)
+    function hex2rgba(hex, a) {
+      const n = parseInt(hex.replace("#",""),16);
+      return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+    }
+
+    // Gradient-Style für eine Match-Karte: links Home-Farbe, rechts Away-Farbe
+    function cardGradient(home, away) {
+      const hc = TEAM_CLR[(home||"").toLowerCase()];
+      const ac = TEAM_CLR[(away||"").toLowerCase()];
+      if (!hc && !ac) return "";
+      const h = hc ? hex2rgba(hc, 0.11) : "transparent";
+      const a = ac ? hex2rgba(ac, 0.11) : "transparent";
+      return `background:linear-gradient(to right,${h} 0%,transparent 42%,transparent 58%,${a} 100%),var(--card);`;
+    }
+
+    // Nachtspiel: zwischen 23:00 und 07:00 Ortszeit
+    const isNightMatch = m => { if (!m.date) return false; const h = m.date.getHours(); return h >= 23 || h < 7; };
+    const nightBadge   = m => sleepMode && isNightMatch(m) ? `<span class="night-badge">🌙</span>` : "";
 
     // Passwort-Hash via SubtleCrypto (SHA-256), Fallback base64
     async function hashPw(pw) {
@@ -1415,8 +1533,15 @@
           const [ph, pa] = prev.split("-").map(Number);
           const [ch, ca] = cur.split("-").map(Number);
           if (ch + ca > ph + pa) {
-            const scorer = ch > ph ? m.home : m.away;
             const fav = isFav(m.home) || isFav(m.away);
+            // Schlaf-Modus: nur Benachrichtigungen für Lieblingsteam in Verlängerung/ET
+            if (sleepMode) {
+              if (!fav) continue;
+              const min = parseInt(m.status) || 0;
+              const inET = min > 90 || /ET|AET|extra|verlängerung/i.test(m.status || "");
+              if (!inET) continue;
+            }
+            const scorer = ch > ph ? m.home : m.away;
             addNotification("goal",
               `${m.home} ${ch}:${ca} ${m.away}`,
               `${fav ? "★ " : ""}Tor für ${scorer}${m.status ? " · " + m.status : ""}`,
@@ -1713,10 +1838,10 @@
       const timeline = buildTimeline(m);
 
       return `
-        <div class="match-live ${state}" data-id="${esc(m.id)}" role="button" tabindex="0">
+        <div class="match-live ${state}" data-id="${esc(m.id)}" role="button" tabindex="0" style="${cardGradient(m.home,m.away)}">
           <div class="mlc-topbar">
             <span class="mlc-phase">${esc(phase)}</span>
-            ${statusRight}
+            ${nightBadge(m)}${statusRight}
           </div>
           <div class="mlc-body">
             <div class="mlc-team">
@@ -1761,10 +1886,10 @@
       else                            kindTag = `<span class="tag test" style="margin-left:4px">Testspiel</span>`;
 
       return `
-        <div class="match-upcoming ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+        <div class="match-upcoming ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0" style="${cardGradient(m.home,m.away)}">
           <div class="muc-topbar">
             <span class="muc-phase">${esc(phase)}</span>
-            ${kindTag}
+            ${nightBadge(m)}${kindTag}
           </div>
           <div class="muc-body">
             <div class="muc-team">
@@ -1806,10 +1931,10 @@
       const dateStr = d ? `${d.getDate()}. ${MONTHS[d.getMonth()]}` : "";
 
       return `
-        <div class="match-finished ${resCls} ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+        <div class="match-finished ${resCls} ${favH || favA ? "is-fav" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0" style="${cardGradient(m.home,m.away)}">
           <div class="mfc-header">
             <span class="mfc-phase">${esc(phase)}${dateStr ? " · " + dateStr : ""}</span>
-            <span class="mfc-ft">FT</span>
+            ${nightBadge(m)}<span class="mfc-ft">FT</span>
           </div>
           <div class="mfc-body">
             <div class="mfc-team home">
@@ -2324,6 +2449,10 @@
           <span class="switch ${notifyGoals ? "on" : ""}" id="swGoals" role="switch"><span class="switch-knob"></span></span>
         </div>
         <div class="settings-row">
+          <span class="settings-row-main">🌙 <span>Schlaf-Modus</span><span class="settings-hint"> · Nur ★ in Verlängerung</span></span>
+          <span class="switch ${sleepMode ? "on" : ""}" id="swSleep" role="switch"><span class="switch-knob"></span></span>
+        </div>
+        <div class="settings-row">
           <span class="settings-row-main">${light ? "🌙" : "☀️"} <span>Heller Modus</span></span>
           <span class="switch ${light ? "on" : ""}" id="swTheme" role="switch"><span class="switch-knob"></span></span>
         </div>
@@ -2346,6 +2475,12 @@
         localStorage.setItem(LS.notifyGoals, notifyGoals ? "1" : "0");
         renderProfile(true);
         showToast(notifyGoals ? "🔔 Tor-Benachrichtigungen an" : "🔕 Tor-Benachrichtigungen aus");
+      });
+      document.getElementById("swSleep")?.addEventListener("click", () => {
+        sleepMode = !sleepMode;
+        localStorage.setItem("wm2026-sleep", sleepMode ? "1" : "0");
+        renderProfile(true); render();
+        showToast(sleepMode ? "🌙 Schlaf-Modus an" : "🌙 Schlaf-Modus aus");
       });
       document.getElementById("swTheme")?.addEventListener("click", () => {
         const next = document.body.classList.contains("theme-light") ? "dark" : "light";
