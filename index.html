@@ -830,6 +830,10 @@
     .auth-note { margin-top: 20px; font-size: 0.7rem; color: var(--muted-2); line-height: 1.5; }
 
     /* ===== Profile: Einstellungen ===== */
+    /* Konfetti-Overlay */
+    .confetti-canvas { position: fixed; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; }
+
     /* Avatar */
     .user-avatar { width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
@@ -1324,15 +1328,85 @@
         else { $list.innerHTML = `<div class="error">⚠️ Spiele konnten nicht geladen werden.<br>(${esc(err.message)})</div>`; $currentPhase.textContent = "FEHLER"; }
       }
     }
-    // Tor-Erkennung: vergleicht Spielstände zwischen zwei Aktualisierungen und
-    // erzeugt eine Benachrichtigung, wenn in einem Live-Spiel ein Tor fällt.
-    let _goalSnap = null;
+    // Konfetti-Animation (3 s), reines Canvas/JS – fällt von oben, mobil-tauglich.
+    let _confettiActive = false;
+    function launchConfetti() {
+      if (_confettiActive) return;
+      _confettiActive = true;
+
+      const cv = document.createElement("canvas");
+      cv.className = "confetti-canvas";
+      document.body.appendChild(cv);
+      const ctx = cv.getContext("2d");
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const resize = () => {
+        cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+        cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      resize();
+      window.addEventListener("resize", resize);
+
+      const colors = ["#D8B964", "#F0D68F", "#34D399", "#3B82F6", "#EC4899", "#FF4D5E", "#FFFFFF"];
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const W = () => innerWidth;
+      // Partikelanzahl an Bildschirmbreite koppeln (mobil weniger)
+      const COUNT = reduce ? 40 : Math.round(Math.min(180, Math.max(80, W() / 4)));
+      const parts = Array.from({ length: COUNT }).map(() => ({
+        x: Math.random() * W(),
+        y: -20 - Math.random() * innerHeight * 0.5,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        vy: 2.2 + Math.random() * 3.2,
+        vx: -1.2 + Math.random() * 2.4,
+        rot: Math.random() * Math.PI,
+        vr: -0.18 + Math.random() * 0.36,
+        color: colors[(Math.random() * colors.length) | 0],
+      }));
+
+      const DURATION = 3000;
+      const start = performance.now();
+      let raf;
+      const frame = now => {
+        const t = now - start;
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        // letzte 600 ms ausblenden
+        ctx.globalAlpha = t > DURATION - 600 ? Math.max(0, (DURATION - t) / 600) : 1;
+        for (const p of parts) {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          p.vx += (Math.random() - 0.5) * 0.06; // leichtes Flattern
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        if (t < DURATION) { raf = requestAnimationFrame(frame); }
+        else { cleanup(); }
+      };
+      const cleanup = () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener("resize", resize);
+        cv.remove();
+        _confettiActive = false;
+      };
+      raf = requestAnimationFrame(frame);
+    }
+
+    // Tor-Erkennung + Sieg-Erkennung: vergleicht Spielstände/Status zwischen zwei
+    // Aktualisierungen. Tor → Benachrichtigung; Live→Abpfiff mit Sieg des
+    // Lieblingsteams → Konfetti.
+    let _goalSnap = null, _liveSnap = null;
     function detectGoals(matches) {
       const snap = new Map();
+      const liveSnap = new Map();
       for (const m of matches) {
         if (m.homeScore == null || m.awayScore == null) continue;
         snap.set(m.id, `${m.homeScore}-${m.awayScore}`);
       }
+      for (const m of matches) liveSnap.set(m.id, !!m.live);
+
       if (_goalSnap && notifyGoals) {
         for (const m of matches) {
           if (!m.live) continue;
@@ -1350,7 +1424,26 @@
           }
         }
       }
+
+      // Live → Abpfiff und Lieblingsteam hat gewonnen → Konfetti
+      if (_liveSnap) {
+        for (const m of matches) {
+          const wasLive = _liveSnap.get(m.id);
+          if (!wasLive || m.live || !m.finished) continue;
+          const hs = m.homeScore, as = m.awayScore;
+          if (hs == null || as == null) continue;
+          const favWon = (isFav(m.home) && hs > as) || (isFav(m.away) && as > hs);
+          if (favWon) {
+            const winner = hs > as ? m.home : m.away;
+            addNotification("goal", `${m.home} ${hs}:${as} ${m.away}`,
+              `🎉 ${winner} hat gewonnen!`, m.id);
+            launchConfetti();
+          }
+        }
+      }
+
       _goalSnap = snap;
+      _liveSnap = liveSnap;
     }
 
     function loadCache() {
