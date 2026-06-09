@@ -933,27 +933,48 @@
     .tipps-score { font-family: "Cinzel", serif; font-size: 2.4rem; font-weight: 700; color: var(--gold); line-height: 1; }
     .tipps-score-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
     .tipps-legend { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--muted); }
+    /* Karte */
     .tipps-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-      padding: 12px 14px; margin-bottom: 8px; }
+      overflow: hidden; margin-bottom: 8px; }
     .tipps-card.locked { opacity: 0.85; }
-    .tipps-card-teams { display: flex; align-items: center; gap: 8px; }
-    .tipps-team-name { flex: 1; font-size: 0.88rem; font-weight: 600; color: var(--text);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tipps-team-name.text-right { text-align: right; }
-    .tipps-inputs { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-    .tipps-input { width: 40px; padding: 5px 4px; text-align: center; background: var(--card-2);
-      border: 1px solid var(--line-bright); border-radius: 8px; color: var(--text);
-      font-family: "Inter", sans-serif; font-size: 0.95rem; font-weight: 700;
+    /* Meta-Zeile oben */
+    .tipps-meta { display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 13px; background: var(--card-2); border-bottom: 1px solid var(--line);
+      font-size: 0.72rem; color: var(--muted-2); gap: 8px; }
+    .tipps-meta-left { font-weight: 600; letter-spacing: 0.3px; }
+    .tipps-meta-right { text-align: right; }
+    /* Spielfeld-Zeile */
+    .tipps-match-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+      gap: 10px; padding: 12px 13px 10px; }
+    .tipps-side { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .tipps-side.right { align-items: center; }
+    .tipps-flag { width: 40px; height: 27px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+    .tipps-flag-fb { width: 40px; height: 27px; border-radius: 4px; background: var(--card-2); flex-shrink: 0; }
+    .tipps-tname { font-size: 0.82rem; font-weight: 700; color: var(--text); text-align: center;
+      max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+    /* Eingabe-Mitte */
+    .tipps-center { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
+    .tipps-inputs { display: flex; align-items: center; gap: 5px; }
+    .tipps-input { width: 44px; height: 44px; padding: 0; text-align: center; background: var(--card-2);
+      border: 1.5px solid var(--line-bright); border-radius: 10px; color: var(--text);
+      font-family: "Inter", sans-serif; font-size: 1.2rem; font-weight: 700;
       -moz-appearance: textfield; }
     .tipps-input::-webkit-outer-spin-button,
     .tipps-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .tipps-input:focus { outline: none; border-color: var(--accent); }
-    .tipps-colon { font-weight: 700; font-size: 1rem; color: var(--muted); }
-    .tipps-score-disp { width: 34px; text-align: center; font-size: 0.95rem; font-weight: 700; color: var(--muted-2); }
-    .tipps-badge { font-size: 1.1rem; margin-left: 4px; flex-shrink: 0; }
-    .tipps-result { display: block; font-size: 0.72rem; color: var(--muted-2); margin-top: 6px; text-align: center; }
-    .tipps-date { font-size: 0.72rem; color: var(--muted-2); margin-top: 5px; text-align: center; }
+    .tipps-input:focus { outline: none; border-color: var(--accent); background: rgba(59,130,246,0.08); }
+    .tipps-colon { font-weight: 800; font-size: 1.3rem; color: var(--muted); line-height: 1; }
+    .tipps-score-disp { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; font-weight: 700; color: var(--muted-2); background: var(--card-2);
+      border: 1.5px solid var(--line); border-radius: 10px; }
+    .tipps-badge { font-size: 1.3rem; line-height: 1; }
+    /* Ergebnis-Zeile unten */
+    .tipps-footer { display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 7px 13px 9px; border-top: 1px solid var(--line);
+      font-size: 0.76rem; color: var(--muted-2); }
+    .tipps-real-score { font-weight: 700; color: var(--text); }
     body.theme-light .tipps-input { background: #f1f5f9; border-color: #cbd5e1; color: #1e293b; }
+    body.theme-light .tipps-input:focus { background: rgba(59,130,246,0.06); }
+    body.theme-light .tipps-score-disp { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
@@ -2600,21 +2621,43 @@
           const pts = scoreTipp(tip, m);
           const badge = pts === 2 ? "✅" : pts === 1 ? "🟡" : pts === 0 ? "❌" : "";
           const gradStyle = cardGradient(m.home, m.away);
+          const dateStr = m.date
+            ? `${m.date.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit"})} · ${pad(m.date.getHours())}:${pad(m.date.getMinutes())} Uhr`
+            : "Termin offen";
+          const statusStr = m.live ? "🔴 Live" : m.finished ? "Abgepfiffen" : "Ausstehend";
+          const hFlag = m.homeBadge
+            ? `<img class="tipps-flag" src="${esc(m.homeBadge)}" alt="" onerror="this.outerHTML='<span class=&quot;tipps-flag-fb&quot;></span>'">`
+            : `<span class="tipps-flag-fb"></span>`;
+          const aFlag = m.awayBadge
+            ? `<img class="tipps-flag" src="${esc(m.awayBadge)}" alt="" onerror="this.outerHTML='<span class=&quot;tipps-flag-fb&quot;></span>'">`
+            : `<span class="tipps-flag-fb"></span>`;
+          const inputsHtml = locked
+            ? `<span class="tipps-score-disp">${tip.h != null ? tip.h : "–"}</span><span class="tipps-colon">:</span><span class="tipps-score-disp">${tip.a != null ? tip.a : "–"}</span>`
+            : `<input class="tipps-input" type="number" min="0" max="20" value="${tip.h != null ? tip.h : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="h"><span class="tipps-colon">:</span><input class="tipps-input" type="number" min="0" max="20" value="${tip.a != null ? tip.a : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="a">`;
+          const footerHtml = m.finished && tip.h != null
+            ? `<div class="tipps-footer">${badge} Dein Tipp: <strong>${tip.h}:${tip.a}</strong> &nbsp;·&nbsp; Ergebnis: <span class="tipps-real-score">${m.homeScore}:${m.awayScore}</span></div>`
+            : "";
           html += `
             <div class="tipps-card${locked ? " locked" : ""}" style="${gradStyle}">
-              <div class="tipps-card-teams">
-                <span class="tipps-team-name">${esc(m.home)}</span>
-                <div class="tipps-inputs">
-                  ${locked
-                    ? `<span class="tipps-score-disp">${tip.h != null ? tip.h : "–"}</span><span class="tipps-colon">:</span><span class="tipps-score-disp">${tip.a != null ? tip.a : "–"}</span>`
-                    : `<input class="tipps-input" type="number" min="0" max="20" value="${tip.h != null ? tip.h : ""}" placeholder="0" data-id="${esc(m.id)}" data-side="h"><span class="tipps-colon">:</span><input class="tipps-input" type="number" min="0" max="20" value="${tip.a != null ? tip.a : ""}" placeholder="0" data-id="${esc(m.id)}" data-side="a">`
-                  }
-                  ${badge ? `<span class="tipps-badge">${badge}</span>` : ""}
-                </div>
-                <span class="tipps-team-name text-right">${esc(m.away)}</span>
+              <div class="tipps-meta">
+                <span class="tipps-meta-left">Gruppe ${esc(g)}</span>
+                <span class="tipps-meta-right">${esc(dateStr)}</span>
               </div>
-              ${m.finished && tip.h != null ? `<div class="tipps-result">Ergebnis: ${m.homeScore}:${m.awayScore}</div>` : ""}
-              ${m.date ? `<div class="tipps-date">${m.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}, ${pad(m.date.getHours())}:${pad(m.date.getMinutes())} Uhr</div>` : ""}
+              <div class="tipps-match-row">
+                <div class="tipps-side">
+                  ${hFlag}
+                  <span class="tipps-tname">${esc(m.home)}</span>
+                </div>
+                <div class="tipps-center">
+                  <div class="tipps-inputs">${inputsHtml}</div>
+                  ${badge ? `<span class="tipps-badge">${badge}</span>` : `<span style="font-size:0.68rem;color:var(--muted-2)">${esc(statusStr)}</span>`}
+                </div>
+                <div class="tipps-side">
+                  ${aFlag}
+                  <span class="tipps-tname">${esc(m.away)}</span>
+                </div>
+              </div>
+              ${footerHtml}
             </div>`;
         }
       }
