@@ -926,6 +926,35 @@
     .pp-name { font-size: 0.62rem; font-weight: 600; color: #fff; text-align: center; line-height: 1.1;
       max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
+    /* ===== Tipps-Tab ===== */
+    .tipps-header { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .tipps-score-wrap { display: flex; flex-direction: column; align-items: center; }
+    .tipps-score { font-family: "Cinzel", serif; font-size: 2.4rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .tipps-score-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+    .tipps-legend { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--muted); }
+    .tipps-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 12px 14px; margin-bottom: 8px; }
+    .tipps-card.locked { opacity: 0.85; }
+    .tipps-card-teams { display: flex; align-items: center; gap: 8px; }
+    .tipps-team-name { flex: 1; font-size: 0.88rem; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tipps-team-name.text-right { text-align: right; }
+    .tipps-inputs { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .tipps-input { width: 40px; padding: 5px 4px; text-align: center; background: var(--card-2);
+      border: 1px solid var(--line-bright); border-radius: 8px; color: var(--text);
+      font-family: "Inter", sans-serif; font-size: 0.95rem; font-weight: 700;
+      -moz-appearance: textfield; }
+    .tipps-input::-webkit-outer-spin-button,
+    .tipps-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .tipps-input:focus { outline: none; border-color: var(--accent); }
+    .tipps-colon { font-weight: 700; font-size: 1rem; color: var(--muted); }
+    .tipps-score-disp { width: 34px; text-align: center; font-size: 0.95rem; font-weight: 700; color: var(--muted-2); }
+    .tipps-badge { font-size: 1.1rem; margin-left: 4px; flex-shrink: 0; }
+    .tipps-result { display: block; font-size: 0.72rem; color: var(--muted-2); margin-top: 6px; text-align: center; }
+    .tipps-date { font-size: 0.72rem; color: var(--muted-2); margin-top: 5px; text-align: center; }
+    body.theme-light .tipps-input { background: #f1f5f9; border-color: #cbd5e1; color: #1e293b; }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
@@ -1019,6 +1048,10 @@
     <button class="bnav-item" data-nav="standings">
       <span class="bnav-icon">🏆</span>
       <span class="bnav-label">Standings</span>
+    </button>
+    <button class="bnav-item" data-nav="tipps">
+      <span class="bnav-icon">🎯</span>
+      <span class="bnav-label">Tipps</span>
     </button>
     <button class="bnav-item" data-nav="teams">
       <span class="bnav-icon">🗺️</span>
@@ -1189,12 +1222,16 @@
       } catch { return btoa(pw + "wm2026"); }
     }
 
-    // Farbiger Avatar-Kreis aus erstem Buchstaben des Namens
+    // Avatar-Kreis: Flagge des Lieblingsteams, Fallback farbiges Initial
     function userAvatar(name) {
+      const flagSrc = flagUrl("", FAV_TEAM);
+      if (flagSrc) {
+        const url = flagSrc.replace("/w40/", "/w80/");
+        return `<div class="user-avatar" style="background-image:url('${url}');background-size:cover;background-position:center;background-color:var(--card-2)"></div>`;
+      }
       const colors = ["#3B82F6","#8B5CF6","#EC4899","#F97316","#10B981","#EF4444","#14B8A6"];
       const idx = [...(name || "?")].reduce((a,c) => a + c.charCodeAt(0), 0) % colors.length;
-      const letter = (name || "?")[0].toUpperCase();
-      return `<div class="user-avatar" style="background:${colors[idx]}">${esc(letter)}</div>`;
+      return `<div class="user-avatar" style="background:${colors[idx]}">${esc((name || "?")[0].toUpperCase())}</div>`;
     }
 
     const FIFA2ISO = {
@@ -1969,6 +2006,7 @@
       if (currentFilter === "scorers") return renderScorers();
       if (currentFilter === "teams") return renderBracket();
       if (currentFilter === "profile") return renderProfile();
+      if (currentFilter === "tipps") return renderTipps();
 
       const now = new Date();
       let matches = allMatches.filter(applyFilter);
@@ -2508,6 +2546,95 @@
       });
     }
 
+    // ====== Tipps-Tab ============================================================
+    const LS_TIPPS = "wm2026-tipps";
+
+    function scoreTipp(tip, m) {
+      if (tip.h == null || tip.a == null || !m.finished) return null;
+      if (tip.h === m.homeScore && tip.a === m.awayScore) return 2;
+      const to = tip.h > tip.a ? 1 : tip.h < tip.a ? -1 : 0;
+      const ao = m.homeScore > m.awayScore ? 1 : m.homeScore < m.awayScore ? -1 : 0;
+      return to === ao ? 1 : 0;
+    }
+
+    function renderTipps() {
+      const tipps = JSON.parse(localStorage.getItem(LS_TIPPS) || "{}");
+      const groupMatches = allMatches.filter(m => m.kind === "wm" && m.group).sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
+
+      let totalPts = 0, judged = 0;
+      for (const m of groupMatches) {
+        const s = scoreTipp(tipps[m.id] || {}, m);
+        if (s != null) { totalPts += s; judged++; }
+      }
+
+      const byGroup = {};
+      for (const m of groupMatches) {
+        const g = m.group || "?";
+        if (!byGroup[g]) byGroup[g] = [];
+        byGroup[g].push(m);
+      }
+
+      let html = `
+        <div class="tipps-header">
+          <div class="tipps-score-wrap">
+            <div class="tipps-score">${totalPts}</div>
+            <div class="tipps-score-label">Punkte gesamt</div>
+          </div>
+          <div class="tipps-legend">
+            <span>✅ Exakt · 2 Pkt.</span>
+            <span>🟡 Ausgang · 1 Pkt.</span>
+            <span>❌ Falsch · 0 Pkt.</span>
+          </div>
+        </div>`;
+
+      if (!groupMatches.length) {
+        $list.innerHTML = html + `<div class="empty">Keine Gruppenspiele gefunden.</div>`;
+        return;
+      }
+
+      for (const g of Object.keys(byGroup).sort()) {
+        html += `<div class="section-head">Gruppe ${esc(g)}</div>`;
+        for (const m of byGroup[g]) {
+          const tip = tipps[m.id] || {};
+          const locked = m.finished || m.live;
+          const pts = scoreTipp(tip, m);
+          const badge = pts === 2 ? "✅" : pts === 1 ? "🟡" : pts === 0 ? "❌" : "";
+          const gradStyle = cardGradient(m.home, m.away);
+          html += `
+            <div class="tipps-card${locked ? " locked" : ""}" style="${gradStyle}">
+              <div class="tipps-card-teams">
+                <span class="tipps-team-name">${esc(m.home)}</span>
+                <div class="tipps-inputs">
+                  ${locked
+                    ? `<span class="tipps-score-disp">${tip.h != null ? tip.h : "–"}</span><span class="tipps-colon">:</span><span class="tipps-score-disp">${tip.a != null ? tip.a : "–"}</span>`
+                    : `<input class="tipps-input" type="number" min="0" max="20" value="${tip.h != null ? tip.h : ""}" placeholder="0" data-id="${esc(m.id)}" data-side="h"><span class="tipps-colon">:</span><input class="tipps-input" type="number" min="0" max="20" value="${tip.a != null ? tip.a : ""}" placeholder="0" data-id="${esc(m.id)}" data-side="a">`
+                  }
+                  ${badge ? `<span class="tipps-badge">${badge}</span>` : ""}
+                </div>
+                <span class="tipps-team-name text-right">${esc(m.away)}</span>
+              </div>
+              ${m.finished && tip.h != null ? `<div class="tipps-result">Ergebnis: ${m.homeScore}:${m.awayScore}</div>` : ""}
+              ${m.date ? `<div class="tipps-date">${m.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}, ${pad(m.date.getHours())}:${pad(m.date.getMinutes())} Uhr</div>` : ""}
+            </div>`;
+        }
+      }
+
+      $list.innerHTML = html;
+
+      $list.querySelectorAll(".tipps-input").forEach(inp => {
+        inp.addEventListener("change", () => {
+          const id = inp.dataset.id;
+          const side = inp.dataset.side;
+          const val = parseInt(inp.value, 10);
+          const cur = JSON.parse(localStorage.getItem(LS_TIPPS) || "{}");
+          if (!cur[id]) cur[id] = {};
+          cur[id][side] = isNaN(val) || val < 0 ? null : val;
+          localStorage.setItem(LS_TIPPS, JSON.stringify(cur));
+          renderTipps();
+        });
+      });
+    }
+
     function setUpdated() {
       const n = new Date();
       $updated.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
@@ -2972,6 +3099,7 @@
       if (nav === "matches")        { currentFilter = "all";    setTab("all");    $tabs.style.display = ""; render(); }
       else if (nav === "live")      { currentFilter = "live";   setTab("live");   $tabs.style.display = ""; render(); }
       else if (nav === "standings") { currentFilter = "groups"; setTab("groups"); $tabs.style.display = ""; render(); }
+      else if (nav === "tipps")     { currentFilter = "tipps";  document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
       else if (nav === "teams")     { currentFilter = "teams";  document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
       else if (nav === "profile")   { currentFilter = "profile";document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
     }));
