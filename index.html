@@ -944,6 +944,11 @@
       display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; }
     .pp-name { font-size: 0.66rem; font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
       max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.65); }
+    .pp.pi-player { cursor: pointer; transition: transform 0.12s ease; }
+    .pp.pi-player:hover .pp-face, .pp.pi-player:focus-visible .pp-face { border-color: var(--gold); }
+    .pp.pi-player:active { transform: scale(0.94); }
+    .pi-bench { cursor: pointer; color: var(--gold-soft); border-bottom: 1px dotted transparent; }
+    .pi-bench:hover, .pi-bench:focus-visible { border-bottom-color: var(--gold-soft); outline: none; }
 
     /* ===== Tipps-Tab ===== */
     .tipps-header { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
@@ -3003,7 +3008,7 @@
             <span class="pp-face"><span class="pp-facenum">${esc(num)}</span>${head ? `<img src="${esc(head)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>
             ${num !== "" ? `<span class="pp-numbadge">${esc(num)}</span>` : ""}
           </span>`;
-        return `<div class="pp">${face}<span class="pp-name">${esc(last)}</span></div>`;
+        return `<div class="pp pi-player" role="button" tabindex="0" data-player="${esc(nm)}" title="${esc(nm)} – Infos anzeigen">${face}<span class="pp-name">${esc(last)}</span></div>`;
       };
       const team = r => {
         const xi = (r.roster || []).filter(p => p.starter);
@@ -3015,7 +3020,9 @@
         const rows = [3, 2, 1, 0].map(i => lines[i].length
           ? `<div class="pitch-row">${lines[i].map(dot).join("")}</div>` : "").join("");
         const bench = (r.roster || []).filter(p => !p.starter)
-          .map(p => esc(p.athlete?.displayName || "")).filter(Boolean).join(", ");
+          .map(p => { const n = p.athlete?.displayName || ""; return n
+            ? `<span class="pi-player pi-bench" role="button" tabindex="0" data-player="${esc(n)}">${esc(n)}</span>` : ""; })
+          .filter(Boolean).join(", ");
         return `<div class="lineup-block">
           <div class="lineup-head"><span class="lineup-team">${esc(r.team?.displayName || "")}</span><span class="lineup-form">${esc(formation)}</span></div>
           <div class="pitch">${rows}</div>
@@ -3245,6 +3252,164 @@
         navigator.serviceWorker.register("sw.js").catch(() => { });
       });
     }
+  </script>
+
+  <!-- ============================================================
+       SPIELER-INFO POPUP (TheSportsDB) – verbunden mit der Aufstellung
+       Tippen auf einen Spieler in der Aufstellung öffnet das Popup.
+       ============================================================ -->
+  <script>
+  (function () {
+    const PI_API_KEY = "123"; // TheSportsDB Free-Key
+    const PI_BASE = `https://www.thesportsdb.com/api/v1/json/${PI_API_KEY}`;
+    const piEsc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+    // ---------- Styles (nutzt App-Theme-Variablen) ----------
+    const piStyle = document.createElement("style");
+    piStyle.textContent = `
+    .pi-backdrop { position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; transition: opacity .2s ease; }
+    .pi-backdrop.pi-open { opacity: 1; }
+    .pi-sheet { width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+      background: var(--card, #16181d); color: var(--text, #eee);
+      border-radius: 20px 20px 0 0; padding: 14px 20px 28px;
+      font-family: "Inter", system-ui, sans-serif;
+      transform: translateY(40px); transition: transform .25s ease;
+      box-shadow: 0 -8px 30px rgba(0,0,0,.5); }
+    .pi-backdrop.pi-open .pi-sheet { transform: translateY(0); }
+    .pi-handle { width: 40px; height: 4px; border-radius: 2px;
+      background: var(--line-bright, #3a3d45); margin: 4px auto 16px; }
+    .pi-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .pi-photo { width: 72px; height: 72px; border-radius: 50%;
+      object-fit: cover; object-position: top; background: var(--card-2, #22252c);
+      border: 2px solid var(--line, #2e3340); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+    .pi-name { font-family: "Cinzel", serif; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+    .pi-sub { font-size: .85rem; color: var(--muted, #9aa0ab); margin-top: 3px;
+      display: flex; align-items: center; gap: 7px; }
+    .pi-sub img { width: 22px; height: 15px; border-radius: 2px; object-fit: cover; }
+    .pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pi-card { background: var(--card-2, #1e2128); border: 1px solid var(--line, #262a33);
+      border-radius: 12px; padding: 10px 12px; }
+    .pi-card .pi-label { font-size: .7rem; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted-2, #8a909c); margin-bottom: 3px; }
+    .pi-card .pi-value { font-size: .95rem; font-weight: 600; }
+    .pi-card.pi-wide { grid-column: 1 / -1; }
+    .pi-desc { grid-column: 1 / -1; font-size: .85rem; color: var(--muted, #b9bec8);
+      line-height: 1.55; max-height: 150px; overflow-y: auto; }
+    .pi-close { display: block; width: 100%; margin-top: 18px; padding: 12px;
+      border: 1px solid var(--line-bright, #2e3340); border-radius: 12px;
+      background: var(--card-2, #2e3340); color: var(--text, #fff);
+      font-family: "Inter", sans-serif; font-size: .95rem; font-weight: 600; cursor: pointer; }
+    .pi-close:hover { border-color: var(--gold, #e5b94e); }
+    .pi-loading, .pi-error { text-align: center; padding: 34px 0; color: var(--muted, #9aa0ab); }
+    .pi-spinner { width: 28px; height: 28px; margin: 0 auto 12px;
+      border: 3px solid var(--line, #2e3340); border-top-color: var(--gold, #e5b94e);
+      border-radius: 50%; animation: pi-spin .8s linear infinite; }
+    @keyframes pi-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .pi-spinner { animation-duration: 2s; } }
+    `;
+    document.head.appendChild(piStyle);
+
+    // ---------- Cache (schont das API-Limit) ----------
+    const piCache = {};
+    async function piFetchPlayer(idPlayer, name) {
+      const cacheKey = idPlayer ? "id:" + idPlayer : "n:" + (name || "").toLowerCase();
+      if (piCache[cacheKey]) return piCache[cacheKey];
+      const url = idPlayer
+        ? `${PI_BASE}/lookupplayer.php?id=${encodeURIComponent(idPlayer)}`
+        : `${PI_BASE}/searchplayers.php?p=${encodeURIComponent(name)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("API-Fehler");
+      const data = await res.json();
+      const player = (data.players || data.player || [])[0];
+      if (!player) throw new Error("nicht gefunden");
+      piCache[cacheKey] = player;
+      return player;
+    }
+
+    function piAge(dateBorn) {
+      if (!dateBorn) return null;
+      const b = new Date(dateBorn), now = new Date();
+      let age = now.getFullYear() - b.getFullYear();
+      const mm = now.getMonth() - b.getMonth();
+      if (mm < 0 || (mm === 0 && now.getDate() < b.getDate())) age--;
+      return age >= 0 && age < 60 ? age : null;
+    }
+
+    // ---------- Popup anzeigen (global, auch manuell aufrufbar) ----------
+    async function showPlayerInfo(idPlayer, name = "") {
+      const backdrop = document.createElement("div");
+      backdrop.className = "pi-backdrop";
+      backdrop.innerHTML = `
+        <div class="pi-sheet">
+          <div class="pi-handle"></div>
+          <div class="pi-loading"><div class="pi-spinner"></div>Lade Spielerdaten…</div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      requestAnimationFrame(() => backdrop.classList.add("pi-open"));
+
+      const close = () => { backdrop.classList.remove("pi-open"); setTimeout(() => backdrop.remove(), 250); };
+      backdrop.addEventListener("click", e => { if (e.target === backdrop) close(); });
+      document.addEventListener("keydown", function onEsc(ev) {
+        if (ev.key === "Escape") { close(); document.removeEventListener("keydown", onEsc); }
+      });
+      const sheet = backdrop.querySelector(".pi-sheet");
+
+      try {
+        const p = await piFetchPlayer(idPlayer, name);
+        const age = piAge(p.dateBorn);
+        const photo = p.strCutout || p.strThumb || p.strRender || "";
+        const desc = p.strDescriptionDE || p.strDescriptionEN || "";
+        const born = p.dateBorn ? new Date(p.dateBorn).toLocaleDateString("de-DE") : "–";
+        sheet.innerHTML = `
+          <div class="pi-handle"></div>
+          <div class="pi-head">
+            ${photo ? `<img class="pi-photo" src="${piEsc(photo)}" alt="" onerror="this.outerHTML='<div class=&quot;pi-photo&quot;>👤</div>'">`
+                    : `<div class="pi-photo">👤</div>`}
+            <div>
+              <div class="pi-name">${piEsc(p.strPlayer || name)}</div>
+              <div class="pi-sub">${piEsc(p.strNationality || "")}${p.strNumber ? " · #" + piEsc(p.strNumber) : ""}</div>
+            </div>
+          </div>
+          <div class="pi-grid">
+            <div class="pi-card pi-wide"><div class="pi-label">Verein</div><div class="pi-value">${piEsc(p.strTeam || "–")}</div></div>
+            <div class="pi-card"><div class="pi-label">Position</div><div class="pi-value">${piEsc(p.strPosition || "–")}</div></div>
+            <div class="pi-card"><div class="pi-label">Alter</div><div class="pi-value">${age !== null ? age + " Jahre" : "–"}</div></div>
+            <div class="pi-card"><div class="pi-label">Geboren</div><div class="pi-value">${piEsc(born)}</div></div>
+            <div class="pi-card"><div class="pi-label">Größe</div><div class="pi-value">${piEsc(p.strHeight || "–")}</div></div>
+            ${desc ? `<div class="pi-card pi-wide"><div class="pi-label">Über</div><div class="pi-desc">${piEsc(desc.slice(0,600))}${desc.length>600?"…":""}</div></div>` : ""}
+          </div>
+          <button class="pi-close">Schließen</button>`;
+        sheet.querySelector(".pi-close").addEventListener("click", close);
+      } catch (err) {
+        sheet.innerHTML = `
+          <div class="pi-handle"></div>
+          <div class="pi-error">Keine Daten zu „${piEsc(name)}" gefunden.</div>
+          <button class="pi-close">Schließen</button>`;
+        sheet.querySelector(".pi-close").addEventListener("click", close);
+      }
+    }
+    window.showPlayerInfo = showPlayerInfo;
+
+    // ---------- Mit der Aufstellung verbinden (Event-Delegation) ----------
+    const piTrigger = el => {
+      const name = el?.dataset?.player;
+      if (name) showPlayerInfo(null, name);
+    };
+    document.addEventListener("click", e => {
+      const el = e.target.closest(".pi-player[data-player]");
+      if (el) { e.stopPropagation(); piTrigger(el); }
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const el = e.target.closest?.(".pi-player[data-player]");
+      if (el) { e.preventDefault(); e.stopPropagation(); piTrigger(el); }
+    });
+  })();
   </script>
 
   <!-- Cloudflare Web Analytics -->
