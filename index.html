@@ -519,6 +519,9 @@
     .notif-card.nt-red::before   { background: #EF4444; }
     .notif-card.nt-var::before   { background: #3B82F6; }
     .notif-card.nt-pen::before   { background: #F97316; }
+    .notif-card.nt-lineup::before { background: var(--gold); }
+    .notif-card.nt-kickoff::before{ background: #22D3EE; }
+    .notif-card.nt-ft::before     { background: var(--muted-2); }
 
     .ni-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
     .ni-body { flex: 1; min-width: 0; }
@@ -528,6 +531,9 @@
     .notif-card.nt-red .ni-type   { color: #EF4444; }
     .notif-card.nt-var .ni-type   { color: #60A5FA; }
     .notif-card.nt-pen .ni-type   { color: #F97316; }
+    .notif-card.nt-lineup .ni-type { color: var(--gold-soft); }
+    .notif-card.nt-kickoff .ni-type{ color: #22D3EE; }
+    .notif-card.nt-ft .ni-type     { color: var(--muted); }
     .ni-title { font-size: 0.86rem; font-weight: 700; color: var(--text); line-height: 1.25; margin-top: 1px; }
     .ni-detail { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
     .ni-time { font-size: 0.6rem; color: var(--muted-2); flex-shrink: 0; align-self: flex-start; }
@@ -3131,6 +3137,9 @@
       red:    { icon: "🟥", cls: "nt-red",    label: "ROTE KARTE" },
       var:    { icon: "🔵", cls: "nt-var",    label: "VAR CHECK" },
       pen:    { icon: "🟠", cls: "nt-pen",    label: "ELFMETER" },
+      lineup:  { icon: "📋", cls: "nt-lineup",  label: "AUFSTELLUNG" },
+      kickoff: { icon: "▶️", cls: "nt-kickoff", label: "ANPFIFF" },
+      fulltime:{ icon: "⏹",  cls: "nt-ft",      label: "ABPFIFF" },
     };
 
     function addNotification(type, title, detail, matchId) {
@@ -3409,6 +3418,189 @@
       const el = e.target.closest?.(".pi-player[data-player]");
       if (el) { e.preventDefault(); e.stopPropagation(); piTrigger(el); }
     });
+  })();
+  </script>
+
+  <!-- ============================================================
+       MATCH-MITTEILUNGEN (TheSportsDB) – verbunden mit dem
+       bestehenden Benachrichtigungsfeld (Glocke + Toasts).
+       Meldet: 📋 Aufstellung · ▶️ Anpfiff · 🟥 Rote Karten · ⏹ Abpfiff
+       Tore meldet die App bereits selbst (detectGoals) – hier deshalb
+       standardmäßig AUS, sonst kämen Tor-Meldungen doppelt.
+       ============================================================ -->
+  <script>
+  (function () {
+    const MW_API_KEY = "123";
+    const MW_BASE = `https://www.thesportsdb.com/api/v1/json/${MW_API_KEY}`;
+    const MW_LEAGUE_ID = "4429";           // FIFA World Cup
+    const MW_POLL_MS = 60000;              // alle 60 Sekunden prüfen
+    const MW_LINEUP_WINDOW_MIN = 75;       // Aufstellung ab 75 Min. vor Anpfiff
+    const MW_NOTIFY_GOALS = false;         // App meldet Tore schon selbst
+
+    // ---------- Brücke zum bestehenden Benachrichtigungsfeld ----------
+    // addNotification(type, title, detail, matchId) aus der Haupt-App.
+    // Typ-Mapping: redcard→red, Rest hat eigene NOTIF_META-Einträge.
+    const MW_TYPE = { goal: "goal", redcard: "red", lineup: "lineup",
+                      kickoff: "kickoff", fulltime: "fulltime" };
+
+    // Spiel in der App wiederfinden → Tippen auf die Mitteilung
+    // öffnet das Spiel-Detail
+    function mwFindMatchId(homeName, awayName) {
+      const c = s => (s || "").trim().toLowerCase();
+      const h = c(homeName), a = c(awayName);
+      const hit = (typeof allMatches !== "undefined" ? allMatches : []).find(m =>
+        (c(m.home) === h && c(m.away) === a) || (c(m.home) === a && c(m.away) === h));
+      return hit ? hit.id : "";
+    }
+
+    // Schlaf-Modus respektieren: nur Spiele mit dem Lieblingsteam melden
+    function mwAllowed(ev) {
+      try {
+        if (typeof sleepMode !== "undefined" && sleepMode) {
+          const fav = (typeof FAV_TEAM !== "undefined" ? FAV_TEAM : "").toLowerCase();
+          return [ev.strHomeTeam, ev.strAwayTeam]
+            .some(t => (t || "").toLowerCase() === fav);
+        }
+      } catch { /* im Zweifel melden */ }
+      return true;
+    }
+
+    function mwNotify(mwType, title, text, ev) {
+      if (ev && !mwAllowed(ev)) return;
+      const type = MW_TYPE[mwType] || "goal";
+      const matchId = ev ? mwFindMatchId(ev.strHomeTeam, ev.strAwayTeam) : "";
+      if (typeof addNotification === "function") {
+        addNotification(type, title, text, matchId); // Feld + Toast + Glocke
+      }
+      mwBrowserNotify(title, text);
+    }
+
+    // Browser-Benachrichtigung (nur bei erteilter Erlaubnis,
+    // auf dem iPhone nur als installierte PWA ab iOS 16.4)
+    function mwBrowserNotify(title, text) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        try { new Notification(title, { body: text, icon: "icon-192.png" }); }
+        catch (e) { /* mobil ggf. nicht erlaubt – ignorieren */ }
+      }
+    }
+
+    // ---------- Watcher-Logik ----------
+    const MatchWatcher = (() => {
+      let state = JSON.parse(localStorage.getItem("mw_state") || "{}");
+      let timer = null;
+      const save = () => localStorage.setItem("mw_state", JSON.stringify(state));
+
+      const scoreText = ev =>
+        `${ev.strHomeTeam} ${ev.intHomeScore ?? 0} : ${ev.intAwayScore ?? 0} ${ev.strAwayTeam}`;
+
+      async function fetchTodayEvents() {
+        const today = new Date().toISOString().slice(0, 10);
+        const res = await fetch(`${MW_BASE}/eventsday.php?d=${today}&l=${MW_LEAGUE_ID}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.events || [];
+      }
+
+      // Rote Karten über die Timeline (liefert der Free-Key nicht immer –
+      // dann wird still übersprungen)
+      async function checkRedCards(ev, prev) {
+        try {
+          const res = await fetch(`${MW_BASE}/lookuptimeline.php?id=${ev.idEvent}`);
+          if (!res.ok) return prev.redCards || 0;
+          const data = await res.json();
+          const reds = (data.timeline || []).filter(t =>
+            (t.strTimeline || "").toLowerCase().includes("card") &&
+            (t.strTimelineDetail || "").toLowerCase().includes("red"));
+          if (reds.length > (prev.redCards || 0)) {
+            const last = reds[reds.length - 1];
+            mwNotify("redcard", "Rote Karte!",
+              `${last.strPlayer || "Spieler"} (${last.strTeam || ""}) – ${ev.strHomeTeam} vs. ${ev.strAwayTeam}`, ev);
+          }
+          return reds.length;
+        } catch { return prev.redCards || 0; }
+      }
+
+      async function checkLineup(ev, prev) {
+        if (prev.lineupNotified) return true;
+        try {
+          const res = await fetch(`${MW_BASE}/lookuplineup.php?id=${ev.idEvent}`);
+          if (!res.ok) return false;
+          const data = await res.json();
+          if (data.lineup && data.lineup.length > 0) {
+            mwNotify("lineup", "Aufstellung ist da!",
+              `${ev.strHomeTeam} vs. ${ev.strAwayTeam}${ev.strTime ? " – Anstoß " + ev.strTime.slice(0,5) + " Uhr" : ""}`, ev);
+            return true;
+          }
+        } catch { /* ignorieren */ }
+        return false;
+      }
+
+      const minutesUntilKickoff = ev =>
+        ev.strTimestamp ? (new Date(ev.strTimestamp) - new Date()) / 60000 : Infinity;
+
+      const isLive = ev => ["1H","2H","HT","ET","LIVE","P"]
+        .some(x => (ev.strStatus || "").toUpperCase().includes(x));
+      const isFinished = ev => ["FT","AET","PEN","FINISHED","MATCH FINISHED"]
+        .some(x => (ev.strStatus || "").toUpperCase().includes(x));
+
+      async function tick() {
+        let events = [];
+        try { events = await fetchTodayEvents(); }
+        catch { return; } // Netzfehler: nächste Runde abwarten
+
+        for (const ev of events) {
+          const key = ev.idEvent;
+          const prev = state[key] || {};
+          const next = { ...prev };
+          const mins = minutesUntilKickoff(ev);
+
+          // 📋 Aufstellung (im Zeitfenster vor Anpfiff)
+          if (!prev.lineupNotified && mins > 0 && mins <= MW_LINEUP_WINDOW_MIN) {
+            next.lineupNotified = await checkLineup(ev, prev);
+          }
+
+          // ▶️ Anpfiff
+          if (isLive(ev) && !prev.kickoffNotified) {
+            mwNotify("kickoff", "Anpfiff!", `${ev.strHomeTeam} vs. ${ev.strAwayTeam}`, ev);
+            next.kickoffNotified = true;
+          }
+
+          // ⚽ Tor (standardmäßig aus – siehe MW_NOTIFY_GOALS)
+          const score = `${ev.intHomeScore ?? ""}:${ev.intAwayScore ?? ""}`;
+          if (MW_NOTIFY_GOALS && isLive(ev) && prev.score && score !== prev.score && score !== ":") {
+            mwNotify("goal", "TOOOR!", scoreText(ev), ev);
+          }
+          if (score !== ":") next.score = score;
+
+          // 🟥 Rote Karten (nur bei Live-Spielen)
+          if (isLive(ev)) next.redCards = await checkRedCards(ev, prev);
+
+          // ⏹ Abpfiff
+          if (isFinished(ev) && !prev.finishedNotified) {
+            mwNotify("fulltime", "Abpfiff", "Endstand: " + scoreText(ev), ev);
+            next.finishedNotified = true;
+          }
+
+          state[key] = next;
+        }
+        save();
+      }
+
+      return {
+        start() {
+          if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+          }
+          tick();
+          timer = setInterval(tick, MW_POLL_MS);
+        },
+        stop() { clearInterval(timer); timer = null; }
+      };
+    })();
+
+    window.MatchWatcher = MatchWatcher;
+    MatchWatcher.start();
   })();
   </script>
 
