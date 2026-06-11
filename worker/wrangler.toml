@@ -8,8 +8,12 @@ crons = ["*/2 * * * *"]
 
 [vars]
 # Öffentlicher VAPID-Schlüssel (setzt deploy.sh automatisch)
-VAPID_PUBLIC_KEY = "HIER_VAPID_PUBLIC_KEY_EINTRAGEN"
+VAPID_PUBLIC_KEY = "BOnj31xNCJecnL_F8T4ec8nHsMWU6DP2w3-G4qLD6EKzhELBZi-HwU5LhN-jYfGELQK-C71pSKoaBy_DygjErhw"
 VAPID_SUBJECT = "mailto:elihesse2008@gmail.com"
 
 # Der KV-Namespace-Block wird von deploy.sh unten angehängt.
 # Der private VAPID-Schlüssel kommt als Secret: wrangler secret put VAPID_PRIVATE_KEY
+
+[[kv_namespaces]]
+binding = "KV"
+id = "e0c97018840146d3a54fd87075a283ec"
