@@ -5,7 +5,7 @@
    - Spieldaten (openfootball) & Flaggen: stale-while-revalidate → schnell,
      aktualisiert sich im Hintergrund, funktioniert offline mit letztem Stand. */
 
-const VERSION = "wm2026-v1";
+const VERSION = "wm2026-v2";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 
@@ -13,8 +13,11 @@ const SHELL_ASSETS = [
   "./",
   "index.html",
   "manifest.json",
+  "icon.svg",
+  "favicon-32.png",
   "icon-192.png",
   "icon-512.png",
+  "icon-512-maskable.png",
   "apple-touch-icon.png",
 ];
 
