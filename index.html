@@ -640,6 +640,17 @@
     .group-title { font-family: "Cinzel", serif; font-size: 0.95rem; font-weight: 700;
       letter-spacing: 1.5px; color: var(--gold-soft); margin-bottom: 12px;
       display: flex; align-items: center; gap: 8px; }
+    /* Live-Tabelle: laufende Spiele zählen mit Zwischenstand mit */
+    .group-live-tag { display: inline-flex; align-items: center; gap: 5px;
+      font-family: "Inter", sans-serif; font-size: 0.6rem; font-weight: 800;
+      letter-spacing: 1px; color: var(--live);
+      border: 1px solid rgba(255,77,94,0.4); border-radius: 7px; padding: 2px 7px; }
+    .live-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 7px;
+      font-size: 0.68rem; font-weight: 800; color: var(--live);
+      font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .live-chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live);
+      animation: pulse 1.2s infinite; flex-shrink: 0; }
+    table.standings tr.live-row td { background: rgba(255,77,94,0.05); }
     /* horizontaler Scroll-Container, damit auf Mobile nichts abgeschnitten wird */
     .standings-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .standings-wrap::-webkit-scrollbar { height: 5px; }
@@ -1886,16 +1897,26 @@
       for (const m of allMatches) if (m.kind === "wm" && m.group) {
         ensure(m.group, m.home, m.homeBadge); ensure(m.group, m.away, m.awayBadge);
       }
-      const finished = allMatches.filter(m => m.kind === "wm" && m.group && m.finished
-        && m.homeScore != null && m.awayScore != null)
+      // Live-Tabelle: laufende Spiele zählen mit aktuellem Zwischenstand mit –
+      // so sieht man während des Spiels, wer gerade vorn liegt
+      const counted = allMatches.filter(m => m.kind === "wm" && m.group
+        && (m.finished || m.live) && m.homeScore != null && m.awayScore != null)
         .sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
-      for (const m of finished) {
+      for (const m of counted) {
         const h = ensure(m.group, m.home, m.homeBadge), a = ensure(m.group, m.away, m.awayBadge);
         const hs = +m.homeScore, as = +m.awayScore;
         h.p++; a.p++; h.gf += hs; h.ga += as; a.gf += as; a.ga += hs;
-        if (hs > as) { h.w++; a.l++; h.pts += 3; h.form.push("w"); a.form.push("l"); }
-        else if (hs < as) { a.w++; h.l++; a.pts += 3; a.form.push("w"); h.form.push("l"); }
-        else { h.d++; a.d++; h.pts++; a.pts++; h.form.push("d"); a.form.push("d"); }
+        if (hs > as) { h.w++; a.l++; h.pts += 3; }
+        else if (hs < as) { a.w++; h.l++; a.pts += 3; }
+        else { h.d++; a.d++; h.pts++; a.pts++; }
+        if (m.live) {
+          // Live-Markierung statt Form-Eintrag (Spiel ist noch nicht vorbei)
+          h.live = { score: `${hs}:${as}`, status: m.status };
+          a.live = { score: `${as}:${hs}`, status: m.status };
+        } else {
+          const r = hs > as ? ["w", "l"] : hs < as ? ["l", "w"] : ["d", "d"];
+          h.form.push(r[0]); a.form.push(r[1]);
+        }
       }
       const out = {};
       for (const g of Object.keys(groups).sort())
@@ -2254,18 +2275,22 @@
       }
       let html = `<div class="legend">Je Gruppe ziehen die <b>ersten beiden</b> ins Sechzehntelfinale ein (zzgl. der acht besten Gruppendritten).</div><div class="groups-grid">`;
       for (const g of keys) {
+        const groupLive = groups[g].some(t => t.live);
         const rows = groups[g].map((t, i) => {
           const form = t.form.slice(-5).map(r =>
             `<span class="${r}">${r === "w" ? "S" : r === "d" ? "U" : "N"}</span>`).join("");
-          return `<tr class="${i < 2 ? "qualified" : ""} ${isFav(t.team) ? "is-fav" : ""}">
+          const liveChip = t.live
+            ? `<span class="live-chip" title="läuft gerade: ${esc(t.live.status || "Live")}"><span class="live-chip-dot"></span>${esc(t.live.score)}</span>`
+            : "";
+          return `<tr class="${i < 2 ? "qualified" : ""} ${isFav(t.team) ? "is-fav" : ""} ${t.live ? "live-row" : ""}">
             <td class="r"><span class="rankcell">${i + 1}</span></td>
-            <td class="t"><span class="team-cell">${flag(t.badge)}<span>${esc(t.team)}${isFav(t.team) ? ' <span class="fav-star">★</span>' : ""}</span></span></td>
+            <td class="t"><span class="team-cell">${flag(t.badge)}<span>${esc(t.team)}${isFav(t.team) ? ' <span class="fav-star">★</span>' : ""}</span>${liveChip}</span></td>
             <td>${t.p}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td>
             <td>${t.gf}:${t.ga}</td><td>${t.gf - t.ga > 0 ? "+" : ""}${t.gf - t.ga}</td>
             <td class="pts">${t.pts}</td><td><span class="form">${form}</span></td>
           </tr>`;
         }).join("");
-        html += `<div class="group-card"><div class="group-title">🏅 Gruppe ${g}</div>
+        html += `<div class="group-card"><div class="group-title">🏅 Gruppe ${g}${groupLive ? ' <span class="group-live-tag"><span class="live-chip-dot"></span>LIVE-TABELLE</span>' : ""}</div>
           <div class="standings-wrap"><table class="standings"><thead><tr>
             <th class="r"></th><th class="t">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th>
             <th>Tore</th><th>Diff</th><th>Pkt</th><th>Form</th>
