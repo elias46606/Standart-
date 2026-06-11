@@ -2693,7 +2693,7 @@
             : `<span class="tipps-flag-fb"></span>`;
           const inputsHtml = locked
             ? `<span class="tipps-score-disp">${tip.h != null ? tip.h : "–"}</span><span class="tipps-colon">:</span><span class="tipps-score-disp">${tip.a != null ? tip.a : "–"}</span>`
-            : `<input class="tipps-input" type="number" min="0" max="20" value="${tip.h != null ? tip.h : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="h"><span class="tipps-colon">:</span><input class="tipps-input" type="number" min="0" max="20" value="${tip.a != null ? tip.a : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="a">`;
+            : `<input class="tipps-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${tip.h != null ? tip.h : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="h"><span class="tipps-colon">:</span><input class="tipps-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${tip.a != null ? tip.a : ""}" placeholder="–" data-id="${esc(m.id)}" data-side="a">`;
           const footerHtml = m.finished && tip.h != null
             ? `<div class="tipps-footer">${badge} Dein Tipp: <strong>${tip.h}:${tip.a}</strong> &nbsp;·&nbsp; Ergebnis: <span class="tipps-real-score">${m.homeScore}:${m.awayScore}</span></div>`
             : "";
@@ -2725,6 +2725,9 @@
       $list.innerHTML = html;
 
       $list.querySelectorAll(".tipps-input").forEach(inp => {
+        inp.addEventListener("input", () => {
+          inp.value = inp.value.replace(/\D/g, "").slice(0, 2);
+        });
         inp.addEventListener("change", () => {
           const id = inp.dataset.id;
           const side = inp.dataset.side;
@@ -3201,11 +3204,13 @@
 
     // Click on match card (delegation for both match types)
     $list.addEventListener("click", e => {
+      if (e.target.closest("input, .tipps-card")) return; // Tipp-Eingabe öffnet kein Spiel-Detail
       const card = e.target.closest("[data-id]");
       if (card) openMatch(card.dataset.id);
     });
     $list.addEventListener("keydown", e => {
       if (e.key !== "Enter" && e.key !== " ") return;
+      if (e.target.closest("input, .tipps-card")) return;
       const card = e.target.closest("[data-id]");
       if (card) { e.preventDefault(); openMatch(card.dataset.id); }
     });
