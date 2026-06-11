@@ -1596,10 +1596,40 @@
       const evs = await espnScoreboard(ESPN_LEAGUE.test);
       return evs.map(e => normalizeESPN(e, "test")).filter(Boolean);
     }
+    // Live-/Tagesdaten der WM von ESPN – openfootball ist nur der statische
+    // Spielplan und kennt weder Live-Status noch Zwischenstände
+    async function loadWMLive() {
+      const evs = await espnScoreboard(ESPN_LEAGUE.wm);
+      return evs.map(e => normalizeESPN(e, "wm")).filter(Boolean);
+    }
 
     async function loadAll() {
       try {
-        const [wm, tests] = await Promise.all([loadWM(), loadTests()]);
+        const [wm, tests, wmLive] = await Promise.all([loadWM(), loadTests(), loadWMLive()]);
+
+        // ESPN-Livedaten in den Spielplan einspielen (Match über Teamnamen
+        // in beliebiger Heim/Auswärts-Reihenfolge, Anstoß ±30 Std.)
+        const near = (a, b) => a != null && b != null && Math.abs(a - b) < 30 * 36e5;
+        for (const le of wmLive) {
+          const hit = wm.find(m =>
+            near(m.date?.getTime(), le.date?.getTime()) && (
+              (espnCanon(m.home) === espnCanon(le.home) && espnCanon(m.away) === espnCanon(le.away)) ||
+              (espnCanon(m.home) === espnCanon(le.away) && espnCanon(m.away) === espnCanon(le.home))));
+          if (hit) {
+            const sw = espnCanon(hit.home) !== espnCanon(le.home); // vertauschte Seiten?
+            hit.live = le.live; hit.status = le.status;
+            hit.espnId = le.espnId; hit.espnLeague = le.espnLeague;
+            const hs = sw ? le.awayScore : le.homeScore;
+            const as = sw ? le.homeScore : le.awayScore;
+            if (hs != null) hit.homeScore = hs;
+            if (as != null) hit.awayScore = as;
+            if (le.finished) hit.finished = true;
+            if (!hit.venue && le.venue) hit.venue = le.venue;
+          } else {
+            wm.push(le); // Spiel fehlt im openfootball-Plan → trotzdem anzeigen
+          }
+        }
+
         let merged = wm.concat(tests);
         if (!merged.length) throw new Error("Keine Daten verfügbar");
 
