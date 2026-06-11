@@ -16,19 +16,27 @@ echo "================================================"
 echo " WM 2026 · Push-Worker Setup"
 echo "================================================"
 
-# ---- 1) Anmeldung: API-Token (iPad/Codespaces) oder Browser-Login ----
-if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then
-  if npx wrangler whoami >/dev/null 2>&1; then
-    echo "✓ Angemeldet über CLOUDFLARE_API_TOKEN."
-  else
-    die "CLOUDFLARE_API_TOKEN ist gesetzt, aber ungültig. Neues Token mit der Vorlage 'Edit Cloudflare Workers' erstellen."
-  fi
-elif npx wrangler whoami >/dev/null 2>&1; then
-  echo "✓ Bereits bei Cloudflare angemeldet."
-else
-  echo "→ Browser öffnet sich: bei Cloudflare einloggen und 'Allow' klicken …"
-  npx wrangler login || die "Login fehlgeschlagen."
+# ---- 1) Anmeldung per Cloudflare-API-Token ----
+# Token säubern (versehentliche Leerzeichen/Zeilenumbrüche aus dem Einfügen)
+CLOUDFLARE_API_TOKEN="$(printf '%s' "${CLOUDFLARE_API_TOKEN:-}" | tr -d '[:space:]')"
+if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+  echo ""
+  echo "Bitte deinen Cloudflare-API-Token einfügen und Enter drücken."
+  echo "(dash.cloudflare.com → Profil → API Tokens → Create Token →"
+  echo " Vorlage 'Edit Cloudflare Workers')"
+  printf "Token: "
+  read -r CLOUDFLARE_API_TOKEN
+  CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]')"
 fi
+export CLOUDFLARE_API_TOKEN
+[ -n "$CLOUDFLARE_API_TOKEN" ] || die "Kein Token eingegeben."
+
+WHO=$(npx wrangler whoami 2>&1)
+if printf '%s' "$WHO" | grep -qiE "not authenticated|necessary to set|invalid|unauthor"; then
+  echo "$WHO"
+  die "Token ungültig oder ohne Workers-Rechte. Neues Token mit Vorlage 'Edit Cloudflare Workers' erstellen."
+fi
+echo "✓ Bei Cloudflare angemeldet."
 
 # ---- 2) KV-Namespace anlegen und Binding in wrangler.toml schreiben ----
 if grep -q "kv_namespaces" wrangler.toml; then
