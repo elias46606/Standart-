@@ -915,16 +915,34 @@
     .lineup-team { font-size: 0.86rem; font-weight: 700; color: var(--text); }
     .lineup-form { font-family: "Cinzel", serif; font-size: 0.78rem; font-weight: 700; color: var(--gold-soft);
       background: rgba(216,185,100,0.12); border: 1px solid rgba(216,185,100,0.28); border-radius: 7px; padding: 2px 9px; }
-    .pitch { display: flex; flex-direction: column; gap: 6px; padding: 12px 6px;
-      background: linear-gradient(160deg, #14502f, #0e3d24);
-      border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); }
-    body.theme-light .pitch { background: linear-gradient(160deg, #2e8b57, #246b43); }
-    .pitch-row { display: flex; justify-content: space-around; gap: 4px; }
-    .pp { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 56px; }
+    .pitch { display: flex; flex-direction: column; gap: 12px; padding: 18px 8px; position: relative;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 26px, transparent 26px 52px),
+        linear-gradient(160deg, #14502f, #0e3d24);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
+    .pitch::before { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: 84px; height: 84px; border: 1.5px solid rgba(255,255,255,0.13); border-radius: 50%; pointer-events: none; }
+    .pitch::after { content: ""; position: absolute; left: 8px; right: 8px; top: 50%;
+      border-top: 1.5px solid rgba(255,255,255,0.13); pointer-events: none; }
+    body.theme-light .pitch { background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 26px, transparent 26px 52px),
+        linear-gradient(160deg, #2e8b57, #246b43); }
+    .pitch-row { display: flex; justify-content: space-around; gap: 4px; position: relative; z-index: 1; }
+    .pp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; }
+    .pp-wrap { position: relative; }
+    .pp-face { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.92);
+      border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .pp-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+    .pp-facenum { font-size: 0.82rem; font-weight: 700; color: #0e3d24; }
+    .pp-numbadge { position: absolute; bottom: -3px; right: -5px; min-width: 17px; height: 17px;
+      padding: 0 3px; border-radius: 9px; background: var(--gold); color: #1a1505;
+      font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
     .pp-shirt { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.95); color: #0e3d24;
       display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; }
-    .pp-name { font-size: 0.62rem; font-weight: 600; color: #fff; text-align: center; line-height: 1.1;
-      max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .pp-name { font-size: 0.66rem; font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
+      max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.65); }
 
     /* ===== Tipps-Tab ===== */
     .tipps-header { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
@@ -976,8 +994,25 @@
     body.theme-light .tipps-input:focus { background: rgba(59,130,246,0.06); }
     body.theme-light .tipps-score-disp { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
 
+    /* ===== TV-Übertragung ===== */
+    .tv-badge { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .mlc-tv { padding: 0 14px 10px; font-size: 0.72rem; color: var(--muted); }
+
+    /* ===== Design-Polish ===== */
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .match-live, .match-upcoming, .match-finished, .tipps-card, .br-match {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+    .match-live:hover, .match-upcoming:hover, .match-finished:hover {
+      transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.22); }
+    body.theme-light .match-live:hover, body.theme-light .match-upcoming:hover,
+    body.theme-light .match-finished:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+    button:focus-visible, .switch:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 2px; }
+    .tipps-input:focus-visible { outline: none; }
+    img { -webkit-user-drag: none; }
+
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; }
     }
     @media (max-width: 520px) {
       .match { grid-template-columns: 56px 1fr auto; gap: 10px; padding: 12px 14px; }
@@ -1234,6 +1269,23 @@
     const isNightMatch = m => { if (!m.date) return false; const h = m.date.getHours(); return h >= 23 || h < 7; };
     const nightBadge   = m => sleepMode && isNightMatch(m) ? `<span class="night-badge">🌙</span>` : "";
 
+    // TV-Übertragung in Deutschland (WM 2026: MagentaTV zeigt alle Spiele,
+    // ARD/ZDF zeigen ausgewählte Spiele inkl. aller deutschen Partien)
+    function tvInfo(m) {
+      const isGer = n => /^(germany|deutschland)$/i.test((n || "").trim());
+      const gerPlays = isGer(m.home) || isGer(m.away);
+      if (m.kind === "wm") {
+        if (gerPlays || m.stage === "Finale") return "ARD/ZDF · MagentaTV";
+        return "MagentaTV (alle Spiele) · tw. ARD/ZDF";
+      }
+      if (gerPlays) return "RTL / ARD";
+      return "";
+    }
+    const tvBadge = m => {
+      const tv = tvInfo(m);
+      return tv ? `<span class="tv-badge">📺 ${esc(tv)}</span>` : "";
+    };
+
     // Passwort-Hash via SubtleCrypto (SHA-256), Fallback base64
     async function hashPw(pw) {
       try {
@@ -1247,8 +1299,7 @@
     function userAvatar(name) {
       const flagSrc = flagUrl("", FAV_TEAM);
       if (flagSrc) {
-        const url = flagSrc.replace("/w40/", "/w80/");
-        return `<div class="user-avatar" style="background-image:url('${url}');background-size:cover;background-position:center;background-color:var(--card-2)"></div>`;
+        return `<div class="user-avatar" style="background-image:url('${flagSrc}');background-size:cover;background-position:center;background-color:var(--card-2)"></div>`;
       }
       const colors = ["#3B82F6","#8B5CF6","#EC4899","#F97316","#10B981","#EF4444","#14B8A6"];
       const idx = [...(name || "?")].reduce((a,c) => a + c.charCodeAt(0), 0) % colors.length;
@@ -1331,7 +1382,7 @@
     }
     function flagUrl(code, name) {
       const iso = isoFor(code, name);
-      return iso ? `https://flagcdn.com/w40/${iso}.png` : "";
+      return iso ? `https://flagcdn.com/${iso}.svg` : "";
     }
     function parseGroup(raw) {
       if (raw == null) return null;
@@ -1916,6 +1967,7 @@
             </div>
           </div>
           ${timeline || `<div class="mlc-last-event">${lastEventHtml}</div>`}
+          ${tvInfo(m) ? `<div class="mlc-tv">${tvBadge(m)}</div>` : ""}
         </div>`;
     }
 
@@ -1965,7 +2017,7 @@
               <span class="muc-name">${esc(m.away)}${favA ? " ★" : ""}</span>
             </div>
           </div>
-          ${m.venue ? `<div class="muc-footer">📍 ${esc(m.venue)}</div>` : ""}
+          ${m.venue || tvInfo(m) ? `<div class="muc-footer">${m.venue ? "📍 " + esc(m.venue) : ""}${m.venue && tvInfo(m) ? " · " : ""}${tvBadge(m)}</div>` : ""}
         </div>`;
     }
 
@@ -2585,6 +2637,8 @@
     }
 
     function renderTipps() {
+      // Nicht neu rendern, während der Nutzer gerade ein Tipp-Feld bearbeitet
+      if (document.activeElement?.classList?.contains("tipps-input")) return;
       const tipps = JSON.parse(localStorage.getItem(LS_TIPPS) || "{}");
       const groupMatches = allMatches.filter(m => m.kind === "wm" && m.group).sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
 
@@ -2646,7 +2700,7 @@
           html += `
             <div class="tipps-card${locked ? " locked" : ""}" style="${gradStyle}">
               <div class="tipps-meta">
-                <span class="tipps-meta-left">${m.live ? "🔴 Live" : m.finished ? "Abgepfiffen" : "Ausstehend"}</span>
+                <span class="tipps-meta-left">${statusStr}</span>
                 <span>${esc(dateStr)}</span>
               </div>
               <div class="tipps-match-row">
@@ -2679,7 +2733,18 @@
           if (!cur[id]) cur[id] = {};
           cur[id][side] = isNaN(val) || val < 0 ? null : val;
           localStorage.setItem(LS_TIPPS, JSON.stringify(cur));
-          renderTipps();
+          // Kein Re-Render: Scroll-Position und Tastatur bleiben erhalten,
+          // nur die Gesamtpunktzahl oben wird aktualisiert
+          const scoreEl = $list.querySelector(".tipps-score");
+          if (scoreEl) {
+            let total = 0;
+            for (const m of allMatches) {
+              if (m.kind !== "wm" || !m.group) continue;
+              const s = scoreTipp(cur[m.id] || {}, m);
+              if (s != null) total += s;
+            }
+            scoreEl.textContent = total;
+          }
         });
       });
     }
@@ -2800,6 +2865,7 @@
           <div class="mds-fact"><span class="mds-fact-k">Phase</span><span class="mds-fact-v">${esc(phase)}</span></div>
           <div class="mds-fact"><span class="mds-fact-k">Anstoß</span><span class="mds-fact-v">${fullDate(m.date)}</span></div>
           <div class="mds-fact"><span class="mds-fact-k">Stadion</span><span class="mds-fact-v">${esc(m.venue) || "–"}</span></div>
+          ${tvInfo(m) ? `<div class="mds-fact"><span class="mds-fact-k">📺 TV (DE)</span><span class="mds-fact-v">${esc(tvInfo(m))}</span></div>` : ""}
           ${hasScore ? `<div class="mds-fact"><span class="mds-fact-k">Endstand</span><span class="mds-fact-v">${m.homeScore} : ${m.awayScore}</span></div>` : ""}
           ${m.htScore && hasScore ? `<div class="mds-fact"><span class="mds-fact-k">Halbzeit</span><span class="mds-fact-v">${m.htScore[0]} : ${m.htScore[1]}</span></div>` : ""}
         </div>`;
@@ -2924,7 +2990,16 @@
         const num = p.jersey ?? p.athlete?.jersey ?? "";
         const nm = p.athlete?.displayName || p.athlete?.shortName || "";
         const last = nm.split(" ").slice(-1)[0] || nm;
-        return `<div class="pp"><span class="pp-shirt">${esc(num)}</span><span class="pp-name">${esc(last)}</span></div>`;
+        const pid = p.athlete?.id;
+        const head = p.athlete?.headshot?.href
+          || (pid ? `https://a.espncdn.com/i/headshots/soccer/players/full/${pid}.png` : "");
+        // Gesicht mit Rückennummer; Bild-Fehler → Nummer bleibt sichtbar
+        const face = `
+          <span class="pp-wrap">
+            <span class="pp-face"><span class="pp-facenum">${esc(num)}</span>${head ? `<img src="${esc(head)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>
+            ${num !== "" ? `<span class="pp-numbadge">${esc(num)}</span>` : ""}
+          </span>`;
+        return `<div class="pp">${face}<span class="pp-name">${esc(last)}</span></div>`;
       };
       const team = r => {
         const xi = (r.roster || []).filter(p => p.starter);
