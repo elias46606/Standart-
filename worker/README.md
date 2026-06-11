@@ -4,7 +4,18 @@ Sendet echte Web-Push-Benachrichtigungen (Tore, Rote Karten, Aufstellung,
 Anpfiff, Abpfiff) an alle Abonnenten der WM-App — auch bei geschlossener App.
 Läuft komplett im Cloudflare Free-Tier (Workers + KV + Cron).
 
-## Einmalige Einrichtung
+## Schnellweg: alles mit einem Befehl
+
+```bash
+cd worker && bash deploy.sh
+```
+
+Das Skript erledigt Login, KV-Namespace, VAPID-Schlüssel, Secret, Deploy
+und trägt die Worker-URL automatisch in `index.html` ein. Einzige
+Interaktion: einmal im Browser bei Cloudflare „Allow" klicken.
+Danach nur noch committen/pushen (das Skript zeigt den Befehl an).
+
+## Manuelle Einrichtung (falls der Schnellweg hakt)
 
 Voraussetzung: Node.js installiert. Alle Befehle in diesem Ordner (`worker/`) ausführen.
 
