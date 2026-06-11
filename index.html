@@ -1155,6 +1155,10 @@
     const REFRESH_MS = 60_000;
     const CACHE_KEY = "wm2026-cache-v3";
 
+    // Push-Worker (Cloudflare): nach dem Deploy hier die Worker-URL eintragen,
+    // z.B. "https://wm2026-push.<dein-name>.workers.dev" – siehe worker/README.md
+    const PUSH_WORKER_URL = "";
+
     // ===== Nutzer-Einstellungen (localStorage) =====
     const LS = {
       fav: "wm2026-fav", user: "wm2026-user",
@@ -1305,6 +1309,60 @@
           new TextEncoder().encode(pw + "·wm2026"));
         return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
       } catch { return btoa(pw + "wm2026"); }
+    }
+
+    // ===== Web-Push (echte Push-Benachrichtigungen über Cloudflare Worker) =====
+    const pushSupported = () =>
+      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+    function urlB64ToUint8Array(s) {
+      const pad = "=".repeat((4 - s.length % 4) % 4);
+      const b64 = (s + pad).replace(/-/g, "+").replace(/_/g, "/");
+      const raw = atob(b64);
+      return Uint8Array.from(raw, c => c.charCodeAt(0));
+    }
+
+    async function pushGetSubscription() {
+      if (!pushSupported()) return null;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        return await reg.pushManager.getSubscription();
+      } catch { return null; }
+    }
+
+    async function pushSubscribe() {
+      if (!pushSupported()) throw new Error("Push wird von diesem Browser nicht unterstützt");
+      if (!PUSH_WORKER_URL) throw new Error("Worker-URL noch nicht eingetragen (siehe worker/README.md)");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") throw new Error("Benachrichtigungen wurden nicht erlaubt");
+      const reg = await navigator.serviceWorker.ready;
+      const { publicKey } = await (await fetch(PUSH_WORKER_URL + "/vapid")).json();
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(publicKey),
+      });
+      const res = await fetch(PUSH_WORKER_URL + "/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub),
+      });
+      if (!res.ok) { await sub.unsubscribe().catch(() => {}); throw new Error("Worker antwortet nicht (" + res.status + ")"); }
+      return sub;
+    }
+
+    async function pushUnsubscribe() {
+      const sub = await pushGetSubscription();
+      if (!sub) return;
+      if (PUSH_WORKER_URL) {
+        try {
+          await fetch(PUSH_WORKER_URL + "/unsubscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+        } catch { /* Worker nicht erreichbar – Subscription trotzdem lokal lösen */ }
+      }
+      await sub.unsubscribe().catch(() => {});
     }
 
     // Avatar-Kreis: Flagge des Lieblingsteams, Fallback farbiges Initial
@@ -2578,6 +2636,10 @@
           <span class="switch ${notifyGoals ? "on" : ""}" id="swGoals" role="switch"><span class="switch-knob"></span></span>
         </div>
         <div class="settings-row">
+          <span class="settings-row-main">🔔 <span>Push-Benachrichtigungen</span><span class="settings-hint"> · Auch bei geschlossener App</span></span>
+          <span class="switch" id="swPush" role="switch"><span class="switch-knob"></span></span>
+        </div>
+        <div class="settings-row">
           <span class="settings-row-main">🌙 <span>Schlaf-Modus</span><span class="settings-hint"> · Nur ★ in Verlängerung</span></span>
           <span class="switch ${sleepMode ? "on" : ""}" id="swSleep" role="switch"><span class="switch-knob"></span></span>
         </div>
@@ -2605,6 +2667,28 @@
         renderProfile(true);
         showToast(notifyGoals ? "🔔 Tor-Benachrichtigungen an" : "🔕 Tor-Benachrichtigungen aus");
       });
+      const $swPush = document.getElementById("swPush");
+      if ($swPush) {
+        // Aktuellen Abo-Status asynchron anzeigen
+        pushGetSubscription().then(s => $swPush.classList.toggle("on", !!s));
+        let pushBusy = false;
+        $swPush.addEventListener("click", async () => {
+          if (pushBusy) return; pushBusy = true;
+          try {
+            if ($swPush.classList.contains("on")) {
+              await pushUnsubscribe();
+              $swPush.classList.remove("on");
+              showToast("🔕 Push-Benachrichtigungen deaktiviert");
+            } else {
+              await pushSubscribe();
+              $swPush.classList.add("on");
+              showToast("🔔 Push aktiv – auch bei geschlossener App");
+            }
+          } catch (e) {
+            showToast("❌ " + e.message);
+          } finally { pushBusy = false; }
+        });
+      }
       document.getElementById("swSleep")?.addEventListener("click", () => {
         sleepMode = !sleepMode;
         localStorage.setItem("wm2026-sleep", sleepMode ? "1" : "0");

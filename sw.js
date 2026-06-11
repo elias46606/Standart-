@@ -3,9 +3,10 @@
    - App-Shell (HTML, Icons, Manifest) beim Install cachen → offline startbar.
    - Navigationsanfragen: Netzwerk zuerst, bei Offline aus Cache (index.html).
    - Spieldaten (openfootball) & Flaggen: stale-while-revalidate → schnell,
-     aktualisiert sich im Hintergrund, funktioniert offline mit letztem Stand. */
+     aktualisiert sich im Hintergrund, funktioniert offline mit letztem Stand.
+   - Web-Push: push-Event zeigt Notification, Klick öffnet/fokussiert die App. */
 
-const VERSION = "wm2026-v2";
+const VERSION = "wm2026-v3";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 
@@ -70,5 +71,33 @@ self.addEventListener("fetch", event => {
   // Rest (Shell, Fonts): Cache zuerst, sonst Netzwerk
   event.respondWith(
     caches.match(req).then(r => r || fetch(req).catch(() => r))
+  );
+});
+
+// ====== Web-Push ============================================================
+self.addEventListener("push", event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text() }; }
+  const title = data.title || "WM 2026";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "",
+    icon: "icon-192.png",
+    badge: "icon-192.png",
+    tag: data.tag || undefined,      // gleiche tags ersetzen sich → kein Spam
+    data: { url: data.url || "./" },
+  }));
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = event.notification.data?.url || "./";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      // Bereits offenes App-Fenster fokussieren, sonst neu öffnen
+      for (const c of list) {
+        if ("focus" in c) { c.navigate?.(target); return c.focus(); }
+      }
+      return clients.openWindow(target);
+    })
   );
 });

@@ -1,0 +1,20 @@
+name = "wm2026-push"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# Cron: alle 2 Minuten WM-Spiele prüfen
+[triggers]
+crons = ["*/2 * * * *"]
+
+# KV-Namespace – ID nach `wrangler kv namespace create KV` hier eintragen
+[[kv_namespaces]]
+binding = "KV"
+id = "HIER_KV_NAMESPACE_ID_EINTRAGEN"
+
+[vars]
+# Öffentlicher VAPID-Schlüssel (aus generate-vapid-keys.mjs)
+VAPID_PUBLIC_KEY = "HIER_VAPID_PUBLIC_KEY_EINTRAGEN"
+VAPID_SUBJECT = "mailto:elihesse2008@gmail.com"
+
+# Der private Schlüssel kommt NICHT hierher, sondern als Secret:
+#   wrangler secret put VAPID_PRIVATE_KEY
