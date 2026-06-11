@@ -13,11 +13,21 @@ echo "================================================"
 echo " WM 2026 · Push-Worker Setup"
 echo "================================================"
 
-# ---- 1) Login (öffnet Browser, nur 'Allow' klicken) ----
-if npx wrangler whoami >/dev/null 2>&1; then
+# ---- 1) Anmeldung: API-Token (iPad/Codespaces) oder Browser-Login ----
+if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then
+  if npx wrangler whoami >/dev/null 2>&1; then
+    echo "✓ Angemeldet über CLOUDFLARE_API_TOKEN."
+  else
+    echo "✗ CLOUDFLARE_API_TOKEN ist gesetzt, aber ungültig."
+    echo "  Neues Token: dash.cloudflare.com → Profil → API Tokens →"
+    echo "  Create Token → Vorlage 'Edit Cloudflare Workers'."
+    exit 1
+  fi
+elif npx wrangler whoami >/dev/null 2>&1; then
   echo "✓ Bereits bei Cloudflare angemeldet."
 else
   echo "→ Browser öffnet sich: bei Cloudflare einloggen und 'Allow' klicken …"
+  echo "  (Auf iPad/Codespaces stattdessen: export CLOUDFLARE_API_TOKEN=… setzen)"
   npx wrangler login
 fi
 
