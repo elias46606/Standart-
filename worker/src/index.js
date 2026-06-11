@@ -51,6 +51,22 @@ export default {
       return json({ ok: true });
     }
 
+    // Test-Push an die eigene Subscription (vom Test-Knopf in der App)
+    if (url.pathname === "/test" && req.method === "POST") {
+      const sub = await req.json().catch(() => null);
+      if (!sub?.endpoint) return json({ error: "Keine Subscription" }, 400);
+      try {
+        const res = await sendWebPush(env, sub, {
+          title: "🔔 Test-Benachrichtigung",
+          body: "Push funktioniert – du bist startklar für die WM! ⚽",
+          tag: "test", url: "./",
+        });
+        return json({ ok: res.ok, status: res.status });
+      } catch (e) {
+        return json({ error: String(e.message || e) }, 500);
+      }
+    }
+
     return json({ error: "Not found" }, 404);
   },
 
