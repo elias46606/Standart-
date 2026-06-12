@@ -2222,19 +2222,7 @@
         html += live.map(renderLiveCard).join("");
       }
 
-      // 2. Upcoming section
-      if (upcoming.length) {
-        html += `<div class="section-head upcoming">Kommend</div>`;
-        let lastKey = "";
-        for (const m of upcoming) {
-          const sh = sectionSubHead(m);
-          const key = sh ? sh.key : (m.date ? `mo-${m.date.getFullYear()}-${m.date.getMonth()}` : "offen");
-          if (key !== lastKey) { html += sectionHeadHtml(sh, m, "Termin offen"); lastKey = key; }
-          html += renderUpcomingCard(m);
-        }
-      }
-
-      // 3. Finished section
+      // 2. Abgeschlossene Spiele zuerst – Ergebnisse & Statistiken direkt sichtbar
       if (finished.length) {
         html += `<div class="section-head finished">Abgeschlossen</div>`;
         const finishedDesc = [...finished].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
@@ -2244,6 +2232,18 @@
           const key = sh ? sh.key : (m.date ? `mo-${m.date.getFullYear()}-${m.date.getMonth()}` : "offen");
           if (key !== lastKey) { html += sectionHeadHtml(sh, m, "–"); lastKey = key; }
           html += renderFinishedCard(m);
+        }
+      }
+
+      // 3. Kommende Spiele danach
+      if (upcoming.length) {
+        html += `<div class="section-head upcoming">Kommend</div>`;
+        let lastKey = "";
+        for (const m of upcoming) {
+          const sh = sectionSubHead(m);
+          const key = sh ? sh.key : (m.date ? `mo-${m.date.getFullYear()}-${m.date.getMonth()}` : "offen");
+          if (key !== lastKey) { html += sectionHeadHtml(sh, m, "Termin offen"); lastKey = key; }
+          html += renderUpcomingCard(m);
         }
       }
 
