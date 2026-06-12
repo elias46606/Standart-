@@ -930,10 +930,11 @@
     .lineups-wrap { display: flex; flex-direction: column; gap: 14px; }
     .lineup-block { background: var(--card-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
     .lineup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
-    .lineup-team { font-size: 0.86rem; font-weight: 700; color: var(--text); }
+    .lineup-team { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; font-weight: 700; color: var(--text); }
+    .lineup-team img { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
     .lineup-form { font-family: "Cinzel", serif; font-size: 0.78rem; font-weight: 700; color: var(--gold-soft);
       background: rgba(216,185,100,0.12); border: 1px solid rgba(216,185,100,0.28); border-radius: 7px; padding: 2px 9px; }
-    .pitch { display: flex; flex-direction: column; gap: 12px; padding: 18px 8px; position: relative;
+    .pitch { display: flex; flex-direction: column; gap: 16px; padding: 20px 8px 20px 22px; position: relative;
       background:
         repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 26px, transparent 26px 52px),
         linear-gradient(160deg, #14502f, #0e3d24);
@@ -946,21 +947,29 @@
         repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 26px, transparent 26px 52px),
         linear-gradient(160deg, #2e8b57, #246b43); }
     .pitch-row { display: flex; justify-content: space-around; gap: 4px; position: relative; z-index: 1; }
-    .pp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; }
+    /* Linien-Beschriftung (ANGRIFF/MITTELFELD/ABWEHR/TOR), vertikal am Rand */
+    .pitch-row-label { position: absolute; left: -16px; top: 50%;
+      transform: translateY(-50%); writing-mode: vertical-rl; rotate: 180deg;
+      font-size: 0.5rem; font-weight: 800; letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.42); pointer-events: none; user-select: none; }
+    .pp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
     .pp-wrap { position: relative; }
-    .pp-face { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.92);
-      border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    /* Spieler-Avatar: Foto, sonst Initialen auf Teamfarben-Verlauf – nie leer */
+    .pp-face { width: 46px; height: 46px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 2px 7px rgba(0,0,0,0.4);
       display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
     .pp-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-    .pp-facenum { font-size: 0.82rem; font-weight: 700; color: #0e3d24; }
+    .pp-init { font-size: 0.82rem; font-weight: 800; color: #fff; letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .pp-face.pp-gk { border-color: var(--gold); }
     .pp-numbadge { position: absolute; bottom: -3px; right: -5px; min-width: 17px; height: 17px;
       padding: 0 3px; border-radius: 9px; background: var(--gold); color: #1a1505;
       font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4); z-index: 1; }
     .pp-shirt { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.95); color: #0e3d24;
       display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; }
-    .pp-name { font-size: 0.66rem; font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
-      max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.65); }
+    .pp-name { font-size: 0.68rem; font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
+      max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
     .pp.pi-player { cursor: pointer; transition: transform 0.12s ease; }
     .pp.pi-player:hover .pp-face, .pp.pi-player:focus-visible .pp-face { border-color: var(--gold); }
     .pp.pi-player:active { transform: scale(0.94); }
@@ -3162,21 +3171,27 @@
         if (/^(M|CM|DM|AM|LM|RM)/.test(a)) return 2;
         return 2;
       };
-      const dot = p => {
+      // Spieler-Avatar: ESPN-Foto; lädt es nicht, bleiben Initialen auf
+      // Teamfarben-Verlauf sichtbar – jeder Spieler hat damit ein Bild
+      const dot = (p, clr, isGk) => {
         const num = p.jersey ?? p.athlete?.jersey ?? "";
         const nm = p.athlete?.displayName || p.athlete?.shortName || "";
         const last = nm.split(" ").slice(-1)[0] || nm;
         const pid = p.athlete?.id;
         const head = p.athlete?.headshot?.href
           || (pid ? `https://a.espncdn.com/i/headshots/soccer/players/full/${pid}.png` : "");
-        // Gesicht mit Rückennummer; Bild-Fehler → Nummer bleibt sichtbar
+        const initials = (nm.split(" ").filter(Boolean).map(x => x[0]).slice(0, 2).join("") || "?").toUpperCase();
         const face = `
           <span class="pp-wrap">
-            <span class="pp-face"><span class="pp-facenum">${esc(num)}</span>${head ? `<img src="${esc(head)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>
+            <span class="pp-face${isGk ? " pp-gk" : ""}" style="background:linear-gradient(150deg,${hex2rgba(clr, 0.85)},#1a1f29)">
+              <span class="pp-init">${esc(initials)}</span>
+              ${head ? `<img src="${esc(head)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
+            </span>
             ${num !== "" ? `<span class="pp-numbadge">${esc(num)}</span>` : ""}
           </span>`;
         return `<div class="pp pi-player" role="button" tabindex="0" data-player="${esc(nm)}" title="${esc(nm)} – Infos anzeigen">${face}<span class="pp-name">${esc(last)}</span></div>`;
       };
+      const ROW_LABEL = { 3: "ANGRIFF", 2: "MITTELFELD", 1: "ABWEHR", 0: "TOR" };
       const team = r => {
         const xi = (r.roster || []).filter(p => p.starter);
         if (!xi.length) return "";
@@ -3184,14 +3199,17 @@
         xi.forEach(p => lines[lineOf(p.position?.abbreviation || p.position?.name)].push(p));
         const formation = r.formation
           || [lines[1].length, lines[2].length, lines[3].length].filter(Boolean).join("-");
+        const tName = r.team?.displayName || "";
+        const clr = TEAM_CLR[tName.toLowerCase()] || "#3B82F6";
         const rows = [3, 2, 1, 0].map(i => lines[i].length
-          ? `<div class="pitch-row">${lines[i].map(dot).join("")}</div>` : "").join("");
+          ? `<div class="pitch-row"><span class="pitch-row-label">${ROW_LABEL[i]}</span>${lines[i].map(p => dot(p, clr, i === 0)).join("")}</div>` : "").join("");
         const bench = (r.roster || []).filter(p => !p.starter)
           .map(p => { const n = p.athlete?.displayName || ""; return n
             ? `<span class="pi-player pi-bench" role="button" tabindex="0" data-player="${esc(n)}">${esc(n)}</span>` : ""; })
           .filter(Boolean).join(", ");
+        const tFlag = flagUrl("", tName) || r.team?.logo || "";
         return `<div class="lineup-block">
-          <div class="lineup-head"><span class="lineup-team">${esc(r.team?.displayName || "")}</span><span class="lineup-form">${esc(formation)}</span></div>
+          <div class="lineup-head"><span class="lineup-team">${tFlag ? `<img src="${esc(tFlag)}" alt="" onerror="this.remove()">` : ""}${esc(tName)}</span><span class="lineup-form">${esc(formation)}</span></div>
           <div class="pitch">${rows}</div>
           ${bench ? `<div class="mds-bench"><b>Bank:</b> ${bench}</div>` : ""}
         </div>`;
