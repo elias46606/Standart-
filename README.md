@@ -7,21 +7,33 @@ Dieses Repository veröffentlicht über GitHub Pages **zwei getrennte Seiten**:
 | ⚽ **WM 2026 & Testspiele** (Fußball-Seite, `wm-spiele.html`) | https://elias46606.github.io/Standart-/ |
 | ◎ **Klarheit** (Social-Media-Demo) | https://elias46606.github.io/Standart-/klarheit/ |
 
-Die Fußball-Seite bleibt unter der Haupt-Adresse erreichbar; Klarheit liegt im
-Unterordner `/klarheit/`. Beide werden vom selben GitHub-Actions-Workflow
-(`.github/workflows/deploy-pages.yml`) veröffentlicht.
+Die Fußball-Seite liegt unter der Haupt-Adresse, Klarheit im Unterordner `/klarheit/`.
 
-## ◎ Klarheit – Social-Media-Demo
+## Ordnerstruktur
 
-Im Ordner [`klarheit/`](klarheit/) liegt **Klarheit**, eine Demo-Webapp (React + Vite),
-die zeigt, wie soziale Medien ohne Suchtdesign aussehen könnten.
+- `index.html` – die Fußball-Seite unter der Haupt-Adresse (Kopie von `wm-spiele.html`)
+- `wm-spiele.html` – die Fußball-Seite (Original)
+- `klarheit/` – die **fertig gebaute** Klarheit-App, die ausgeliefert wird
+- `klarheit-src/` – der **Quellcode** der Klarheit-App (React + Vite)
 
-**Lokal starten:**
+> Hinweis: `klarheit/` enthält den Build-Stand. Wer den Quellcode in `klarheit-src/`
+> ändert, baut neu und kopiert das Ergebnis nach `klarheit/` (siehe unten) – oder
+> stellt GitHub Pages auf „GitHub Actions", dann übernimmt der Workflow das automatisch.
+
+## ◎ Klarheit lokal starten
 
 ```bash
-cd klarheit
+cd klarheit-src
 npm install
 npm run dev
 ```
 
-Mehr Details und Vorführ-Tipps: [klarheit/README.md](klarheit/README.md)
+Neu bauen und ausgelieferten Ordner aktualisieren:
+
+```bash
+cd klarheit-src
+npm run build
+cp -r dist/. ../klarheit/
+```
+
+Mehr Details und Vorführ-Tipps: [klarheit-src/README.md](klarheit-src/README.md)

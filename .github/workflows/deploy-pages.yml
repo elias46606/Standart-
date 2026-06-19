@@ -5,8 +5,9 @@ on:
     branches:
       - claude/sharp-einstein-tf9ppn
     paths:
-      - 'klarheit/**'
+      - 'klarheit-src/**'
       - 'wm-spiele.html'
+      - 'index.html'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -32,14 +33,14 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: klarheit/package-lock.json
+          cache-dependency-path: klarheit-src/package-lock.json
 
       - name: Klarheit-Abhängigkeiten installieren
-        working-directory: klarheit
+        working-directory: klarheit-src
         run: npm ci
 
       - name: Klarheit bauen
-        working-directory: klarheit
+        working-directory: klarheit-src
         run: npm run build
 
       - name: Pages-Verzeichnis zusammenstellen
@@ -49,7 +50,7 @@ jobs:
           cp wm-spiele.html _site/wm-spiele.html
           cp wm-spiele.html _site/index.html
           # Klarheit bekommt eine eigene Unter-Adresse (/Standart-/klarheit/)
-          cp -r klarheit/dist/. _site/klarheit/
+          cp -r klarheit-src/dist/. _site/klarheit/
 
       - name: GitHub Pages konfigurieren
         uses: actions/configure-pages@v5

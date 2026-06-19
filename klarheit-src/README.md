@@ -9,7 +9,7 @@ Demo-Daten fest im Code hinterlegt.
 ## 🚀 Schnellstart
 
 ```bash
-cd klarheit
+cd klarheit-src
 npm install
 npm run dev
 ```
