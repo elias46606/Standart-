@@ -2,7 +2,7 @@
    - POST /subscribe    Push-Subscription speichern (KV)
    - POST /unsubscribe  Subscription löschen
    - GET  /vapid        öffentlichen VAPID-Schlüssel liefern
-   - Cron (alle 2 Min.) WM-Spiele prüfen (TheSportsDB, Liga 4429) und
+   - Cron (jede Minute) WM-Spiele prüfen (TheSportsDB, Liga 4429) und
                         bei Toren, Roten Karten, Aufstellung, Anpfiff,
                         Abpfiff Web-Push an alle Subscriptions senden.
    Zustand pro Spiel liegt in KV ("state:<idEvent>") → keine Doppel-Pushes. */
