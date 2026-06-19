@@ -70,6 +70,38 @@ export default {
       }
     }
 
+    // Tippspiel-Rangliste: eigenen Punktestand melden
+    if (url.pathname === "/score" && req.method === "POST") {
+      const d = await req.json().catch(() => null);
+      const name = (d?.name || "").trim().slice(0, 32);
+      if (!name) return json({ error: "kein Name" }, 400);
+      const entry = {
+        name,
+        points: d.points | 0, exact: d.exact | 0,
+        tend: d.tend | 0, wrong: d.wrong | 0, ts: Date.now(),
+      };
+      // Schlüssel ohne Sonderzeichen, Eintrag 60 Tage halten
+      const key = "rank:" + name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      await env.KV.put(key, JSON.stringify(entry), { expirationTtl: 60 * 60 * 24 * 60 });
+      return json({ ok: true });
+    }
+
+    // Tippspiel-Rangliste: Top-Liste abrufen
+    if (url.pathname === "/leaderboard" && req.method === "GET") {
+      const out = [];
+      let cursor;
+      do {
+        const page = await env.KV.list({ prefix: "rank:", cursor });
+        cursor = page.list_complete ? null : page.cursor;
+        for (const k of page.keys) {
+          const e = JSON.parse(await env.KV.get(k.name) || "null");
+          if (e) out.push(e);
+        }
+      } while (cursor);
+      out.sort((a, b) => b.points - a.points || b.exact - a.exact || a.name.localeCompare(b.name));
+      return json({ leaderboard: out.slice(0, 100) });
+    }
+
     return json({ error: "Not found" }, 404);
   },
 
