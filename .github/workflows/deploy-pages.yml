@@ -1,4 +1,4 @@
-name: Klarheit auf GitHub Pages veröffentlichen
+name: Seiten auf GitHub Pages veröffentlichen
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - claude/sharp-einstein-tf9ppn
     paths:
       - 'klarheit/**'
+      - 'wm-spiele.html'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -33,23 +34,32 @@ jobs:
           cache: npm
           cache-dependency-path: klarheit/package-lock.json
 
-      - name: Abhängigkeiten installieren
+      - name: Klarheit-Abhängigkeiten installieren
         working-directory: klarheit
         run: npm ci
 
-      - name: App bauen
+      - name: Klarheit bauen
         working-directory: klarheit
         run: npm run build
+
+      - name: Pages-Verzeichnis zusammenstellen
+        run: |
+          mkdir -p _site/klarheit
+          # Fußball-Seite behält die Haupt-Adresse (/Standart-/ und /Standart-/wm-spiele.html)
+          cp wm-spiele.html _site/wm-spiele.html
+          cp wm-spiele.html _site/index.html
+          # Klarheit bekommt eine eigene Unter-Adresse (/Standart-/klarheit/)
+          cp -r klarheit/dist/. _site/klarheit/
 
       - name: GitHub Pages konfigurieren
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      - name: Build-Ergebnis als Pages-Artefakt hochladen
+      - name: Pages-Artefakt hochladen
         uses: actions/upload-pages-artifact@v3
         with:
-          path: klarheit/dist
+          path: _site
 
   deploy:
     needs: build
