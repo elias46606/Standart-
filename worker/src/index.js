@@ -13,6 +13,9 @@ const TSDB_KEY = "123";
 const TSDB = `https://www.thesportsdb.com/api/v1/json/${TSDB_KEY}`;
 const LEAGUE_ID = "4429";          // FIFA World Cup
 const LINEUP_WINDOW_MIN = 75;      // Aufstellung ab 75 Min. vor Anpfiff prüfen
+const REMIND_MIN = 30;             // Erinnerung 30 Min. vor Anpfiff (Lieblingsteam)
+
+const normTeam = s => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -84,7 +87,8 @@ async function checkMatches(env) {
   const events = (await res.json())?.events || [];
   if (!events.length) return;
 
-  const pushes = [];
+  const pushes = [];      // an alle Abonnenten
+  const reminders = [];   // nur an Abonnenten, deren Lieblingsteam spielt
 
   for (const ev of events) {
     const stateKey = "state:" + ev.idEvent;
@@ -93,6 +97,15 @@ async function checkMatches(env) {
     const title = `${ev.strHomeTeam} vs. ${ev.strAwayTeam}`;
     const mins = ev.strTimestamp ? (new Date(ev.strTimestamp) - Date.now()) / 60000 : Infinity;
     const live = isLive(ev), done = isFinished(ev);
+
+    // ⏰ Erinnerung kurz vor Anpfiff – nur für Lieblingsteam-Abonnenten
+    if (!prev.remindNotified && mins > 0 && mins <= REMIND_MIN && !live && !done) {
+      reminders.push({
+        teams: [normTeam(ev.strHomeTeam), normTeam(ev.strAwayTeam)],
+        payload: { title: "⏰ Gleich geht's los!", body: `${title} – Anpfiff in ca. ${Math.max(1, Math.round(mins))} Min.`, tag: "remind-" + ev.idEvent },
+      });
+      next.remindNotified = true;
+    }
 
     // 📋 Aufstellung verfügbar (Zeitfenster vor Anpfiff)
     if (!prev.lineupNotified && mins > 0 && mins <= LINEUP_WINDOW_MIN) {
@@ -136,7 +149,7 @@ async function checkMatches(env) {
     }
   }
 
-  if (pushes.length) await broadcast(env, pushes);
+  if (pushes.length || reminders.length) await broadcast(env, pushes, reminders);
 }
 
 const scoreText = ev =>
@@ -164,8 +177,9 @@ async function countRedCards(idEvent) {
   } catch { return 0; }
 }
 
-// Alle Subscriptions benachrichtigen; tote (404/410) löschen
-async function broadcast(env, pushes) {
+// Subscriptions benachrichtigen; tote (404/410) löschen.
+// pushes -> an alle; reminders -> nur an Abos, deren favTeam mitspielt.
+async function broadcast(env, pushes, reminders = []) {
   let cursor;
   do {
     const page = await env.KV.list({ prefix: "sub:", cursor });
@@ -173,15 +187,17 @@ async function broadcast(env, pushes) {
     for (const k of page.keys) {
       const sub = JSON.parse(await env.KV.get(k.name) || "null");
       if (!sub) continue;
-      for (const p of pushes) {
+      const fav = normTeam(sub.favTeam);
+      const queue = pushes.concat(
+        reminders.filter(r => fav && r.teams.includes(fav)).map(r => r.payload));
+      let dead = false;
+      for (const p of queue) {
         try {
           const res = await sendWebPush(env, sub, { ...p, url: "./" });
-          if (res.status === 404 || res.status === 410) {
-            await env.KV.delete(k.name);
-            break;
-          }
+          if (res.status === 404 || res.status === 410) { dead = true; break; }
         } catch { /* einzelner Fehlschlag: nächste Runde versucht es erneut */ }
       }
+      if (dead) await env.KV.delete(k.name);
     }
   } while (cursor);
 }
