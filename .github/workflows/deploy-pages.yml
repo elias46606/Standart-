@@ -35,6 +35,7 @@ jobs:
           cp index.html manifest.json sw.js _site/ 2>/dev/null || true
           cp *.png *.svg _site/ 2>/dev/null || true
           cp himmel.html _site/ 2>/dev/null || true
+          cp -r css _site/ 2>/dev/null || true
           touch _site/.nojekyll
 
       - name: Pages-Artefakt hochladen
