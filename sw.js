@@ -6,7 +6,7 @@
      aktualisiert sich im Hintergrund, funktioniert offline mit letztem Stand.
    - Web-Push: push-Event zeigt Notification, Klick öffnet/fokussiert die App. */
 
-const VERSION = "wm2026-v3";
+const VERSION = "wm2026-v4";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 
@@ -14,6 +14,8 @@ const SHELL_ASSETS = [
   "./",
   "index.html",
   "manifest.json",
+  "css/tokens.css",
+  "css/skin.css",
   "icon.svg",
   "favicon-32.png",
   "icon-192.png",

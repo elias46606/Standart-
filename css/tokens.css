@@ -1,0 +1,20 @@
+/* ============================================================
+   Bronze & Bodoni — Design-Tokens
+   Wird als ERSTES Stylesheet eingebunden. Reine Variablen,
+   keine Komponenten-Regeln (die liegen in skin.css + index.html).
+   ============================================================ */
+:root{
+  --bg:#16110B; --bg-2:#1D1710; --panel:#211A11;
+  --fg:#F2EAD8; --muted:#A0917A;
+  --line:rgba(242,234,216,.12); --line-2:rgba(242,234,216,.20);
+  --brass:#C9A45B; --brass-hi:#ECD9A2; --brass-lo:#94762F;
+  --ruby:#E14A56;
+  --screen:#0C0805; --screen-fg:#F6F0DE;
+  --g-a:#C8505F; --g-b:#5B82B0; --g-c:#3E9472; --g-d:#D7A23F; /* Gruppen A–D */
+  --font-display:"Bodoni Moda",serif;        /* Wordmark, Scores, Abschnittstitel (kursiv) */
+  --font-ui:"Archivo",system-ui,sans-serif;  /* Teamnamen, Codes, Buttons */
+  --font-mono:"Space Mono",monospace;        /* Labels, Minute, Stats, Ticker */
+  --radius:14px;
+  --shadow:0 22px 46px -28px rgba(0,0,0,.85);
+  --metal:linear-gradient(180deg,var(--brass-hi),var(--brass) 52%,var(--brass-lo));
+}
