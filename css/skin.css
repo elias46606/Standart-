@@ -115,7 +115,7 @@ body::after{
 .mfc-tname.winner{ color:var(--fg); }
 .mfc-score{
   font-family:var(--font-display); font-style:italic; font-weight:700;
-  color:var(--g,var(--brass-hi)); letter-spacing:1px;
+  color:var(--brass-hi); letter-spacing:1px;
 }
 .mfc-stats-btn{ font-family:var(--font-mono); color:var(--brass); border-color:var(--line-2); }
 .mfc-venue{ font-family:var(--font-mono); }
@@ -154,7 +154,194 @@ table.standings th{ font-family:var(--font-mono); color:var(--muted); }
 .search-input{ font-family:var(--font-ui); background:var(--panel); border-color:var(--line-2); }
 .search-input:focus{ border-color:var(--brass); }
 
-/* ---------- Reduced Motion: alle (auch neue) Animationen aus ---------- */
+/* ================================================================
+   STANDINGS — Bronze-Ticket-Tabelle
+   ================================================================ */
+
+/* Gruppe-Card: panel + leichte Kante */
+.group-card{
+  background:var(--panel); border:1px solid var(--line-2);
+  border-radius:var(--radius); overflow:hidden;
+}
+/* Gruppen-Titel: Bodoni kursiv, Messing */
+.group-title{
+  font-family:var(--font-display); font-style:italic; font-size:1rem; font-weight:700;
+  color:var(--brass-hi); padding:10px 14px 8px;
+  border-bottom:1px solid var(--line); background:var(--bg-2); letter-spacing:.3px;
+}
+/* Tabellen-Header: Space Mono, gedimmt */
+table.standings thead th{
+  font-family:var(--font-mono); font-size:.58rem; letter-spacing:.8px;
+  text-transform:uppercase; color:var(--muted); padding:5px 6px 4px;
+  border-bottom:1px solid var(--line);
+}
+/* Rang-Zellen: Bodoni kursiv Messing */
+.rankcell{
+  font-family:var(--font-display); font-style:italic; font-weight:700;
+  font-size:.95rem; color:var(--brass);
+}
+/* Tabellen-Zeilen */
+table.standings tbody tr td{ padding:5px 6px; }
+/* Qualifiziert (Platz 1+2): 3px Messing-Kante links */
+table.standings tr.qualified td:first-child{
+  border-left:3px solid var(--brass); padding-left:6px;
+}
+/* Trennlinie nach Platz 2 — dashed */
+table.standings tbody tr:nth-child(2) td{
+  border-bottom:1px dashed var(--line-2); padding-bottom:7px;
+}
+table.standings tbody tr:nth-child(3) td{ padding-top:7px; }
+/* Punkte-Spalte: mono bold fg */
+table.standings td.pts, .pts{
+  font-family:var(--font-mono); font-weight:700; color:var(--fg);
+}
+/* Form-Punkte */
+.form span.w{ color:var(--g-c); font-weight:700; }
+.form span.d{ color:var(--brass); }
+.form span.l{ color:var(--muted); opacity:.65; }
+/* Favoriten-Zeile: Messing-Hintergrund */
+table.standings tr.is-fav{ background:rgba(201,164,91,.07); }
+/* Live-Zeile */
+table.standings tr.live-row{ background:rgba(225,74,86,.06); }
+
+/* ================================================================
+   TIPPS — Bronze-Bodoni-Redesign
+   ================================================================ */
+
+/* Header-Ticket: panel + Messing-Linie oben */
+.tipps-header{
+  background:var(--panel); border:1px solid var(--line-2);
+  border-radius:var(--radius); border-top:3px solid var(--brass);
+  padding:16px 16px 14px; margin-bottom:18px;
+}
+/* Punkte-Held: Bodoni Metall-Verlauf */
+.tipps-score{
+  font-family:var(--font-display); font-style:italic; font-weight:700;
+  font-size:3.2rem; line-height:1;
+  background:var(--metal); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+/* Score-Label */
+.tipps-score-label{
+  font-family:var(--font-mono); font-size:.6rem; letter-spacing:1px;
+  text-transform:uppercase; color:var(--muted); margin-top:5px;
+  -webkit-text-fill-color:var(--muted); /* reset gradient inheritance */
+}
+/* Legende */
+.tipps-legend{ font-family:var(--font-mono); font-size:.68rem; }
+/* Statistik-Kacheln */
+.tipps-stat{
+  background:var(--panel); border:1px solid var(--line-2);
+  border-radius:12px;
+}
+.tipps-stat-num{ font-family:var(--font-display); font-style:italic; }
+.tipps-stat-num.ex{ color:var(--g-c); }
+.tipps-stat-num.te{ color:var(--brass-hi); }
+.tipps-stat-num.fa{ color:var(--ruby); }
+.tipps-stat-num.qu{ color:var(--brass); }
+.tipps-stat-lbl{ font-family:var(--font-mono); }
+/* Tipp-Karten */
+.tipps-card{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); margin-bottom:8px;
+}
+.tipps-card.locked{ opacity:1; border-color:var(--line); }
+/* Meta-Streifen oben */
+.tipps-meta{
+  font-family:var(--font-mono); font-size:.65rem;
+  background:var(--bg-2); border-bottom:1px solid var(--line);
+}
+/* Team-Namen */
+.tipps-tname{ font-family:var(--font-ui); font-weight:600; }
+/* Obsidian Score-Felder */
+.tipps-input{
+  background:var(--screen); border:1.5px solid var(--line-2);
+  color:var(--screen-fg);
+  font-family:var(--font-display); font-style:italic; font-weight:700; font-size:1.2rem;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.55);
+  border-radius:8px;
+}
+.tipps-input:focus{
+  outline:none; border-color:var(--brass);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.55), 0 0 0 2px rgba(201,164,91,.22);
+  background:var(--screen);
+}
+/* Anzeige im gesperrten Zustand */
+.tipps-score-disp{
+  background:var(--screen); border:1.5px solid var(--line);
+  color:var(--screen-fg); font-family:var(--font-display); font-style:italic; font-weight:700;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.4);
+}
+.tipps-colon{ font-family:var(--font-display); font-style:italic; color:var(--muted); }
+/* Footer-Zeile (Ergebnis + Tipp) */
+.tipps-footer{
+  font-family:var(--font-mono); font-size:.68rem;
+  border-top:1px dashed var(--line-2);
+  background:var(--bg-2);
+}
+.tipps-real-score{ font-family:var(--font-display); font-style:italic; color:var(--brass-hi); }
+
+/* --- Rangliste --- */
+.lb-row{ background:var(--panel); border:1px solid var(--line); }
+.lb-row:nth-child(1){ border-color:var(--brass); background:rgba(201,164,91,.07); }
+.lb-row.me{ border-color:var(--brass-hi); background:rgba(201,164,91,.12); }
+.lb-pos{ font-family:var(--font-display); font-style:italic; font-weight:700; }
+.lb-row:nth-child(1) .lb-pos{ color:var(--brass-hi); }
+.lb-pts{ font-family:var(--font-mono); font-weight:700; color:var(--brass-hi); }
+.lb-name{ font-family:var(--font-ui); font-weight:600; }
+.lb-detail{ font-family:var(--font-mono); }
+.lb-empty{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); font-family:var(--font-mono);
+}
+
+/* ================================================================
+   BAUM (KO-Bracket) — Bronze-Bodoni-Redesign
+   ================================================================ */
+
+/* Leere-Zustand-Karte */
+.bracket-empty{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); color:var(--muted); font-family:var(--font-mono);
+}
+/* Spalten-Titel: Bodoni kursiv */
+.br-col-title{
+  font-family:var(--font-display); font-style:italic; font-size:.9rem; font-weight:700;
+  color:var(--brass-hi); text-transform:none; letter-spacing:0;
+  text-align:center; padding:4px 0 8px;
+  background:transparent;
+}
+/* Match-Karten: panel look */
+.br-match{
+  background:var(--panel); border:1px solid var(--line-2);
+  border-radius:var(--radius);
+}
+.br-match:hover{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass-lo); }
+.br-match.live{ border-color:var(--ruby); box-shadow:0 0 0 1px rgba(225,74,86,.3); }
+/* Trennlinie zwischen Teams */
+.br-team + .br-team{ border-top:1px solid var(--line); }
+/* Team-Name */
+.br-name{ font-family:var(--font-ui); color:var(--muted); font-weight:600; }
+/* Gewinner: fg + Messing-Score */
+.br-team.win .br-name{ color:var(--fg); }
+.br-team.win .br-score{
+  font-family:var(--font-display); font-style:italic; font-weight:700;
+  color:var(--brass-hi);
+}
+/* Score */
+.br-score{
+  font-family:var(--font-display); font-style:italic; font-weight:700;
+  color:var(--muted);
+}
+/* Verlierer: ausblenden (nur wenn Spiel entschieden) */
+.br-match.done .br-team:not(.win){ opacity:.42; }
+/* Status-Leiste */
+.br-status{ font-family:var(--font-mono); font-size:.6rem; color:var(--muted); border-top:1px dashed var(--line); }
+.br-status.is-live{ color:var(--ruby); }
+
+/* ================================================================
+   Reduced Motion: alle (auch neue) Animationen aus
+   ================================================================ */
 @media (prefers-reduced-motion: reduce){
   .mlc-topbar::after{ animation:none; display:none; }
   *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition:none !important; }
