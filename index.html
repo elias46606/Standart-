@@ -725,6 +725,16 @@
       font-variant-numeric: tabular-nums; color: var(--text); }
     table.scorers-tbl td.t { text-align: left; font-weight: 600; }
     table.scorers-tbl td.g { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+    /* Handy: redundante Team-Spalte ausblenden (Flagge zeigt das Land bereits),
+       Zahlen-Spalten und Abstände enger ziehen */
+    @media (max-width: 480px) {
+      .scorers { padding: 6px 10px 10px; }
+      table.scorers-tbl { font-size: 0.85rem; }
+      table.scorers-tbl th.team-col, table.scorers-tbl td.team-col { display: none; }
+      table.scorers-tbl th, table.scorers-tbl td { padding: 8px 3px; }
+      table.scorers-tbl td.t { max-width: 0; }
+      table.scorers-tbl td.g { font-size: 1rem; }
+    }
 
     /* ===== Modal ===== */
     .modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end;
@@ -2071,7 +2081,7 @@
         <tr>
           <td><span class="rankcell">${i + 1}</span></td>
           <td class="t"><span class="team-cell">${flag(s.badge)}<span>${esc(s.name)}${isFav(s.team) ? ' <span class="fav-star">★</span>' : ""}</span></span></td>
-          <td class="t" style="color:var(--muted)">${esc(s.team)}</td>
+          <td class="t team-col" style="color:var(--muted)">${esc(s.team)}</td>
           <td class="g">${s.goals}</td>
           <td>${s.pens || ""}</td>
           <td>${anyAssist ? (s.assists || "") : "–"}</td>
@@ -2100,7 +2110,7 @@
 
       $list.innerHTML = `<div class="stats-section-title" style="margin-top:4px">⚽ Torschützen${anyAssist ? " & Vorlagen" : ""}</div>
         <div class="scorers"><table class="scorers-tbl">
-        <thead><tr><th></th><th class="t">Spieler</th><th class="t">Team</th>
+        <thead><tr><th></th><th class="t">Spieler</th><th class="t team-col">Team</th>
           <th>Tore</th><th>11m</th><th>Vorlagen</th></tr></thead>
         <tbody>${rows}</tbody></table></div>
         ${anyAssist ? "" : `<div class="legend" style="margin-top:12px">Vorlagen sind in der freien Datenquelle nicht enthalten.</div>`}
