@@ -725,6 +725,12 @@
       font-variant-numeric: tabular-nums; color: var(--text); }
     table.scorers-tbl td.t { text-align: left; font-weight: 600; }
     table.scorers-tbl td.g { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+    /* Antippbare Torschützen-Zeile: Cursor + dezenter Hover/Fokus */
+    table.scorers-tbl tr.scorer-row { cursor: pointer; transition: background 0.12s; }
+    table.scorers-tbl tr.scorer-row:hover,
+    table.scorers-tbl tr.scorer-row:focus-visible { background: rgba(201,164,91,0.09); outline: none; }
+    table.scorers-tbl tr.scorer-row:focus-visible td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+    table.scorers-tbl tr.scorer-row:active { background: rgba(201,164,91,0.16); }
     /* Handy: redundante Team-Spalte ausblenden (Flagge zeigt das Land bereits),
        Zahlen-Spalten und Abstände enger ziehen */
     @media (max-width: 480px) {
@@ -2078,7 +2084,7 @@
         return;
       }
       const rows = list.slice(0, 100).map((s, i) => `
-        <tr>
+        <tr class="pi-player scorer-row" role="button" tabindex="0" data-player="${esc(s.name)}" title="${esc(s.name)} – Infos anzeigen">
           <td><span class="rankcell">${i + 1}</span></td>
           <td class="t"><span class="team-cell">${flag(s.badge)}<span>${esc(s.name)}${isFav(s.team) ? ' <span class="fav-star">★</span>' : ""}</span></span></td>
           <td class="t team-col" style="color:var(--muted)">${esc(s.team)}</td>
