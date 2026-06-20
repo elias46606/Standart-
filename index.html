@@ -1161,7 +1161,7 @@
     <div class="filter-tabs">
       <button class="tab active" data-filter="all">Alle</button>
       <button class="tab" data-filter="live">● Live</button>
-      <button class="tab" data-filter="upcoming">Kommend</button>
+      <button class="tab" data-filter="upcoming">Anstehend</button>
       <button class="tab" data-filter="groups">Gruppen</button>
       <button class="tab" data-filter="scorers">Torschützen</button>
       <button class="tab" data-filter="wm">WM-Endrunde</button>
@@ -2369,7 +2369,7 @@
 
       // 3. Kommende Spiele danach
       if (upcoming.length) {
-        html += `<div class="section-head upcoming">Kommend</div>`;
+        html += `<div class="section-head upcoming">Anstehend</div>`;
         let lastKey = "";
         for (const m of upcoming) {
           const sh = sectionSubHead(m);
@@ -2600,7 +2600,7 @@
       if (m.live) status = `<div class="br-status is-live"><span class="live-chip-dot"></span>${esc(m.status || "LIVE")}</div>`;
       else if (m.finished) status = `<div class="br-status">Beendet</div>`;
       else if (m.date) status = `<div class="br-status">${m.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} · ${pad(m.date.getHours())}:${pad(m.date.getMinutes())}</div>`;
-      return `<div class="br-match${m.live ? " live" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+      return `<div class="br-match${m.live ? " live" : ""}${done ? " done" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
         ${row(m.home, m.homeBadge, hs, done && hs > as, isFav(m.home))}
         ${row(m.away, m.awayBadge, as, done && as > hs, isFav(m.away))}
         ${status}
