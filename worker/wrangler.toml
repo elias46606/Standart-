@@ -2,9 +2,9 @@ name = "wm2026-push"
 main = "src/index.js"
 compatibility_date = "2026-06-01"
 
-# Cron: alle 2 Minuten WM-Spiele prüfen
+# Cron: jede Minute WM-Spiele prüfen (kürzester von Cloudflare erlaubter Takt)
 [triggers]
-crons = ["*/2 * * * *"]
+crons = ["* * * * *"]
 
 [vars]
 # Öffentlicher VAPID-Schlüssel (setzt deploy.sh automatisch)

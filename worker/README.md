@@ -78,7 +78,7 @@ den Cron-Handler lokal antesten geht mit
 ```bash
 npx wrangler dev --test-scheduled
 # dann in zweitem Terminal:
-curl "http://localhost:8787/__scheduled?cron=*/2+*+*+*+*"
+curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
 ```
 
 Logs des deployten Workers ansehen:
@@ -91,7 +91,7 @@ npx wrangler tail
 
 - **iPhone**: Web-Push funktioniert ab iOS 16.4, aber **nur wenn die App
   zum Homescreen hinzugefügt** wurde (Teilen → „Zum Home-Bildschirm").
-- **Cron**: prüft alle 2 Minuten (`*/2 * * * *`) die heutigen Spiele der
+- **Cron**: prüft jede Minute (`* * * * *`) die heutigen Spiele der
   FIFA-WM (TheSportsDB Liga 4429). Zustand pro Spiel liegt in KV
   (`state:<idEvent>`, läuft nach 3 Tagen automatisch ab) → keine Doppel-Pushes.
 - **Subscriptions** liegen in KV als `sub:<sha256(endpoint)>`. Tote
