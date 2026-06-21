@@ -133,12 +133,14 @@ body::after{
 table.standings th{ font-family:var(--font-mono); color:var(--muted); }
 .rank-pts,.pts{ font-family:var(--font-mono); }
 
-/* ---------- BOTTOM-NAV: mono, transluzent, Messing aktiv ---------- */
+/* ---------- BOTTOM-NAV: schwebende Glas-Leiste, Messing aktiv ----------
+   Optik (bg/blur/border/shadow) liefert die .glass-panel--strong-Klasse
+   am <nav>; hier nur die schwebende Geometrie. */
 .bottom-nav{
-  background:var(--bg-2);                                   /* Fallback */
-  background:color-mix(in srgb, var(--bg) 80%, transparent);
-  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-  border-top:1px solid var(--line-2);
+  left:12px; right:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  padding:10px 0;
+  border-radius:18px;
 }
 .bnav-label{ font-family:var(--font-mono); letter-spacing:.4px; text-transform:uppercase; font-size:.6rem; }
 .bnav-item.active{ color:var(--brass-hi); }
@@ -340,9 +342,82 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
 .br-status.is-live{ color:var(--ruby); }
 
 /* ================================================================
-   Reduced Motion: alle (auch neue) Animationen aus
+   FROSTED BRONZE GLASS — Glassmorphism-Schicht über dem Theme
+   Utility-Klassen + Anwendung. Typografie/Akzente bleiben unberührt.
+   ================================================================ */
+
+/* ---- Utility: .glass-panel / .glass-panel--strong ---- */
+.glass-panel{
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius);
+  box-shadow:var(--glass-shadow);
+}
+.glass-panel--strong{
+  background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(var(--glass-blur-strong)) saturate(140%);
+  backdrop-filter:blur(var(--glass-blur-strong)) saturate(140%);
+}
+/* feiner Glaskanten-Reflex oben (nur auf Panels ohne eigenes ::before) */
+.glass-panel::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(180deg,var(--glass-highlight),transparent 42%);
+}
+
+/* ---- Anwendung auf Standalone-Panels (ohne ::before-Konflikt) ----
+   position:relative nur dort, wo das Element nicht ohnehin fixed/relative
+   ist (nav & notif-panel sind fixed -> deren ::before ankert von selbst). */
+/* Standings-Cards */
+.group-card.glass-panel{ position:relative; overflow:hidden; }
+/* Bracket-Knoten: Glas, aber Messing-Akzente bleiben klar sichtbar */
+.br-match.glass-panel{ position:relative; background:var(--glass-bg); }
+.br-match.glass-panel:hover{ border-color:var(--brass); }
+/* Spieler-Info-Sheet braucht eigenen Positionskontext fürs ::before */
+.pi-sheet.glass-panel{ position:relative; }
+
+/* Bottom-Sheets / Popover behalten ihre eigene Form (statt 14px rundum) */
+.modal-card.glass-panel, .pi-sheet.glass-panel{ border-radius:20px 20px 0 0; }
+.notif-panel.glass-panel{ border-radius:18px; }
+
+/* ---- Match-Cards: gleiche Glas-Tokens direkt am Selektor ----
+   (kein .glass-panel als Klasse, damit die farbigen Ergebnis-/Team-
+   Akzentbalken im ::before erhalten bleiben). Highlight via inset-Shadow. */
+.match-live, .match-finished, .match-upcoming, .tipps-card{
+  background:var(--glass-bg);   /* greift, wenn cardGradient() leer ist */
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  border-color:var(--glass-border);
+  box-shadow:var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+/* Der translucente Espresso-Untergrund kommt aus cardGradient() (JS),
+   das jetzt var(--glass-bg) statt var(--card) als Basis nutzt. */
+
+/* ---- Fallback: kein backdrop-filter (ältere Safari/Android-WebViews) ---- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .glass-panel, .glass-panel--strong,
+  .match-live, .match-finished, .match-upcoming, .tipps-card,
+  .bottom-nav{
+    background:var(--glass-bg-strong);
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+  }
+}
+
+/* ================================================================
+   Reduced Motion / sparsame Geräte: Blur reduzieren, Animationen aus
    ================================================================ */
 @media (prefers-reduced-motion: reduce){
   .mlc-topbar::after{ animation:none; display:none; }
   *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition:none !important; }
+  /* schwächerer Blur spart GPU auf schwachen Geräten */
+  .glass-panel, .match-live, .match-finished, .match-upcoming, .tipps-card{
+    -webkit-backdrop-filter:blur(8px) saturate(130%);
+    backdrop-filter:blur(8px) saturate(130%);
+  }
+  .glass-panel--strong, .bottom-nav{
+    -webkit-backdrop-filter:blur(12px) saturate(130%);
+    backdrop-filter:blur(12px) saturate(130%);
+  }
 }

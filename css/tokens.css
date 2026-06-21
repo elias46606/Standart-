@@ -17,4 +17,13 @@
   --radius:14px;
   --shadow:0 22px 46px -28px rgba(0,0,0,.85);
   --metal:linear-gradient(180deg,var(--brass-hi),var(--brass) 52%,var(--brass-lo));
+
+  /* ---- Frosted Bronze Glass (Schicht über dem Theme, ersetzt nichts) ---- */
+  --glass-bg:rgba(28,22,18,.55);           /* espresso, halbtransparent */
+  --glass-bg-strong:rgba(28,22,18,.72);
+  --glass-border:rgba(193,154,107,.28);    /* Messing-Kante, dezent */
+  --glass-highlight:rgba(255,248,240,.06); /* feiner Top-Glanz */
+  --glass-blur:16px;
+  --glass-blur-strong:22px;
+  --glass-shadow:0 8px 32px rgba(0,0,0,.38);
 }
