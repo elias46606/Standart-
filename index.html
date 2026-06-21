@@ -964,13 +964,15 @@
     body.theme-light .pitch { background:
         repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 26px, transparent 26px 52px),
         linear-gradient(160deg, #2e8b57, #246b43); }
-    .pitch-row { display: flex; justify-content: space-around; gap: 4px; position: relative; z-index: 1; }
+    .pitch-row { display: flex; justify-content: space-evenly; gap: 2px; position: relative; z-index: 1; }
     /* Linien-Beschriftung (ANGRIFF/MITTELFELD/ABWEHR/TOR), vertikal am Rand */
     .pitch-row-label { position: absolute; left: -16px; top: 50%;
       transform: translateY(-50%); writing-mode: vertical-rl; rotate: 180deg;
       font-size: 0.5rem; font-weight: 800; letter-spacing: 1.5px;
       color: rgba(255,255,255,0.42); pointer-events: none; user-select: none; }
-    .pp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
+    /* Spieler teilen sich die Reihenbreite (auch 5er-Reihen passen aufs Handy) */
+    .pp { display: flex; flex-direction: column; align-items: center; gap: 4px;
+      flex: 1 1 0; min-width: 0; max-width: 72px; }
     .pp-wrap { position: relative; }
     /* Spieler-Avatar: Foto, sonst Initialen auf Teamfarben-Verlauf – nie leer */
     .pp-face { width: 46px; height: 46px; border-radius: 50%;
@@ -987,12 +989,20 @@
     .pp-shirt { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.95); color: #0e3d24;
       display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; }
     .pp-name { font-size: 0.68rem; font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
-      max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+      max-width: 100%; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
     .pp.pi-player { cursor: pointer; transition: transform 0.12s ease; }
     .pp.pi-player:hover .pp-face, .pp.pi-player:focus-visible .pp-face { border-color: var(--gold); }
     .pp.pi-player:active { transform: scale(0.94); }
     .pi-bench { cursor: pointer; color: var(--gold-soft); border-bottom: 1px dotted transparent; }
     .pi-bench:hover, .pi-bench:focus-visible { border-bottom-color: var(--gold-soft); outline: none; }
+    /* Schmale Handys: Platz auf dem Spielfeld sparen, damit auch 5er-Reihen passen */
+    @media (max-width: 380px) {
+      .pitch { padding: 18px 4px 18px 18px; gap: 14px; }
+      .pp-face { width: 40px; height: 40px; }
+      .pp-init { font-size: 0.72rem; }
+      .pp-name { font-size: 0.62rem; }
+      .pp-numbadge { min-width: 15px; height: 15px; font-size: 0.55rem; }
+    }
 
     /* ===== Tipps-Tab ===== */
     .tipps-header { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
@@ -2077,7 +2087,6 @@
       let list = computeScorers();
       if (searchTerm) list = list.filter(s =>
         s.name.toLowerCase().includes(searchTerm) || s.team.toLowerCase().includes(searchTerm));
-      const anyAssist = list.some(s => s.assists > 0);
       if (!list.length) {
         $list.innerHTML = `<div class="empty">Noch keine Tore.<br>
           Die Torschützenliste füllt sich automatisch, sobald gespielt wird.</div>`;
@@ -2090,7 +2099,6 @@
           <td class="t team-col" style="color:var(--muted)">${esc(s.team)}</td>
           <td class="g">${s.goals}</td>
           <td>${s.pens || ""}</td>
-          <td>${anyAssist ? (s.assists || "") : "–"}</td>
         </tr>`).join("");
       // Beste Defensive: wenigste Gegentore (nur Teams, die schon gespielt haben)
       const groups = computeGroups();
@@ -2114,12 +2122,11 @@
           <thead><tr><th></th><th class="t">Team</th><th>Gegentore</th><th>Sp</th><th>Ø</th></tr></thead>
           <tbody>${defRows}</tbody></table></div>` : "";
 
-      $list.innerHTML = `<div class="stats-section-title" style="margin-top:4px">⚽ Torschützen${anyAssist ? " & Vorlagen" : ""}</div>
+      $list.innerHTML = `<div class="stats-section-title" style="margin-top:4px">⚽ Torschützen</div>
         <div class="scorers"><table class="scorers-tbl">
         <thead><tr><th></th><th class="t">Spieler</th><th class="t team-col">Team</th>
-          <th>Tore</th><th>11m</th><th>Vorlagen</th></tr></thead>
+          <th>Tore</th><th>11m</th></tr></thead>
         <tbody>${rows}</tbody></table></div>
-        ${anyAssist ? "" : `<div class="legend" style="margin-top:12px">Vorlagen sind in der freien Datenquelle nicht enthalten.</div>`}
         ${defenseHtml}`;
     }
 
