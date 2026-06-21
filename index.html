@@ -1183,15 +1183,8 @@
       <input class="search-input" type="search" id="search" placeholder="Team, Gruppe, Stadion, Uhrzeit…" autocomplete="off">
     </div>
 
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-      <button class="tab active" data-filter="all">Alle</button>
-      <button class="tab" data-filter="live">● Live</button>
-      <button class="tab" data-filter="upcoming">Anstehend</button>
-      <button class="tab" data-filter="groups">Gruppen</button>
-      <button class="tab" data-filter="scorers">Torschützen</button>
-      <button class="tab" data-filter="wm">WM-Endrunde</button>
-    </div>
+    <!-- Kontextuelle Sub-Tabs (werden je Haupt-Bereich dynamisch befüllt) -->
+    <div class="filter-tabs" id="filterTabs"></div>
 
     <!-- Match sections -->
     <div id="list"><div class="loading"><div class="spinner"></div>Spiele werden geladen…</div></div>
@@ -2496,6 +2489,7 @@
         case "test":     return m.kind === "test";
         case "live":     return m.live;
         case "upcoming": return !m.finished && !m.live && m.date && m.date >= new Date();
+        case "finished": return !m.live && (m.finished || (m.date && m.date < new Date()));
         default:         return true;
       }
     }
@@ -3589,11 +3583,77 @@
       applyTheme(next);
     });
 
-    // Filter tabs
-    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
-      document.querySelector(".tab.active")?.classList.remove("active");
-      tab.classList.add("active"); currentFilter = tab.dataset.filter; render();
-    }));
+    // ====== NAVIGATION (ein Modell) =========================================
+    // Untere Tab-Bar = einzige Haupt-Navigation (App-Bereiche).
+    // Obere Leiste  = NUR kontextuelle Sub-Filter im aktuellen Bereich.
+    //
+    // SUBTABS: pro Bereich die obere Leiste. Leeres Array => Leiste ausblenden.
+    // Zuordnungen hier zentral & leicht anpassbar.
+    const SUBTABS = {
+      matches:   [ { f: "all", label: "Alle" }, { f: "upcoming", label: "Anstehend" }, { f: "finished", label: "Beendet" } ],
+      live:      [],                                                   // eigener Bereich, keine Sub-Filter
+      standings: [ { f: "groups", label: "Gruppen" }, { f: "scorers", label: "Torschützen" } ],
+      tipps:     [],
+      teams:     [],                                                   // = Baum, keine Sub-Filter
+      profile:   [],
+    };
+    // Standard-Filter (= erster Sub-Tab bzw. bereichseigener Renderer) je Bereich
+    const AREA_DEFAULT = { matches: "all", live: "live", standings: "groups", tipps: "tipps", teams: "teams", profile: "profile" };
+    // Welcher Bereich gehört zu welchem Filter (für Redirect/Alias alter Tabs)
+    const FILTER_AREA = { all: "matches", upcoming: "matches", finished: "matches", live: "live",
+                          groups: "standings", scorers: "standings", teams: "teams", tipps: "tipps", profile: "profile" };
+    // Aliase für alte Deep-Links / Tab-Namen -> [Bereich, Filter]
+    const NAV_ALIAS = {
+      gruppen: ["standings", "groups"], groups: ["standings", "groups"],
+      torschuetzen: ["standings", "scorers"], torschützen: ["standings", "scorers"], scorers: ["standings", "scorers"],
+      endrunde: ["teams", "teams"], "wm-endrunde": ["teams", "teams"], wm: ["teams", "teams"], baum: ["teams", "teams"], teams: ["teams", "teams"],
+      matches: ["matches", "all"], all: ["matches", "all"], alle: ["matches", "all"],
+      upcoming: ["matches", "upcoming"], anstehend: ["matches", "upcoming"],
+      finished: ["matches", "finished"], beendet: ["matches", "finished"],
+      live: ["live", "live"], tipps: ["tipps", "tipps"], profile: ["profile", "profile"],
+    };
+
+    const $filterTabs = document.getElementById("filterTabs");
+
+    // Baut die obere Leiste für einen Bereich neu auf (oder blendet sie aus)
+    function buildSubtabs(area, activeFilter) {
+      const items = SUBTABS[area] || [];
+      if (!items.length) { $filterTabs.innerHTML = ""; $filterTabs.style.display = "none"; return; }
+      $filterTabs.style.display = "";
+      $filterTabs.innerHTML = items.map(it =>
+        `<button class="tab${it.f === activeFilter ? " active" : ""}" data-filter="${it.f}">${it.label}</button>`).join("");
+      $filterTabs.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+        $filterTabs.querySelector(".tab.active")?.classList.remove("active");
+        tab.classList.add("active");
+        currentFilter = tab.dataset.filter;
+        render();
+      }));
+    }
+
+    // Wechselt den Haupt-Bereich (+ optional Sub-Filter), baut Sub-Tabs, rendert
+    function selectArea(area, filter) {
+      if (!AREA_DEFAULT[area]) area = "matches";
+      const f = filter || AREA_DEFAULT[area];
+      document.querySelectorAll(".bnav-item").forEach(b => b.classList.toggle("active", b.dataset.nav === area));
+      buildSubtabs(area, f);
+      currentFilter = f;
+      render();
+    }
+
+    // Untere Haupt-Navigation
+    document.querySelectorAll(".bnav-item").forEach(btn =>
+      btn.addEventListener("click", () => selectArea(btn.dataset.nav)));
+
+    // Deep-Link/Alias-Auflösung über location.hash (additiv, bricht nichts)
+    function routeFromHash() {
+      const key = decodeURIComponent((location.hash || "").replace(/^#/, "").trim().toLowerCase());
+      if (!key) return false;
+      const target = NAV_ALIAS[key];
+      if (!target) return false;
+      selectArea(target[0], target[1]);
+      return true;
+    }
+    window.addEventListener("hashchange", routeFromHash);
 
     // Search toggle
     const $searchWrap = document.getElementById("searchWrap");
@@ -3743,23 +3803,18 @@
       if (card) { e.preventDefault(); openMatch(card.dataset.id); }
     });
 
-    // Bottom nav
-    document.querySelectorAll(".bnav-item").forEach(btn => btn.addEventListener("click", () => {
-      document.querySelectorAll(".bnav-item").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const nav = btn.dataset.nav;
-      const setTab = f => {
-        document.querySelector(".tab.active")?.classList.remove("active");
-        document.querySelector(`[data-filter="${f}"]`)?.classList.add("active");
-      };
-      const $tabs = document.querySelector(".filter-tabs");
-      if (nav === "matches")        { currentFilter = "all";    setTab("all");    $tabs.style.display = ""; render(); }
-      else if (nav === "live")      { currentFilter = "live";   setTab("live");   $tabs.style.display = ""; render(); }
-      else if (nav === "standings") { currentFilter = "groups"; setTab("groups"); $tabs.style.display = ""; render(); }
-      else if (nav === "tipps")     { currentFilter = "tipps";  document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
-      else if (nav === "teams")     { currentFilter = "teams";  document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
-      else if (nav === "profile")   { currentFilter = "profile";document.querySelector(".tab.active")?.classList.remove("active"); $tabs.style.display = "none"; render(); }
-    }));
+    // Start: Bereich/obere Leiste initialisieren (Deep-Link aus dem Hash
+    // berücksichtigen). Das erste Rendern übernimmt loadAll(), sobald Daten
+    // da sind – so bleibt der Lade-Spinner sichtbar (kein "Keine Spiele"-Blitz).
+    (function initNav() {
+      let area = "matches", filter = AREA_DEFAULT.matches;
+      const key = decodeURIComponent((location.hash || "").replace(/^#/, "").trim().toLowerCase());
+      if (key && NAV_ALIAS[key]) [area, filter] = NAV_ALIAS[key];
+      document.querySelectorAll(".bnav-item").forEach(b => b.classList.toggle("active", b.dataset.nav === area));
+      buildSubtabs(area, filter);
+      currentFilter = filter;
+      if (allMatches.length) render();
+    })();
 
     // ====== Onboarding (einmalige Kurz-Einführung) ===========================
     const ONB_KEY = "wm2026-onboard";

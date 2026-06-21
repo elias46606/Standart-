@@ -6,7 +6,7 @@
      aktualisiert sich im Hintergrund, funktioniert offline mit letztem Stand.
    - Web-Push: push-Event zeigt Notification, Klick öffnet/fokussiert die App. */
 
-const VERSION = "wm2026-v10";
+const VERSION = "wm2026-v11";
 const SHELL = "shell-" + VERSION;
 const DATA = "data-" + VERSION;
 
