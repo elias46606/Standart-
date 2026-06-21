@@ -7,7 +7,7 @@
 /* ---------- GLOBAL: Galerielicht, Filmkorn, Messing-Oberkante ---------- */
 body{
   background:
-    radial-gradient(130% 70% at 50% -10%, rgba(201,164,91,.14), transparent 58%),
+    radial-gradient(130% 70% at 50% -10%, rgba(255,255,255,.03), transparent 55%),
     var(--bg);
   font-family:var(--font-ui);
 }
@@ -54,7 +54,7 @@ body::after{
   font-weight:600; font-size:1.05rem; letter-spacing:.3px;
 }
 .section-head.live{ color:var(--ruby); }
-.section-head.upcoming{ color:var(--brass-hi); }
+.section-head.upcoming{ color:var(--fg); }
 .section-head.finished{ color:var(--muted); }
 
 /* ---------- LIVE-MATCH = "Sendeticket" ---------- */
@@ -115,12 +115,12 @@ body::after{
   width:4px; background:var(--g,var(--brass-lo));
 }
 .mfc-phase{ font-family:var(--font-mono); letter-spacing:.6px; color:var(--g,var(--muted)); }
-.mfc-ft{ font-family:var(--font-mono); color:var(--brass); }
+.mfc-ft{ font-family:var(--font-mono); color:var(--muted); }
 .mfc-tname{ font-family:var(--font-ui); }
 .mfc-tname.winner{ color:var(--fg); }
 .mfc-score{
   font-family:var(--font-display); font-style:italic; font-weight:700;
-  color:var(--brass-hi); letter-spacing:1px;
+  color:var(--fg); letter-spacing:1px;
 }
 .mfc-stats-btn{ font-family:var(--font-mono); color:var(--brass); border-color:var(--line-2); }
 .mfc-venue{ font-family:var(--font-mono); }
@@ -128,7 +128,7 @@ body::after{
 /* ---------- UPCOMING-CARD ---------- */
 .match-upcoming{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); }
 .muc-phase{ font-family:var(--font-mono); }
-.muc-time{ font-family:var(--font-display); font-style:italic; color:var(--brass-hi); }
+.muc-time{ font-family:var(--font-display); font-style:italic; color:var(--fg); }
 .muc-date,.muc-vs,.muc-countdown,.muc-footer{ font-family:var(--font-mono); }
 .muc-name{ font-family:var(--font-ui); }
 
@@ -173,7 +173,7 @@ table.standings th{ font-family:var(--font-mono); color:var(--muted); }
 /* Gruppen-Titel: Bodoni kursiv, Messing */
 .group-title{
   font-family:var(--font-display); font-style:italic; font-size:1rem; font-weight:700;
-  color:var(--brass-hi); padding:10px 14px 8px;
+  color:var(--fg); padding:10px 14px 8px;
   border-bottom:1px solid var(--line); background:var(--bg-2); letter-spacing:.3px;
 }
 /* Tabellen-Header: Space Mono, gedimmt */
@@ -182,10 +182,10 @@ table.standings thead th{
   text-transform:uppercase; color:var(--muted); padding:5px 6px 4px;
   border-bottom:1px solid var(--line);
 }
-/* Rang-Zellen: Bodoni kursiv Messing */
+/* Rang-Zellen: Bodoni kursiv, hell (kein Gold) */
 .rankcell{
   font-family:var(--font-display); font-style:italic; font-weight:700;
-  font-size:.95rem; color:var(--brass);
+  font-size:.95rem; color:var(--fg);
 }
 /* Tabellen-Zeilen */
 table.standings tbody tr td{ padding:5px 6px; }
@@ -204,10 +204,10 @@ table.standings td.pts, .pts{
 }
 /* Form-Punkte */
 .form span.w{ color:var(--g-c); font-weight:700; }
-.form span.d{ color:var(--brass); }
+.form span.d{ color:var(--muted); }
 .form span.l{ color:var(--muted); opacity:.65; }
-/* Favoriten-Zeile: Messing-Hintergrund */
-table.standings tr.is-fav{ background:rgba(201,164,91,.07); }
+/* Favoriten-Zeile: dezenter neutraler Hintergrund */
+table.standings tr.is-fav{ background:rgba(255,255,255,.05); }
 /* Live-Zeile */
 table.standings tr.live-row{ background:rgba(225,74,86,.06); }
 
@@ -215,18 +215,16 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
    TIPPS — Bronze-Bodoni-Redesign
    ================================================================ */
 
-/* Header-Ticket: panel + Messing-Linie oben */
+/* Header-Ticket: panel + dezente Linie oben */
 .tipps-header{
   background:var(--panel); border:1px solid var(--line-2);
-  border-radius:var(--radius); border-top:3px solid var(--brass);
+  border-radius:var(--radius); border-top:3px solid var(--line-2);
   padding:16px 16px 14px; margin-bottom:18px;
 }
-/* Punkte-Held: Bodoni Metall-Verlauf */
+/* Punkte-Held: Bodoni, hell (kein Gold-Verlauf) */
 .tipps-score{
   font-family:var(--font-display); font-style:italic; font-weight:700;
-  font-size:3.2rem; line-height:1;
-  background:var(--metal); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  background-clip:text;
+  font-size:3.2rem; line-height:1; color:var(--fg);
 }
 /* Score-Label */
 .tipps-score-label{
@@ -243,9 +241,9 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
 }
 .tipps-stat-num{ font-family:var(--font-display); font-style:italic; }
 .tipps-stat-num.ex{ color:var(--g-c); }
-.tipps-stat-num.te{ color:var(--brass-hi); }
+.tipps-stat-num.te{ color:var(--fg); }
 .tipps-stat-num.fa{ color:var(--ruby); }
-.tipps-stat-num.qu{ color:var(--brass); }
+.tipps-stat-num.qu{ color:var(--fg); }
 .tipps-stat-lbl{ font-family:var(--font-mono); }
 /* Tipp-Karten */
 .tipps-card{
@@ -286,15 +284,15 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
   border-top:1px dashed var(--line-2);
   background:var(--bg-2);
 }
-.tipps-real-score{ font-family:var(--font-display); font-style:italic; color:var(--brass-hi); }
+.tipps-real-score{ font-family:var(--font-display); font-style:italic; color:var(--fg); }
 
 /* --- Rangliste --- */
 .lb-row{ background:var(--panel); border:1px solid var(--line); }
-.lb-row:nth-child(1){ border-color:var(--brass); background:rgba(201,164,91,.07); }
-.lb-row.me{ border-color:var(--brass-hi); background:rgba(201,164,91,.12); }
+.lb-row:nth-child(1){ border-color:var(--brass); background:rgba(201,164,91,.06); } /* nur #1: dezenter Gold-Akzent */
+.lb-row.me{ border-color:var(--line-2); background:rgba(255,255,255,.05); }
 .lb-pos{ font-family:var(--font-display); font-style:italic; font-weight:700; }
-.lb-row:nth-child(1) .lb-pos{ color:var(--brass-hi); }
-.lb-pts{ font-family:var(--font-mono); font-weight:700; color:var(--brass-hi); }
+.lb-row:nth-child(1) .lb-pos{ color:var(--brass-hi); }                              /* nur #1 golden */
+.lb-pts{ font-family:var(--font-mono); font-weight:700; color:var(--fg); }
 .lb-name{ font-family:var(--font-ui); font-weight:600; }
 .lb-detail{ font-family:var(--font-mono); }
 .lb-empty{
@@ -311,10 +309,10 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
   background:var(--panel); border:1px solid var(--line);
   border-radius:var(--radius); color:var(--muted); font-family:var(--font-mono);
 }
-/* Spalten-Titel: Bodoni kursiv */
+/* Spalten-Titel: Bodoni kursiv, hell */
 .br-col-title{
   font-family:var(--font-display); font-style:italic; font-size:.9rem; font-weight:700;
-  color:var(--brass-hi); text-transform:none; letter-spacing:0;
+  color:var(--fg); text-transform:none; letter-spacing:0;
   text-align:center; padding:4px 0 8px;
   background:transparent;
 }
@@ -329,11 +327,11 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
 .br-team + .br-team{ border-top:1px solid var(--line); }
 /* Team-Name */
 .br-name{ font-family:var(--font-ui); color:var(--muted); font-weight:600; }
-/* Gewinner: fg + Messing-Score */
+/* Gewinner: hell hervorgehoben (kein Gold) */
 .br-team.win .br-name{ color:var(--fg); }
 .br-team.win .br-score{
   font-family:var(--font-display); font-style:italic; font-weight:700;
-  color:var(--brass-hi);
+  color:var(--fg);
 }
 /* Score */
 .br-score{
