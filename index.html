@@ -82,7 +82,7 @@
     body {
       min-height: 100vh; background: var(--bg); color: var(--text);
       font-family: var(--font-ui);
-      padding: 0 16px 88px; overflow-x: hidden;
+      padding: 0 16px 100px; overflow-x: hidden;
     }
 
     .wrap { max-width: 680px; margin: 0 auto; position: relative; }
@@ -1205,7 +1205,7 @@
   </div>
 
   <!-- Notification Panel -->
-  <div class="notif-panel" id="notifPanel" hidden>
+  <div class="notif-panel glass-panel glass-panel--strong" id="notifPanel" hidden>
     <div class="notif-panel-head">
       <span class="notif-panel-title">Benachrichtigungen</span>
       <button class="notif-clear-btn" id="notifClear">Alle löschen</button>
@@ -1217,7 +1217,7 @@
   <div id="notifToastArea"></div>
 
   <!-- Fixed Bottom Navigation -->
-  <nav class="bottom-nav" role="navigation" aria-label="Hauptnavigation">
+  <nav class="bottom-nav glass-panel glass-panel--strong" role="navigation" aria-label="Hauptnavigation">
     <button class="bnav-item active" data-nav="matches">
       <span class="bnav-icon">📅</span>
       <span class="bnav-label">Matches</span>
@@ -1247,7 +1247,7 @@
   <!-- Spiel-Detail-Overlay -->
   <div id="modal" class="modal" hidden>
     <div class="modal-backdrop" data-close></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Spieldetails">
+    <div class="modal-card glass-panel glass-panel--strong" role="dialog" aria-modal="true" aria-label="Spieldetails">
       <button class="modal-close" data-close aria-label="Schließen">✕</button>
       <div id="modal-body"></div>
     </div>
@@ -1391,7 +1391,7 @@
       if (!hc && !ac) return "";
       const h = hc ? hex2rgba(hc, 0.11) : "transparent";
       const a = ac ? hex2rgba(ac, 0.11) : "transparent";
-      return `background:linear-gradient(to right,${h} 0%,transparent 42%,transparent 58%,${a} 100%),var(--card);`;
+      return `background:linear-gradient(to right,${h} 0%,transparent 42%,transparent 58%,${a} 100%),var(--glass-bg);`;
     }
 
     // Bronze & Bodoni: CSS-Variablen je Karte – Gruppenfarbe (--g) + Team-Kanten
@@ -2446,7 +2446,7 @@
             <td class="pts">${t.pts}</td><td><span class="form">${form}</span></td>
           </tr>`;
         }).join("");
-        html += `<div class="group-card"><div class="group-title">🏅 Gruppe ${g}${groupLive ? ' <span class="group-live-tag"><span class="live-chip-dot"></span>LIVE-TABELLE</span>' : ""}</div>
+        html += `<div class="group-card glass-panel"><div class="group-title">🏅 Gruppe ${g}${groupLive ? ' <span class="group-live-tag"><span class="live-chip-dot"></span>LIVE-TABELLE</span>' : ""}</div>
           <div class="standings-wrap"><table class="standings"><thead><tr>
             <th class="r"></th><th class="t">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th>
             <th>Tore</th><th>Diff</th><th>Pkt</th><th>Form</th>
@@ -2623,7 +2623,7 @@
       if (m.live) status = `<div class="br-status is-live"><span class="live-chip-dot"></span>${esc(m.status || "LIVE")}</div>`;
       else if (m.finished) status = `<div class="br-status">Beendet</div>`;
       else if (m.date) status = `<div class="br-status">${m.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} · ${pad(m.date.getHours())}:${pad(m.date.getMinutes())}</div>`;
-      return `<div class="br-match${m.live ? " live" : ""}${done ? " done" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
+      return `<div class="br-match glass-panel${m.live ? " live" : ""}${done ? " done" : ""}" data-id="${esc(m.id)}" role="button" tabindex="0">
         ${row(m.home, m.homeBadge, hs, done && hs > as, isFav(m.home))}
         ${row(m.away, m.awayBadge, as, done && as > hs, isFav(m.away))}
         ${status}
@@ -3803,7 +3803,7 @@
       const backdrop = document.createElement("div");
       backdrop.className = "pi-backdrop";
       backdrop.innerHTML = `
-        <div class="pi-sheet">
+        <div class="pi-sheet glass-panel glass-panel--strong">
           <div class="pi-handle"></div>
           <div class="pi-loading"><div class="pi-spinner"></div>Lade Spielerdaten…</div>
         </div>`;
