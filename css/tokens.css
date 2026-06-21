@@ -4,26 +4,26 @@
    keine Komponenten-Regeln (die liegen in skin.css + index.html).
    ============================================================ */
 :root{
-  --bg:#16110B; --bg-2:#1D1710; --panel:#211A11;
-  --fg:#F2EAD8; --muted:#A0917A;
-  --line:rgba(242,234,216,.12); --line-2:rgba(242,234,216,.20);
+  --bg:#0C0C0E; --bg-2:#131316; --panel:#191A1E;
+  --fg:#ECEAE4; --muted:#8E8C88;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.18);
   --brass:#C9A45B; --brass-hi:#ECD9A2; --brass-lo:#94762F;
   --ruby:#E14A56;
-  --screen:#0C0805; --screen-fg:#F6F0DE;
+  --screen:#08080A; --screen-fg:#F2F0EA;
   --g-a:#C8505F; --g-b:#5B82B0; --g-c:#3E9472; --g-d:#D7A23F; /* Gruppen A–D */
   --font-display:"Bodoni Moda",serif;        /* Wordmark, Scores, Abschnittstitel (kursiv) */
   --font-ui:"Archivo",system-ui,sans-serif;  /* Teamnamen, Codes, Buttons */
   --font-mono:"Space Mono",monospace;        /* Labels, Minute, Stats, Ticker */
   --radius:14px;
-  --shadow:0 22px 46px -28px rgba(0,0,0,.85);
+  --shadow:0 22px 46px -28px rgba(0,0,0,.9);
   --metal:linear-gradient(180deg,var(--brass-hi),var(--brass) 52%,var(--brass-lo));
 
   /* ---- Frosted Bronze Glass (Schicht über dem Theme, ersetzt nichts) ---- */
-  --glass-bg:rgba(28,22,18,.55);           /* espresso, halbtransparent */
-  --glass-bg-strong:rgba(28,22,18,.72);
-  --glass-border:rgba(193,154,107,.28);    /* Messing-Kante, dezent */
-  --glass-highlight:rgba(255,248,240,.06); /* feiner Top-Glanz */
+  --glass-bg:rgba(18,18,21,.55);           /* neutral-dunkel, halbtransparent */
+  --glass-bg-strong:rgba(16,16,19,.74);
+  --glass-border:rgba(255,255,255,.12);    /* neutrale Kante (kein Gold) */
+  --glass-highlight:rgba(255,255,255,.05); /* feiner Top-Glanz */
   --glass-blur:16px;
   --glass-blur-strong:22px;
-  --glass-shadow:0 8px 32px rgba(0,0,0,.38);
+  --glass-shadow:0 8px 32px rgba(0,0,0,.45);
 }

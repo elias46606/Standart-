@@ -40,11 +40,11 @@
       --card-2: var(--bg-2);
       --line-bright: var(--line-2);
       --text: var(--fg);
-      --muted-2: #6E5F49;
-      --silver-2: var(--brass-hi);
-      --silver-3: var(--brass);
+      --muted-2: #6E6C67;
+      --silver-2: var(--fg);
+      --silver-3: var(--muted);
       --gold: var(--brass);
-      --gold-soft: var(--brass-hi);
+      --gold-soft: var(--fg);
       --live: var(--ruby);
       --green: var(--g-c);
       --accent: var(--g-b);
@@ -600,7 +600,7 @@
     .match.is-fav { border-color: rgba(216,185,100,0.22); }
     .match.is-fav::before { background: linear-gradient(var(--gold-soft), var(--gold)); opacity: 1; }
     .fav-star { color: var(--gold-soft); margin-left: 4px; }
-    tr.is-fav td { background: rgba(216,185,100,0.06); }
+    tr.is-fav td { background: rgba(255,255,255,0.05); }
     tr.is-fav td.t { color: var(--text); }
 
     .when { text-align: center; font-size: 0.7rem; color: var(--muted);
@@ -671,7 +671,7 @@
     .rankcell { display: inline-flex; align-items: center; justify-content: center;
       width: 22px; height: 22px; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
       background: var(--card-2); color: var(--muted); }
-    tr.qualified .rankcell { background: rgba(216,185,100,0.18); color: var(--gold-soft); }
+    tr.qualified .rankcell { background: rgba(255,255,255,0.10); color: var(--fg); }
     .team-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .team-cell .flag, .team-cell .flag-fallback { width: 22px; height: 15px; flex-shrink: 0; }
     .team-cell > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1152,7 +1152,7 @@
     <!-- App Header -->
     <header class="app-header">
       <div class="header-brand">
-        <div class="header-logo brass-shimmer brass-shimmer--auto">🏆</div>
+        <div class="header-logo">🏆</div>
         <div class="header-text">
           <div class="header-title">WM 2026</div>
           <div class="header-phase">
@@ -1162,17 +1162,17 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn brass-shimmer" id="btnRefresh" title="Aktualisieren" aria-label="Daten aktualisieren">
+        <button class="icon-btn" id="btnRefresh" title="Aktualisieren" aria-label="Daten aktualisieren">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
-        <button class="icon-btn theme-toggle brass-shimmer" id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Design umschalten">
+        <button class="icon-btn theme-toggle" id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Design umschalten">
           <svg class="ic-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           <svg class="ic-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="3.5" y1="3.5" x2="5.3" y2="5.3"/><line x1="18.7" y1="18.7" x2="20.5" y2="20.5"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="3.5" y1="20.5" x2="5.3" y2="18.7"/><line x1="18.7" y1="5.3" x2="20.5" y2="3.5"/></svg>
         </button>
-        <button class="icon-btn brass-shimmer" id="btnSearch" title="Suchen" aria-label="Suche öffnen">
+        <button class="icon-btn" id="btnSearch" title="Suchen" aria-label="Suche öffnen">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
-        <button class="icon-btn brass-shimmer" id="btnBell" title="Benachrichtigungen" aria-label="Benachrichtigungen">
+        <button class="icon-btn" id="btnBell" title="Benachrichtigungen" aria-label="Benachrichtigungen">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </button>
       </div>
@@ -2411,7 +2411,7 @@
           <div class="mfc-result-bar">${barHtml}</div>
           <div class="mfc-footer">
             <span class="mfc-venue">${m.venue ? "📍 " + esc(m.venue) : ""}</span>
-            <button class="mfc-stats-btn brass-shimmer">Statistiken →</button>
+            <button class="mfc-stats-btn">Statistiken →</button>
           </div>
         </div>`;
     }
