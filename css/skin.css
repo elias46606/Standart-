@@ -11,11 +11,16 @@ body{
     var(--bg);
   font-family:var(--font-ui);
 }
-/* Feines Filmkorn über allem (SVG feTurbulence) */
+/* ============================================================
+   EFFEKT 1 — NOISE / GRAIN-LAYER (modular: zum Abschalten diese eine
+   Regel auskommentieren). Feines Filmkorn für Papier-/Druckanmutung.
+   z-index liegt ÜBER dem Inhalt, aber UNTER Nav/Popups
+   (Nav 100 · Modal 200 · Notif 300 · Toast 400 · Sheets 9999+).
+   pointer-events:none ist Pflicht – nie über interaktiven Elementen. */
 body::before{
-  content:""; position:fixed; inset:0; z-index:9998; pointer-events:none;
+  content:""; position:fixed; inset:0; z-index:90; pointer-events:none;
   opacity:.045; mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 /* 3px Messing-Verlaufslinie ganz oben */
 body::after{
@@ -406,10 +411,77 @@ table.standings tr.live-row{ background:rgba(225,74,86,.06); }
 }
 
 /* ================================================================
+   EFFEKT 2 — COUNT-UP (Logik in JS). Hier nur: Zahlen tabellarisch,
+   damit beim Hochzählen die Breite nicht springt.
+   ================================================================ */
+.count-up{ font-variant-numeric:tabular-nums; }
+
+/* ================================================================
+   EFFEKT 3 — SHIMMER auf Brass-Akzenten (modular).
+   .brass-shimmer        -> Lichtreflex bei :hover (Buttons)
+   .brass-shimmer--auto  -> langsamer Durchlauf ~7s (statische Linien)
+   Container clippt den Streifen (overflow:hidden).
+   ================================================================ */
+.brass-shimmer{ position:relative; overflow:hidden; }
+.brass-shimmer::after{
+  content:""; position:absolute; top:0; bottom:0; left:-60%; width:42%;
+  pointer-events:none; opacity:0;
+  background:linear-gradient(100deg,transparent,rgba(255,240,210,.5),transparent);
+  transform:skewX(-18deg); mix-blend-mode:screen;
+}
+/* Hover-Durchlauf (einmalig pro Hover) */
+.brass-shimmer:hover::after{ animation:brass-sweep 1.1s ease forwards; }
+@keyframes brass-sweep{
+  0%{ left:-60%; opacity:0; }
+  10%{ opacity:1; }
+  90%{ opacity:1; }
+  100%{ left:120%; opacity:0; }
+}
+/* Periodischer, ruhiger Durchlauf für statische Brass-Linien (~7s Takt,
+   Reflex selbst nur ~1.3s sichtbar – nicht dauerhaft unruhig) */
+.brass-shimmer--auto::after{ animation:brass-sweep-auto 7s ease-in-out infinite; }
+@keyframes brass-sweep-auto{
+  0%{ left:-60%; opacity:0; }
+  2%{ opacity:1; }
+  17%{ left:120%; opacity:1; }
+  19%{ left:120%; opacity:0; }
+  100%{ left:120%; opacity:0; }
+}
+
+/* ================================================================
+   EFFEKT 4 — BRACKET-ADVANCE (Baum). Wenn ein Spiel entschieden wird,
+   fließt kurz ein Brass-Puls über die Sieger-Zeile (einmalig pro
+   Ereignis, per JS-Klasse .br-advance ausgelöst). Akzente bleiben
+   danach voll sichtbar. Keine Endlosschleife.
+   ================================================================ */
+.br-team{ position:relative; overflow:hidden; }
+.br-team.br-advance::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(236,217,162,.55),transparent);
+  background-size:100% 220%;
+  mix-blend-mode:screen;
+  animation:br-flow 1.2s ease-out forwards;
+}
+@keyframes br-flow{
+  0%{ background-position:0 140%; opacity:0; }
+  25%{ opacity:1; }
+  100%{ background-position:0 -120%; opacity:0; }
+}
+/* kurzer Brass-Glow am Rahmen des Sieger-Knotens */
+.br-match.br-advance-glow{ animation:br-glow 1.2s ease-out forwards; }
+@keyframes br-glow{
+  0%{ box-shadow:0 0 0 0 rgba(201,164,91,0); }
+  30%{ box-shadow:0 0 0 1px var(--brass), 0 0 14px rgba(201,164,91,.5); }
+  100%{ box-shadow:0 0 0 0 rgba(201,164,91,0); }
+}
+
+/* ================================================================
    Reduced Motion / sparsame Geräte: Blur reduzieren, Animationen aus
    ================================================================ */
 @media (prefers-reduced-motion: reduce){
   .mlc-topbar::after{ animation:none; display:none; }
+  .brass-shimmer::after, .brass-shimmer--auto::after,
+  .br-team.br-advance::after, .br-match.br-advance-glow{ animation:none !important; opacity:0; }
   *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition:none !important; }
   /* schwächerer Blur spart GPU auf schwachen Geräten */
   .glass-panel, .match-live, .match-finished, .match-upcoming, .tipps-card{
