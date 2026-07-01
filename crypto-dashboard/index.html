@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krypto-Dashboard · Markt, Portfolio &amp; News</title>
+<meta name="description" content="Schlichtes Krypto-Dashboard: Live-Marktdaten der Top 50 Coins, eigenes Portfolio-Tracking und aktuelle Krypto-News.">
+<meta name="theme-color" content="#fbfbfa">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-left">
+    <span class="logo">KRYPTO<span class="logo-dim">/DASHBOARD</span></span>
+  </div>
+  <div class="header-right">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span class="meta-text" id="coin-count-meta">50 COINS · LIVE</span>
+    <button class="icon-btn" id="account-icon" type="button" title="Keine Anmeldung nötig – Portfolio-Daten werden ausschließlich lokal in deinem Browser gespeichert" aria-label="Konto-Hinweis">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5"/></svg>
+    </button>
+  </div>
+</header>
+
+<nav class="tab-nav" role="tablist" aria-label="Bereiche">
+  <button class="tab-btn active" data-tab="market" role="tab" aria-selected="true">Markt</button>
+  <button class="tab-btn" data-tab="portfolio" role="tab" aria-selected="false">Portfolio</button>
+  <button class="tab-btn" data-tab="news" role="tab" aria-selected="false">News</button>
+</nav>
+
+<main>
+
+  <!-- ================= MARKT ================= -->
+  <section id="tab-market" class="tab-panel active" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">01 · MARKTÜBERSICHT</p>
+      <h1 class="headline">Marktübersicht</h1>
+      <p class="subtext">Die Top 50 Kryptowährungen nach Marktkapitalisierung, live von CoinGecko. Aktualisiert sich automatisch alle 60 Sekunden.</p>
+    </div>
+
+    <div id="market-error" class="error-banner hidden" role="alert"></div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <input type="text" id="market-search" placeholder="Name oder Symbol suchen …" autocomplete="off" aria-label="Coin suchen">
+        <button id="market-search-btn" type="button">Suchen</button>
+      </div>
+      <div class="pill-group" id="sort-pills" aria-label="Sortieren nach">
+        <button class="pill active" data-sort="market_cap">Marktkap. <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="price">Preis <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="change">24h % <span class="arrow">↓</span></button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-name">Name</th>
+            <th class="col-price">Preis</th>
+            <th class="col-change">24 Std. %</th>
+            <th class="col-cap">Marktkap.</th>
+            <th class="col-spark">7 Tage</th>
+          </tr>
+        </thead>
+        <tbody id="market-tbody"></tbody>
+      </table>
+    </div>
+    <p class="table-status" id="market-status">Lade Marktdaten …</p>
+  </section>
+
+  <!-- ================= PORTFOLIO ================= -->
+  <section id="tab-portfolio" class="tab-panel" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">02 · MEIN PORTFOLIO</p>
+      <h1 class="headline">Mein Portfolio</h1>
+      <p class="subtext">Trage deine Bestände ein, um Gesamtwert und Gewinn/Verlust auf Basis der aktuellen Kurse zu verfolgen. Alle Angaben bleiben ausschließlich lokal in deinem Browser gespeichert.</p>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-card">
+        <span class="summary-label">Gesamtwert</span>
+        <span class="summary-value" id="portfolio-total-value">€0,00</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Heute</span>
+        <span class="summary-value" id="portfolio-day-change">€0,00</span>
+        <span class="summary-sub" id="portfolio-day-change-pct">—</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Gewinn/Verlust gesamt</span>
+        <span class="summary-value" id="portfolio-total-pl">—</span>
+        <span class="summary-sub" id="portfolio-total-pl-pct">—</span>
+      </div>
+    </div>
+
+    <div class="portfolio-grid">
+      <div class="portfolio-main">
+        <h3 class="block-title">Holding hinzufügen</h3>
+        <form id="holding-form" class="holding-form" autocomplete="off">
+          <input type="hidden" id="holding-editing-id" value="">
+          <input type="hidden" id="holding-coin-id" value="">
+
+          <div class="form-field combobox" id="coin-combobox">
+            <label for="holding-coin-search">Coin</label>
+            <input type="text" id="holding-coin-search" placeholder="Name oder Symbol …" required>
+            <ul class="combobox-list hidden" id="coin-suggestions"></ul>
+          </div>
+
+          <div class="form-field">
+            <label for="holding-amount">Menge</label>
+            <input type="number" id="holding-amount" step="any" min="0" placeholder="0,00" required>
+          </div>
+
+          <div class="form-field">
+            <label for="holding-buy-price">Kaufpreis pro Coin (€, optional)</label>
+            <input type="number" id="holding-buy-price" step="any" min="0" placeholder="optional">
+          </div>
+
+          <div class="form-field">
+            <label for="holding-buy-date">Kaufdatum (optional)</label>
+            <input type="date" id="holding-buy-date">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="holding-submit-btn" class="btn-primary">Hinzufügen</button>
+            <button type="button" id="holding-cancel-btn" class="btn-ghost hidden">Abbrechen</button>
+          </div>
+        </form>
+
+        <div class="table-scroll">
+          <table class="holdings-table">
+            <thead>
+              <tr>
+                <th>Coin</th>
+                <th>Menge</th>
+                <th>Preis</th>
+                <th>Wert</th>
+                <th>Kaufpreis</th>
+                <th>G/V seit Kauf</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="holdings-tbody"></tbody>
+          </table>
+        </div>
+        <p class="table-status" id="holdings-status">Noch keine Holdings hinzugefügt.</p>
+      </div>
+
+      <div class="portfolio-side">
+        <h3 class="block-title">Verteilung</h3>
+        <div class="donut-wrap">
+          <canvas id="portfolio-donut"></canvas>
+        </div>
+        <ul class="donut-legend" id="donut-legend"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NEWS ================= -->
+  <section id="tab-news" class="tab-panel" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">03 · NEWS</p>
+      <h1 class="headline">News</h1>
+      <p class="subtext">Aktuelle Krypto-News von CryptoCompare, sortiert nach den neuesten Artikeln. Aktualisiert sich automatisch alle 5 Minuten.</p>
+    </div>
+
+    <div id="news-error" class="error-banner hidden" role="alert"></div>
+
+    <div class="pill-group" id="news-category-pills" aria-label="Nach Kategorie filtern">
+      <button class="pill active" data-category="ALL">Alle</button>
+    </div>
+
+    <ul class="news-list" id="news-list"></ul>
+    <p class="table-status" id="news-status">Lade News …</p>
+  </section>
+
+</main>
+
+<!-- ================= COIN DETAIL MODAL ================= -->
+<div id="coin-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="modal"></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-coin-name">
+    <button class="modal-close" data-close="modal" type="button" aria-label="Schließen">×</button>
+    <div class="modal-header">
+      <img id="modal-coin-icon" class="modal-coin-icon" src="" alt="">
+      <div>
+        <h2 id="modal-coin-name"></h2>
+        <span id="modal-coin-symbol" class="mono-tag"></span>
+      </div>
+    </div>
+    <div class="modal-price-row">
+      <span id="modal-coin-price" class="modal-price"></span>
+      <span id="modal-coin-change" class="change-tag"></span>
+    </div>
+    <div class="pill-group" id="range-pills">
+      <button class="pill active" data-range="7">7T</button>
+      <button class="pill" data-range="30">30T</button>
+      <button class="pill" data-range="365">1J</button>
+    </div>
+    <div class="modal-chart-wrap">
+      <canvas id="modal-chart"></canvas>
+    </div>
+    <p class="modal-status" id="modal-status"></p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>Daten von <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a> &amp; <a href="https://www.cryptocompare.com" target="_blank" rel="noopener noreferrer">CryptoCompare</a> · ohne Gewähr, keine Anlageberatung · Portfolio-Daten verlassen nie deinen Browser.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
