@@ -26,6 +26,7 @@
     <span class="logo">KRYPTO<span class="logo-dim">/DASHBOARD</span></span>
   </div>
   <div class="header-right">
+    <button type="button" class="cmdk-hint" id="cmdk-open-btn" aria-label="Suche öffnen">⌘K</button>
     <span class="live-dot" aria-hidden="true"></span>
     <span class="meta-text" id="coin-count-meta">50 COINS · LIVE</span>
     <div class="currency-toggle" id="currency-toggle" role="group" aria-label="Anzeigewährung">
@@ -113,6 +114,10 @@
     <div id="etf-error" class="error-banner hidden" role="alert"></div>
 
     <div class="controls-row">
+      <div class="search-box">
+        <input type="text" id="etf-search" placeholder="Name oder Symbol suchen …" autocomplete="off" aria-label="ETF suchen">
+        <button id="etf-search-btn" type="button">Suchen</button>
+      </div>
       <div class="pill-group" id="etf-sort-pills" aria-label="Sortieren nach">
         <button class="pill active" data-sort="name">Name <span class="arrow">↓</span></button>
         <button class="pill" data-sort="price">Preis <span class="arrow">↓</span></button>
@@ -204,6 +209,7 @@
         <button class="row-btn" id="export-csv-btn" type="button">Export CSV</button>
         <button class="row-btn" id="import-btn" type="button">Importieren</button>
         <input type="file" id="import-file-input" class="hidden" accept=".json,.csv">
+        <button class="row-btn" id="share-performance-btn" type="button">Performance teilen</button>
       </div>
     </div>
 
@@ -268,6 +274,31 @@
         </div>
         <ul class="donut-legend" id="donut-legend"></ul>
       </div>
+    </div>
+
+    <div class="history-block" id="correlation-block">
+      <div class="history-head">
+        <h3 class="block-title">Korrelation (30 Tage)</h3>
+      </div>
+      <p class="table-status" id="correlation-status">Mindestens 2 Positionen nötig.</p>
+      <div class="table-scroll">
+        <table class="corr-table hidden" id="corr-table"></table>
+      </div>
+      <p class="corr-hint hidden" id="corr-hint"></p>
+    </div>
+
+    <div class="history-block">
+      <div class="history-head">
+        <h3 class="block-title">Was-wäre-wenn</h3>
+        <button class="row-btn" id="whatif-reset-btn" type="button">Zurücksetzen</button>
+      </div>
+      <div class="whatif-summary">
+        <span class="summary-label">Simulierter Gesamtwert</span>
+        <span class="summary-value" id="whatif-total-value">—</span>
+        <span class="summary-sub" id="whatif-total-change">—</span>
+      </div>
+      <div class="whatif-sliders" id="whatif-sliders"></div>
+      <p class="table-status" id="whatif-status">Noch keine Holdings zum Simulieren.</p>
     </div>
   </section>
 
@@ -337,11 +368,50 @@
   </div>
 </div>
 
+<!-- ================= COMMAND-K SUCHE ================= -->
+<div id="cmdk-overlay" class="cmdk-overlay hidden" aria-hidden="true">
+  <div class="cmdk-backdrop" data-close="cmdk"></div>
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Suche">
+    <input type="text" id="cmdk-input" class="cmdk-input" placeholder="Coins, ETFs oder Holdings suchen …" autocomplete="off">
+    <div class="cmdk-results" id="cmdk-results"></div>
+  </div>
+</div>
+
+<!-- ================= SHORTCUTS-UEBERSICHT ================= -->
+<div id="shortcuts-overlay" class="cmdk-overlay hidden" aria-hidden="true">
+  <div class="cmdk-backdrop" data-close="shortcuts"></div>
+  <div class="shortcuts-panel" role="dialog" aria-modal="true" aria-label="Tastenkürzel">
+    <button class="modal-close" data-close="shortcuts" type="button" aria-label="Schließen">×</button>
+    <h3 class="block-title">Tastenkürzel</h3>
+    <ul class="shortcuts-list">
+      <li><kbd>⌘</kbd><kbd>K</kbd><span>Suche öffnen</span></li>
+      <li><kbd>1</kbd><span>Markt</span></li>
+      <li><kbd>2</kbd><span>Portfolio</span></li>
+      <li><kbd>3</kbd><span>ETFs</span></li>
+      <li><kbd>4</kbd><span>News</span></li>
+      <li><kbd>?</kbd><span>Diese Übersicht</span></li>
+      <li><kbd>Esc</kbd><span>Overlay schließen</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= SHARE-KARTE (off-screen, für PNG-Export) ================= -->
+<div id="share-card" class="share-card" aria-hidden="true">
+  <p class="eyebrow">MEIN PORTFOLIO</p>
+  <h2 class="share-perf-value" id="share-perf-value">—</h2>
+  <p class="share-period" id="share-period">—</p>
+  <div class="share-allocation-bar" id="share-allocation-bar"></div>
+  <div class="share-allocation-legend" id="share-allocation-legend"></div>
+  <p class="share-footer">Krypto/Dashboard</p>
+</div>
+
 <footer class="site-footer">
   <p>Daten von <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>, <a href="https://www.cryptocompare.com" target="_blank" rel="noopener noreferrer">CryptoCompare</a>, <a href="https://stooq.com" target="_blank" rel="noopener noreferrer">Stooq</a>, <a href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer">Yahoo Finance</a>, <a href="https://alternative.me" target="_blank" rel="noopener noreferrer">alternative.me</a> &amp; <a href="https://www.frankfurter.app" target="_blank" rel="noopener noreferrer">Frankfurter</a> · ohne Gewähr, keine Anlageberatung · Portfolio-Daten verlassen nie deinen Browser.</p>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="etfs-data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

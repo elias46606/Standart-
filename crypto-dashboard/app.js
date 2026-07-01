@@ -28,14 +28,7 @@ const FX_REFRESH_MS = 60 * 60 * 1000;
 const FNG_REFRESH_MS = 10 * 60 * 1000;
 const RATE_LIMIT_BACKOFF_MS = [5000, 15000, 30000];
 
-const ETF_LIST = [
-  { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust', currency: 'USD', stooq: 'spy.us', yahoo: 'SPY' },
-  { symbol: 'QQQ', name: 'Invesco QQQ Trust', currency: 'USD', stooq: 'qqq.us', yahoo: 'QQQ' },
-  { symbol: 'VWCE.DE', name: 'Vanguard FTSE All-World UCITS ETF', currency: 'EUR', stooq: 'vwce.de', yahoo: 'VWCE.DE' },
-  { symbol: 'IWDA.AS', name: 'iShares Core MSCI World UCITS ETF', currency: 'EUR', stooq: 'iwda.uk', yahoo: 'IWDA.AS' },
-  { symbol: 'VUSA.L', name: 'Vanguard S&P 500 UCITS ETF', currency: 'GBP', stooq: 'vusa.uk', yahoo: 'VUSA.L' },
-  { symbol: 'EUNL.DE', name: 'iShares Core MSCI World UCITS ETF', currency: 'EUR', stooq: 'eunl.de', yahoo: 'EUNL.DE' },
-];
+// ETF_LIST wird aus etfs-data.js geladen (eigenes Datenmodul, vor app.js eingebunden).
 
 const ETF_RANGE_DAYS_BACK = { 7: 12, 30: 45, 365: 400 };
 const YAHOO_RANGE_MAP = { 7: ['1mo', '1d'], 30: ['3mo', '1d'], 365: ['1y', '1d'] };
@@ -57,6 +50,7 @@ const state = {
   etfSortKey: 'name',
   etfSortDir: 'asc',
   etfWatchlistOnly: false,
+  etfSearch: '',
 
   chartCache: {},
 
@@ -72,6 +66,8 @@ const state = {
   fngLoadedAt: 0,
 
   watchlist: loadWatchlist(),
+  correlationLoadedOnce: false,
+  whatIf: new Map(),
 };
 
 let holdings = loadHoldings();
@@ -159,10 +155,11 @@ function convertAmount(amount, fromCcy, toCcy) {
 }
 
 function formatCurrency(value, fromCcy = 'USD') {
-  const converted = convertAmount(value, fromCcy, state.displayCurrency);
+  let converted = convertAmount(value, fromCcy, state.displayCurrency);
   if (converted == null) return '—';
+  if (Math.abs(converted) < 1e-8) converted = 0; // Floating-Point-Rauschen (z.B. bei What-if-Differenzen) glaetten
   const abs = Math.abs(converted);
-  const decimals = abs >= 1 ? 2 : (abs >= 0.01 ? 4 : 6);
+  const decimals = abs === 0 ? 2 : (abs >= 1 ? 2 : (abs >= 0.01 ? 4 : 6));
   return new Intl.NumberFormat('de-DE', {
     style: 'currency', currency: state.displayCurrency,
     minimumFractionDigits: decimals, maximumFractionDigits: decimals,
@@ -744,6 +741,7 @@ function setEtfStatus(text) {
 
 function getFilteredSortedEtfAssets() {
   let assets = state.etfs.slice();
+  assets = filterAssetsBySearch(assets, state.etfSearch);
   assets = filterAssetsByWatchlist(assets, state.etfWatchlistOnly);
   return sortAssets(assets, state.etfSortKey, state.etfSortDir);
 }
@@ -784,6 +782,16 @@ function updateEtfSortPillsUI() {
 }
 
 function initEtfControls() {
+  const etfSearchInput = document.getElementById('etf-search');
+  etfSearchInput?.addEventListener('input', () => {
+    state.etfSearch = etfSearchInput.value;
+    renderEtfTable();
+  });
+  document.getElementById('etf-search-btn')?.addEventListener('click', () => {
+    state.etfSearch = etfSearchInput.value;
+    renderEtfTable();
+  });
+
   document.getElementById('etf-sort-pills')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.pill');
     if (!btn) return;
@@ -951,24 +959,28 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+async function getOrFetchAssetSeries(type, id, range) {
+  const cacheKey = `${type}:${id}:${range}`;
+  let points = state.chartCache[cacheKey];
+  if (points) return points;
+  if (type === 'crypto') {
+    const json = await fetchWithRetry(`${COINGECKO_BASE}/coins/${id}/market_chart?vs_currency=usd&days=${range}`);
+    points = ((json && json.prices) || []).map(([t, price]) => ({ t, price }));
+  } else {
+    const def = ETF_LIST.find((e) => e.symbol === id);
+    if (!def) throw new Error('UNKNOWN_ETF');
+    const result = await loadEtfSeries(def, range);
+    points = result.points;
+  }
+  state.chartCache[cacheKey] = points;
+  return points;
+}
+
 async function loadModalChart(type, id, range) {
   const statusEl = document.getElementById('modal-status');
   statusEl.textContent = 'Lade Chart …';
-  const cacheKey = `${type}:${id}:${range}`;
   try {
-    let points = state.chartCache[cacheKey];
-    if (!points) {
-      if (type === 'crypto') {
-        const json = await fetchWithRetry(`${COINGECKO_BASE}/coins/${id}/market_chart?vs_currency=usd&days=${range}`);
-        points = ((json && json.prices) || []).map(([t, price]) => ({ t, price }));
-      } else {
-        const def = ETF_LIST.find((e) => e.symbol === id);
-        if (!def) throw new Error('UNKNOWN_ETF');
-        const result = await loadEtfSeries(def, range);
-        points = result.points;
-      }
-      state.chartCache[cacheKey] = points;
-    }
+    const points = await getOrFetchAssetSeries(type, id, range);
     statusEl.textContent = '';
     renderModalChart(points, range);
   } catch (err) {
@@ -1007,9 +1019,6 @@ function renderModalChart(points, range) {
 
 function initModal() {
   document.querySelectorAll('[data-close="modal"]').forEach((el) => el.addEventListener('click', closeModal));
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-  });
   document.getElementById('range-pills')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.pill');
     if (!btn || !currentModalAsset) return;
@@ -1267,6 +1276,8 @@ function deleteHolding(id) {
   holdings = holdings.filter((h) => h.id !== id);
   saveHoldings();
   renderPortfolio();
+  renderCorrelationMatrix();
+  renderWhatIf();
 }
 
 function initHoldingForm() {
@@ -1304,6 +1315,8 @@ function initHoldingForm() {
     saveHoldings();
     resetHoldingForm();
     renderPortfolio();
+    renderCorrelationMatrix();
+    renderWhatIf();
   });
 
   document.getElementById('holding-cancel-btn')?.addEventListener('click', resetHoldingForm);
@@ -1466,6 +1479,7 @@ function renderPortfolio() {
   const hasPricedRow = rows.some((r) => r.value != null);
   maybeSnapshotPortfolio(totalValue, hasPricedRow);
   renderPortfolioHistoryChart();
+  if (document.getElementById('whatif-total-value')) updateWhatIfSummary();
 }
 
 /* ===================================================================
@@ -1605,6 +1619,319 @@ function initPortfolioHistoryControls() {
 }
 
 /* ===================================================================
+   KORRELATIONS-MATRIX (30 Tage, Tages-Returns)
+   =================================================================== */
+
+function toDailyCloseMap(points) {
+  const map = new Map();
+  points.forEach((p) => {
+    const d = new Date(p.t).toISOString().slice(0, 10);
+    map.set(d, p.price);
+  });
+  return map;
+}
+
+function dailyReturnsFromCloseMap(dailyMap) {
+  const dates = [...dailyMap.keys()].sort();
+  const returns = new Map();
+  for (let i = 1; i < dates.length; i++) {
+    const prev = dailyMap.get(dates[i - 1]);
+    const cur = dailyMap.get(dates[i]);
+    if (prev) returns.set(dates[i], (cur - prev) / prev);
+  }
+  return returns;
+}
+
+function pearsonCorrelation(xs, ys) {
+  const n = Math.min(xs.length, ys.length);
+  if (n < 5) return null;
+  const meanX = xs.reduce((a, b) => a + b, 0) / n;
+  const meanY = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let denX = 0;
+  let denY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - meanX;
+    const dy = ys[i] - meanY;
+    num += dx * dy;
+    denX += dx * dx;
+    denY += dy * dy;
+  }
+  const den = Math.sqrt(denX * denY);
+  return den ? num / den : null;
+}
+
+function getUniquePortfolioAssets() {
+  const seen = new Map();
+  holdings.forEach((h) => {
+    const key = `${h.assetType}:${h.assetId}`;
+    if (!seen.has(key)) {
+      const asset = findAsset(h.assetType, h.assetId);
+      if (asset) seen.set(key, asset);
+    }
+  });
+  return [...seen.values()];
+}
+
+async function renderCorrelationMatrix() {
+  const statusEl = document.getElementById('correlation-status');
+  const tableEl = document.getElementById('corr-table');
+  const hintEl = document.getElementById('corr-hint');
+  if (!tableEl) return;
+
+  const assets = getUniquePortfolioAssets();
+  if (assets.length < 2) {
+    tableEl.classList.add('hidden');
+    hintEl.classList.add('hidden');
+    statusEl.textContent = 'Mindestens 2 Positionen nötig.';
+    statusEl.classList.remove('hidden');
+    return;
+  }
+
+  statusEl.textContent = 'Lade Korrelationsdaten …';
+  statusEl.classList.remove('hidden');
+  tableEl.classList.add('hidden');
+  hintEl.classList.add('hidden');
+
+  const returnsByKey = new Map();
+  await Promise.all(assets.map(async (a) => {
+    const key = `${a.type}:${a.id}`;
+    try {
+      const points = await getOrFetchAssetSeries(a.type, a.id, '30');
+      returnsByKey.set(key, dailyReturnsFromCloseMap(toDailyCloseMap(points)));
+    } catch (err) {
+      console.warn(`Korrelationsdaten für ${key} nicht verfügbar:`, err);
+    }
+  }));
+
+  const usable = assets.filter((a) => returnsByKey.has(`${a.type}:${a.id}`));
+  if (usable.length < 2) {
+    statusEl.textContent = 'Korrelationsdaten momentan nicht verfügbar.';
+    return;
+  }
+  statusEl.classList.add('hidden');
+
+  const keys = usable.map((a) => `${a.type}:${a.id}`);
+  const matrix = keys.map((keyA) => keys.map((keyB) => {
+    if (keyA === keyB) return 1;
+    const a = returnsByKey.get(keyA);
+    const b = returnsByKey.get(keyB);
+    const sharedDates = [...a.keys()].filter((d) => b.has(d));
+    if (sharedDates.length < 5) return null;
+    return pearsonCorrelation(sharedDates.map((d) => a.get(d)), sharedDates.map((d) => b.get(d)));
+  }));
+
+  function corrCellStyle(corr) {
+    if (corr == null) return '';
+    const lightness = Math.round(100 - Math.max(0, corr) * 55);
+    const textColor = lightness < 55 ? '#fbfbfa' : '#111111';
+    return `background:hsl(0,0%,${lightness}%);color:${textColor};`;
+  }
+
+  let html = '<thead><tr><th></th>';
+  usable.forEach((a) => { html += `<th>${escapeHtml(a.symbol)}</th>`; });
+  html += '</tr></thead><tbody>';
+  usable.forEach((rowAsset, i) => {
+    html += `<tr><th>${escapeHtml(rowAsset.symbol)}</th>`;
+    usable.forEach((_, j) => {
+      const corr = matrix[i][j];
+      html += `<td style="${corrCellStyle(corr)}">${corr != null ? corr.toFixed(2) : '—'}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tableEl.innerHTML = html;
+  tableEl.classList.remove('hidden');
+
+  let sum = 0;
+  let count = 0;
+  for (let i = 0; i < matrix.length; i++) {
+    for (let j = 0; j < matrix.length; j++) {
+      if (i === j || matrix[i][j] == null) continue;
+      sum += matrix[i][j];
+      count++;
+    }
+  }
+  const avg = count ? sum / count : 0;
+  if (count && avg > 0.6) {
+    hintEl.textContent = 'Deine Positionen bewegen sich oft gleich – wenig Diversifikation.';
+    hintEl.classList.remove('hidden');
+  } else {
+    hintEl.classList.add('hidden');
+  }
+}
+
+/* ===================================================================
+   WAS-WAERE-WENN-RECHNER
+   =================================================================== */
+
+function computeWhatIfRows() {
+  return holdings.map((h) => {
+    const asset = findAsset(h.assetType, h.assetId);
+    if (!asset || asset.price == null) return { holding: h, value: null };
+    const key = `${h.assetType}:${h.assetId}`;
+    const pct = state.whatIf.get(key) || 0;
+    const simPrice = asset.price * (1 + pct / 100);
+    const value = convertAmount(simPrice * h.amount, asset.currency, state.displayCurrency);
+    return { holding: h, value };
+  });
+}
+
+function renderWhatIf() {
+  const container = document.getElementById('whatif-sliders');
+  const statusEl = document.getElementById('whatif-status');
+  if (!container) return;
+
+  const assets = getUniquePortfolioAssets();
+  if (!assets.length) {
+    container.innerHTML = '';
+    statusEl.textContent = 'Noch keine Holdings zum Simulieren.';
+    statusEl.classList.remove('hidden');
+    updateWhatIfSummary();
+    return;
+  }
+  statusEl.classList.add('hidden');
+
+  container.innerHTML = assets.map((a) => {
+    const key = `${a.type}:${a.id}`;
+    const pct = state.whatIf.get(key) || 0;
+    return `
+      <div class="whatif-row" data-key="${escapeHtml(key)}">
+        <span class="whatif-label">${escapeHtml(a.name)} (${escapeHtml(a.symbol)})</span>
+        <input type="range" class="whatif-slider" min="-50" max="100" step="1" value="${pct}">
+        <span class="whatif-pct">${pct >= 0 ? '+' : ''}${pct} %</span>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.whatif-row').forEach((row) => {
+    const key = row.dataset.key;
+    const slider = row.querySelector('.whatif-slider');
+    const pctLabel = row.querySelector('.whatif-pct');
+    slider.addEventListener('input', () => {
+      const val = Number(slider.value);
+      state.whatIf.set(key, val);
+      pctLabel.textContent = `${val >= 0 ? '+' : ''}${val} %`;
+      updateWhatIfSummary();
+    });
+  });
+
+  updateWhatIfSummary();
+}
+
+function updateWhatIfSummary() {
+  const valueEl = document.getElementById('whatif-total-value');
+  const changeEl = document.getElementById('whatif-total-change');
+  if (!valueEl) return;
+
+  const simRows = computeWhatIfRows();
+  const simTotal = simRows.reduce((s, r) => s + (r.value || 0), 0);
+  const realRows = computePortfolioRows();
+  const realTotal = realRows.reduce((s, r) => s + (r.value || 0), 0);
+
+  valueEl.textContent = formatCurrency(simTotal, state.displayCurrency);
+  const diff = simTotal - realTotal;
+  const diffPct = realTotal ? (diff / realTotal) * 100 : 0;
+  changeEl.textContent = `${diff >= 0 ? '+' : ''}${formatCurrency(diff, state.displayCurrency)} (${formatPercent(diffPct)}) ggü. echtem Wert`;
+  changeEl.className = `summary-sub ${changeClass(diff)}`;
+}
+
+function initWhatIf() {
+  document.getElementById('whatif-reset-btn')?.addEventListener('click', () => {
+    state.whatIf.clear();
+    renderWhatIf();
+  });
+}
+
+/* ===================================================================
+   SHARE-ANSICHT (anonymisierter PNG-Export der Performance)
+   =================================================================== */
+
+const HISTORY_RANGE_LABELS = { 7: 'Letzte 7 Tage', 30: 'Letzte 30 Tage', all: 'Gesamter Zeitraum' };
+
+function computeShareData() {
+  const rows = computePortfolioRows();
+  const totalValue = rows.reduce((s, r) => s + (r.value || 0), 0);
+  const cryptoValue = rows.filter((r) => r.holding.assetType === 'crypto').reduce((s, r) => s + (r.value || 0), 0);
+  const etfValue = rows.filter((r) => r.holding.assetType === 'etf').reduce((s, r) => s + (r.value || 0), 0);
+  const cryptoPct = totalValue ? (cryptoValue / totalValue) * 100 : 0;
+  const etfPct = totalValue ? (etfValue / totalValue) * 100 : 0;
+
+  const histPoints = getPortfolioHistoryForRange(portfolioHistoryRange);
+  let perfPct = null;
+  if (histPoints.length >= 2) {
+    const first = convertAmount(histPoints[0].valueUsd, 'USD', state.displayCurrency);
+    const last = convertAmount(histPoints[histPoints.length - 1].valueUsd, 'USD', state.displayCurrency);
+    perfPct = first ? ((last - first) / first) * 100 : 0;
+  }
+
+  return {
+    perfPct,
+    periodLabel: HISTORY_RANGE_LABELS[portfolioHistoryRange] || 'Zeitraum',
+    cryptoPct,
+    etfPct,
+    hasPositions: totalValue > 0,
+  };
+}
+
+function populateShareCard(data) {
+  document.getElementById('share-perf-value').textContent = data.perfPct != null ? formatPercent(data.perfPct) : '—';
+  document.getElementById('share-perf-value').className = `share-perf-value ${changeClass(data.perfPct)}`;
+  document.getElementById('share-period').textContent = data.perfPct != null ? `Performance · ${data.periodLabel}` : 'Noch keine Verlaufsdaten';
+
+  const barEl = document.getElementById('share-allocation-bar');
+  const legendEl = document.getElementById('share-allocation-legend');
+  if (!data.hasPositions) {
+    barEl.innerHTML = '';
+    legendEl.innerHTML = '<span>Keine Positionen</span>';
+    return;
+  }
+  barEl.innerHTML = `
+    <div class="seg-crypto" style="width:${data.cryptoPct}%"></div>
+    <div class="seg-etf" style="width:${data.etfPct}%"></div>
+  `;
+  legendEl.innerHTML = `
+    <span><span class="legend-swatch" style="display:inline-block;width:9px;height:9px;background:var(--fg)"></span>Krypto ${data.cryptoPct.toFixed(0)}%</span>
+    <span><span class="legend-swatch" style="display:inline-block;width:9px;height:9px;background:var(--gray-200)"></span>ETF ${data.etfPct.toFixed(0)}%</span>
+  `;
+}
+
+async function sharePerformanceImage() {
+  if (typeof html2canvas === 'undefined') {
+    alert('Bild-Export ist momentan nicht verfügbar.');
+    return;
+  }
+  const data = computeShareData();
+  if (!data.hasPositions) {
+    alert('Noch keine Holdings für einen Performance-Export vorhanden.');
+    return;
+  }
+  populateShareCard(data);
+  const card = document.getElementById('share-card');
+  try {
+    const canvas = await html2canvas(card, { backgroundColor: '#fbfbfa', scale: 2 });
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `portfolio-performance-${dateStamp()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  } catch (err) {
+    console.error('Bild-Export fehlgeschlagen:', err);
+    alert('Bild-Export fehlgeschlagen.');
+  }
+}
+
+function initShareButton() {
+  document.getElementById('share-performance-btn')?.addEventListener('click', sharePerformanceImage);
+}
+
+/* ===================================================================
    PORTFOLIO — Export / Import (JSON + CSV, inkl. Verlauf)
    =================================================================== */
 
@@ -1729,6 +2056,8 @@ function initExportImport() {
       holdings = holdings.concat(imported);
       saveHoldings();
       renderPortfolio();
+      renderCorrelationMatrix();
+      renderWhatIf();
       alert(`${imported.length} Holding(s) importiert.`);
     } catch (err) {
       console.error('Import fehlgeschlagen:', err);
@@ -1917,11 +2246,215 @@ function switchTab(tab) {
     b.setAttribute('aria-selected', String(active));
   });
   document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `tab-${tab}`));
+  if (tab === 'portfolio' && !state.correlationLoadedOnce) {
+    state.correlationLoadedOnce = true;
+    renderCorrelationMatrix();
+  }
 }
 
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+/* ===================================================================
+   COMMAND-K SUCHE
+   =================================================================== */
+
+let cmdkActiveIndex = -1;
+let cmdkFlatItems = [];
+
+function isOverlayOpen(id) {
+  const el = document.getElementById(id);
+  return !!el && !el.classList.contains('hidden');
+}
+
+function openCmdk() {
+  const overlay = document.getElementById('cmdk-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+  const input = document.getElementById('cmdk-input');
+  input.value = '';
+  renderCmdkResults('');
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeCmdk() {
+  const overlay = document.getElementById('cmdk-overlay');
+  if (!overlay) return;
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function holdingLabel(h) {
+  const asset = findAsset(h.assetType, h.assetId);
+  return asset ? `${asset.name} (${asset.symbol})` : h.assetId;
+}
+
+function renderCmdkResults(query) {
+  const container = document.getElementById('cmdk-results');
+  if (!container) return;
+  const q = query.trim().toLowerCase();
+
+  const matchAsset = (a) => !q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q);
+  const coins = state.coins.map(coinToAsset).filter(matchAsset).slice(0, 6);
+  const etfs = state.etfs.filter(matchAsset).slice(0, 6);
+  const holdingMatches = holdings
+    .filter((h) => !q || holdingLabel(h).toLowerCase().includes(q))
+    .slice(0, 6);
+
+  cmdkFlatItems = [];
+  const groups = [
+    { label: 'Coins', kind: 'asset', items: coins },
+    { label: 'ETFs', kind: 'asset', items: etfs },
+    { label: 'Meine Holdings', kind: 'holding', items: holdingMatches },
+  ];
+
+  let html = '';
+  groups.forEach((group) => {
+    if (!group.items.length) return;
+    html += `<div class="cmdk-group-label">${escapeHtml(group.label)}</div>`;
+    group.items.forEach((item) => {
+      const index = cmdkFlatItems.length;
+      if (group.kind === 'asset') {
+        cmdkFlatItems.push({ kind: 'asset', type: item.type, id: item.id });
+        html += `
+          <div class="cmdk-item" data-index="${index}">
+            ${assetIconHtml(item, 'xs')}
+            <span class="coin-name-text">${escapeHtml(item.name)}</span>
+            <span class="mono-tag">${escapeHtml(item.symbol)}</span>
+            <span class="cmdk-item-price">${formatCurrency(item.price, item.currency)}</span>
+          </div>`;
+      } else {
+        cmdkFlatItems.push({ kind: 'holding', holdingId: item.id });
+        html += `
+          <div class="cmdk-item" data-index="${index}">
+            <span class="coin-name-text">${escapeHtml(holdingLabel(item))}</span>
+            <span class="mono-tag">${escapeHtml(formatAmount(item.amount))}</span>
+          </div>`;
+      }
+    });
+  });
+
+  if (!cmdkFlatItems.length) {
+    html = `<div class="cmdk-empty">${q ? 'Keine Treffer.' : 'Tippe, um Coins, ETFs oder Holdings zu finden.'}</div>`;
+  }
+  container.innerHTML = html;
+  cmdkActiveIndex = cmdkFlatItems.length ? 0 : -1;
+  updateCmdkActiveItem();
+
+  container.querySelectorAll('.cmdk-item').forEach((el) => {
+    el.addEventListener('click', () => activateCmdkItem(Number(el.dataset.index)));
+  });
+}
+
+function updateCmdkActiveItem() {
+  const container = document.getElementById('cmdk-results');
+  if (!container) return;
+  container.querySelectorAll('.cmdk-item').forEach((el) => {
+    el.classList.toggle('active', Number(el.dataset.index) === cmdkActiveIndex);
+  });
+  const activeEl = container.querySelector('.cmdk-item.active');
+  activeEl?.scrollIntoView({ block: 'nearest' });
+}
+
+function activateCmdkItem(index) {
+  const item = cmdkFlatItems[index];
+  if (!item) return;
+  closeCmdk();
+  if (item.kind === 'asset') {
+    switchTab(item.type === 'crypto' ? 'market' : 'etf');
+    openAssetModal(item.type, item.id);
+  } else {
+    switchTab('portfolio');
+    setTimeout(() => {
+      const row = document.querySelector(`[data-action="edit"][data-id="${CSS.escape(item.holdingId)}"]`);
+      const tr = row?.closest('tr');
+      tr?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (tr) {
+        tr.style.background = 'var(--bg-alt)';
+        setTimeout(() => { tr.style.background = ''; }, 1200);
+      }
+    }, 100);
+  }
+}
+
+function initCmdk() {
+  document.getElementById('cmdk-open-btn')?.addEventListener('click', openCmdk);
+  document.querySelectorAll('[data-close="cmdk"]').forEach((el) => el.addEventListener('click', closeCmdk));
+
+  const input = document.getElementById('cmdk-input');
+  input?.addEventListener('input', () => renderCmdkResults(input.value));
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (cmdkFlatItems.length) cmdkActiveIndex = (cmdkActiveIndex + 1) % cmdkFlatItems.length;
+      updateCmdkActiveItem();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (cmdkFlatItems.length) cmdkActiveIndex = (cmdkActiveIndex - 1 + cmdkFlatItems.length) % cmdkFlatItems.length;
+      updateCmdkActiveItem();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (cmdkActiveIndex >= 0) activateCmdkItem(cmdkActiveIndex);
+    }
+  });
+}
+
+/* ===================================================================
+   KEYBOARD-SHORTCUTS
+   =================================================================== */
+
+const TAB_SHORTCUTS = { 1: 'market', 2: 'portfolio', 3: 'etf', 4: 'news' };
+
+function isTypingContext() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+}
+
+function anyOverlayOpen() {
+  return isOverlayOpen('cmdk-overlay') || isOverlayOpen('shortcuts-overlay') || isOverlayOpen('asset-modal');
+}
+
+function openShortcutsOverlay() {
+  const overlay = document.getElementById('shortcuts-overlay');
+  overlay?.classList.remove('hidden');
+  overlay?.setAttribute('aria-hidden', 'false');
+}
+
+function closeShortcutsOverlay() {
+  const overlay = document.getElementById('shortcuts-overlay');
+  overlay?.classList.add('hidden');
+  overlay?.setAttribute('aria-hidden', 'true');
+}
+
+function initKeyboardShortcuts() {
+  document.querySelectorAll('[data-close="shortcuts"]').forEach((el) => el.addEventListener('click', closeShortcutsOverlay));
+
+  document.addEventListener('keydown', (e) => {
+    const meta = e.metaKey || e.ctrlKey;
+    if (meta && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openCmdk();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (isOverlayOpen('cmdk-overlay')) closeCmdk();
+      else if (isOverlayOpen('shortcuts-overlay')) closeShortcutsOverlay();
+      else if (isOverlayOpen('asset-modal')) closeModal();
+      return;
+    }
+    if (isTypingContext() || anyOverlayOpen()) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (TAB_SHORTCUTS[e.key]) {
+      switchTab(TAB_SHORTCUTS[e.key]);
+    } else if (e.key === '?') {
+      openShortcutsOverlay();
+    }
   });
 }
 
@@ -1989,10 +2522,15 @@ async function init() {
   registerServiceWorker();
   initVisibilityHandling();
   startApiCallLogger();
+  initCmdk();
+  initKeyboardShortcuts();
+  initWhatIf();
+  initShareButton();
 
   updateSortPillsUI();
   updateEtfSortPillsUI();
   renderPortfolio();
+  renderWhatIf();
   renderStatusDots();
 
   loadFxRates();
