@@ -33,6 +33,10 @@ const RATE_LIMIT_BACKOFF_MS = [5000, 15000, 30000];
 const ETF_RANGE_DAYS_BACK = { 7: 12, 30: 45, 365: 400 };
 const YAHOO_RANGE_MAP = { 7: ['1mo', '1d'], 30: ['3mo', '1d'], 365: ['1y', '1d'] };
 
+// Chart-Serien (Modal, Korrelation) ändern sich selten schneller als der Marktpreis selbst,
+// daher eigene, längere TTL statt bei jedem Öffnen neu zu laden.
+const CHART_CACHE_TTL_MS = 5 * 60 * 1000;
+
 /* ===================================================================
    Zustand
    =================================================================== */
@@ -66,7 +70,6 @@ const state = {
   fngLoadedAt: 0,
 
   watchlist: loadWatchlist(),
-  correlationLoadedOnce: false,
   whatIf: new Map(),
 };
 
@@ -702,7 +705,7 @@ async function fetchEtfData() {
     const prev = points.length > 1 ? points[points.length - 2] : null;
     const changeAbs = prev ? last.price - prev.price : null;
     const changePct = prev && prev.price ? (changeAbs / prev.price) * 100 : null;
-    state.chartCache[`etf:${def.symbol}:30`] = points;
+    state.chartCache[`etf:${def.symbol}:30`] = { points, loadedAt: Date.now() };
     assets.push({
       type: 'etf', id: def.symbol, symbol: def.symbol, name: def.name, image: null,
       currency: def.currency, price: last.price, changeAbs, changePct,
@@ -959,21 +962,38 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+const chartSeriesInFlight = {};
+
+// Zentrale Chart-Serien-Beschaffung mit TTL-Cache + In-Flight-Dedup (analog zu ensureFresh),
+// damit z.B. Modal-Öffnen und Korrelationsmatrix nicht parallel dieselbe Serie doppelt laden.
 async function getOrFetchAssetSeries(type, id, range) {
   const cacheKey = `${type}:${id}:${range}`;
-  let points = state.chartCache[cacheKey];
-  if (points) return points;
-  if (type === 'crypto') {
-    const json = await fetchWithRetry(`${COINGECKO_BASE}/coins/${id}/market_chart?vs_currency=usd&days=${range}`);
-    points = ((json && json.prices) || []).map(([t, price]) => ({ t, price }));
-  } else {
-    const def = ETF_LIST.find((e) => e.symbol === id);
-    if (!def) throw new Error('UNKNOWN_ETF');
-    const result = await loadEtfSeries(def, range);
-    points = result.points;
-  }
-  state.chartCache[cacheKey] = points;
-  return points;
+  const cached = state.chartCache[cacheKey];
+  if (cached && Date.now() - cached.loadedAt < CHART_CACHE_TTL_MS) return cached.points;
+  if (chartSeriesInFlight[cacheKey]) return chartSeriesInFlight[cacheKey];
+
+  chartSeriesInFlight[cacheKey] = (async () => {
+    try {
+      let points;
+      if (type === 'crypto') {
+        const json = await fetchWithRetry(`${COINGECKO_BASE}/coins/${id}/market_chart?vs_currency=usd&days=${range}`);
+        points = ((json && json.prices) || []).map(([t, price]) => ({ t, price }));
+      } else {
+        const def = ETF_LIST.find((e) => e.symbol === id);
+        if (!def) throw new Error('UNKNOWN_ETF');
+        const result = await loadEtfSeries(def, range);
+        points = result.points;
+      }
+      state.chartCache[cacheKey] = { points, loadedAt: Date.now() };
+      return points;
+    } catch (err) {
+      if (cached) return cached.points;
+      throw err;
+    } finally {
+      chartSeriesInFlight[cacheKey] = null;
+    }
+  })();
+  return chartSeriesInFlight[cacheKey];
 }
 
 async function loadModalChart(type, id, range) {
@@ -989,15 +1009,10 @@ async function loadModalChart(type, id, range) {
   }
 }
 
-function renderModalChart(points, range) {
-  const canvas = document.getElementById('modal-chart');
-  if (!canvas || typeof Chart === 'undefined') return;
-  const assetCcy = (currentModalAsset && findAsset(currentModalAsset.type, currentModalAsset.id)?.currency) || 'USD';
-  const labels = points.map((p) => formatChartLabel(p.t, range));
-  const values = points.map((p) => convertAmount(p.price, assetCcy, state.displayCurrency));
-
-  if (modalChart) modalChart.destroy();
-  modalChart = new Chart(canvas, {
+// Gemeinsame Chart.js-Konfiguration für alle Preis-/Wert-Linencharts (Modal, Portfolio-Verlauf),
+// damit Tooltip-/Achsen-Formatierung und Optik an einer Stelle gepflegt werden.
+function createPriceLineChart(canvas, labels, values) {
+  return new Chart(canvas, {
     type: 'line',
     data: { labels, datasets: [{ data: values, borderColor: '#111111', borderWidth: 1.5, pointRadius: 0, tension: 0.1, fill: false }] },
     options: {
@@ -1006,15 +1021,26 @@ function renderModalChart(points, range) {
       animation: false,
       plugins: {
         legend: { display: false },
-        tooltip: { mode: 'index', intersect: false, callbacks: { label: (ctx) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: state.displayCurrency }).format(ctx.parsed.y) } },
+        tooltip: { mode: 'index', intersect: false, callbacks: { label: (ctx) => formatCurrency(ctx.parsed.y, state.displayCurrency) } },
       },
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: { ticks: { maxTicksLimit: 6, color: '#9a9a96', font: { family: 'ui-monospace', size: 10 } }, grid: { display: false } },
-        y: { ticks: { color: '#9a9a96', font: { family: 'ui-monospace', size: 10 }, callback: (v) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: state.displayCurrency, notation: 'compact', maximumFractionDigits: 2 }).format(v) }, grid: { color: '#ececea' } },
+        y: { ticks: { color: '#9a9a96', font: { family: 'ui-monospace', size: 10 }, callback: (v) => formatCompactCurrency(v, state.displayCurrency) }, grid: { color: '#ececea' } },
       },
     },
   });
+}
+
+function renderModalChart(points, range) {
+  const canvas = document.getElementById('modal-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const assetCcy = (currentModalAsset && findAsset(currentModalAsset.type, currentModalAsset.id)?.currency) || 'USD';
+  const labels = points.map((p) => formatChartLabel(p.t, range));
+  const values = points.map((p) => convertAmount(p.price, assetCcy, state.displayCurrency));
+
+  if (modalChart) modalChart.destroy();
+  modalChart = createPriceLineChart(canvas, labels, values);
 }
 
 function initModal() {
@@ -1479,7 +1505,31 @@ function renderPortfolio() {
   const hasPricedRow = rows.some((r) => r.value != null);
   maybeSnapshotPortfolio(totalValue, hasPricedRow);
   renderPortfolioHistoryChart();
-  if (document.getElementById('whatif-total-value')) updateWhatIfSummary();
+  refreshWhatIfIfNeeded();
+  refreshCorrelationIfNeeded();
+}
+
+// Baut Was-wäre-wenn-Slider und Korrelationsmatrix neu auf, falls sie beim letzten Versuch
+// leer geblieben sind (z.B. weil Markt-/ETF-Daten damals noch nicht geladen waren), statt
+// dauerhaft leer zu bleiben, bis der Nutzer manuell den Tab wechselt oder eine Holding ändert.
+function refreshWhatIfIfNeeded() {
+  const container = document.getElementById('whatif-sliders');
+  if (!container) return;
+  const assets = getUniquePortfolioAssets();
+  if (assets.length && !container.children.length) {
+    renderWhatIf();
+  } else {
+    updateWhatIfSummary();
+  }
+}
+
+function refreshCorrelationIfNeeded() {
+  const panel = document.getElementById('tab-portfolio');
+  const tableEl = document.getElementById('corr-table');
+  if (!panel || !tableEl || !panel.classList.contains('active')) return;
+  const assets = getUniquePortfolioAssets();
+  const hasRenderedRows = tableEl.querySelector('tbody tr');
+  if (assets.length >= 2 && !hasRenderedRows) renderCorrelationMatrix();
 }
 
 /* ===================================================================
@@ -1530,8 +1580,7 @@ function getPortfolioHistoryForRange(range) {
 }
 
 function formatHistoryDate(dateStr) {
-  const d = new Date(`${dateStr}T00:00:00Z`);
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  return formatChartLabel(`${dateStr}T00:00:00Z`, '30');
 }
 
 function showHistoryEmptyState(message) {
@@ -1592,20 +1641,7 @@ function renderPortfolioHistoryChart() {
   const labels = points.map((p) => formatHistoryDate(p.date));
   const values = points.map((p) => toDisplay(p.valueUsd));
   if (portfolioHistoryChart) portfolioHistoryChart.destroy();
-  portfolioHistoryChart = new Chart(canvas, {
-    type: 'line',
-    data: { labels, datasets: [{ data: values, borderColor: '#111111', borderWidth: 1.5, pointRadius: 0, tension: 0.1, fill: false }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.parsed.y, state.displayCurrency) } } },
-      scales: {
-        x: { ticks: { maxTicksLimit: 6, color: '#9a9a96', font: { family: 'ui-monospace', size: 10 } }, grid: { display: false } },
-        y: { ticks: { color: '#9a9a96', font: { family: 'ui-monospace', size: 10 }, callback: (v) => formatCompactCurrency(v, state.displayCurrency) }, grid: { color: '#ececea' } },
-      },
-    },
-  });
+  portfolioHistoryChart = createPriceLineChart(canvas, labels, values);
 }
 
 function initPortfolioHistoryControls() {
@@ -2246,10 +2282,10 @@ function switchTab(tab) {
     b.setAttribute('aria-selected', String(active));
   });
   document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `tab-${tab}`));
-  if (tab === 'portfolio' && !state.correlationLoadedOnce) {
-    state.correlationLoadedOnce = true;
-    renderCorrelationMatrix();
-  }
+  // Serien sind über getOrFetchAssetSeries TTL-gecacht, daher ist ein Neuaufbau bei jedem
+  // Tab-Wechsel unkritisch und behebt zuverlässig den Fall, dass Markt-/ETF-Daten beim
+  // ersten Öffnen des Portfolio-Tabs noch nicht geladen waren.
+  if (tab === 'portfolio') renderCorrelationMatrix();
 }
 
 function initTabs() {
