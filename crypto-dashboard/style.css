@@ -570,11 +570,15 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
 
 @media (max-width: 640px) {
   .holding-form { grid-template-columns: 1fr 1fr; }
-  .col-cap, .col-spark { display: none; }
-  .search-box { max-width: none; width: 100%; }
+  .col-cap, .col-spark, .col-rank { display: none; }
+  .search-box { max-width: none; width: 100%; flex: 1 1 auto; }
   .controls-row { flex-direction: column; align-items: stretch; }
   .summary-row { grid-template-columns: 1fr; }
   .news-thumb-wrap { width: 72px; height: 56px; }
+  thead th, tbody td { padding: 10px 6px; }
+  .coin-icon { width: 20px; height: 20px; }
+  .coin-name-cell { gap: 7px; }
+  .coin-symbol { margin-left: 0; }
 }
 
 @media (max-width: 420px) {
