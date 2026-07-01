@@ -659,7 +659,10 @@ async function fetchStooqSeries(stooqSymbol, daysBack) {
   const d2 = new Date();
   const d1 = new Date(d2.getTime() - daysBack * 86400000);
   const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqSymbol)}&d1=${stooqDateStr(d1)}&d2=${stooqDateStr(d2)}&i=d`;
-  const text = await fetchWithRetry(url, { retries: 0, parse: 'text' });
+  // stooq.com sendet keine Access-Control-Allow-Origin-Header, ein direkter fetch() aus dem
+  // Browser schlägt daher im Live-Betrieb (anders als in Node-basierten Tests) mit CORS-Fehler
+  // fehl. Deshalb wie beim Yahoo-Fallback über den CORS-Proxy laufen lassen.
+  const text = await fetchWithRetry(proxied(url), { retries: 0, parse: 'text' });
   const points = parseStooqHistoryCsv(text);
   if (!points.length) throw new Error('STOOQ_NO_DATA');
   return points;

@@ -18,7 +18,7 @@ Ein reines Vanilla-JS/HTML/CSS-Dashboard für Krypto-Assets, ETFs, Portfolio-Tra
 | [CoinGecko](https://www.coingecko.com/en/api) | Kryptopreise, Sparklines, Chart-Historie | öffentliches Rate-Limit, kein API-Key |
 | [CryptoCompare News API](https://min-api.cryptocompare.com/) | News (primäre Quelle) | direkter Zugriff scheitert oft an CORS im Browser |
 | CoinDesk-/Cointelegraph-RSS via [rss2json.com](https://rss2json.com/) | News (Fallback) | falls CryptoCompare nicht erreichbar ist |
-| [Stooq](https://stooq.com/) CSV-Endpunkt | ETF-Kurshistorie (primär) | Ticker-Mapping in `etfs-data.js` ist best-effort |
+| [Stooq](https://stooq.com/) CSV-Endpunkt | ETF-Kurshistorie (primär) | Ticker-Mapping in `etfs-data.js` ist best-effort; sendet keine CORS-Header, läuft daher wie Yahoo über den CORS-Proxy |
 | [Yahoo Finance Chart API](https://query1.finance.yahoo.com/) | ETF-Kurshistorie (Fallback) | nur über CORS-Proxy erreichbar |
 | [Frankfurter](https://www.frankfurter.app/) | USD/EUR/GBP-Wechselkurse | stündlich aktualisiert |
 | [alternative.me Fear & Greed Index](https://alternative.me/crypto/fear-and-greed-index/) | Marktstimmung | — |
