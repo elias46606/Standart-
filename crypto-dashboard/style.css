@@ -37,6 +37,29 @@ input, button { font-size: 14px; }
 .hidden { display: none !important; }
 .mono { font-family: var(--mono); }
 
+/* ---------- Install-Banner (PWA) ---------- */
+
+.install-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: var(--fg);
+  color: var(--bg);
+  padding: 12px clamp(16px, 4vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.install-banner .btn-primary { background: var(--bg); color: var(--fg); }
+.install-banner .btn-ghost { border-color: rgba(251, 251, 250, .4); color: var(--bg); }
+.install-banner-actions { display: flex; gap: 8px; flex: none; }
+
 /* ---------- Header ---------- */
 
 .site-header {
@@ -94,6 +117,34 @@ input, button { font-size: 14px; }
 }
 
 .icon-btn svg { width: 14px; height: 14px; }
+
+.currency-toggle { display: flex; border: 1px solid var(--gray-200); flex: none; }
+
+.currency-toggle button {
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+.currency-toggle button + button { border-left: 1px solid var(--gray-200); }
+.currency-toggle button.active { background: var(--fg); color: var(--bg); }
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-400);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.status-dot-ok { background: var(--green); }
+.status-dot-stale { background: #b8860b; }
+.status-dot-error { background: var(--red); }
 
 /* ---------- Tabs ---------- */
 
@@ -164,6 +215,34 @@ main {
   margin: 0 0 16px;
 }
 
+/* ---------- Fear & Greed widget ---------- */
+
+.fng-widget {
+  border: 1px solid var(--gray-200);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.fng-info { display: flex; flex-direction: column; gap: 4px; }
+
+.fng-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--gray-600);
+}
+
+.fng-classification { font-size: 14px; font-weight: 600; }
+.fng-value { font-size: 28px; font-weight: 800; font-family: var(--mono); }
+
+.fng-bar { flex: 1 1 160px; min-width: 120px; height: 6px; background: var(--gray-200); }
+.fng-bar-fill { height: 100%; background: var(--fg); transition: width .3s ease; }
+
 /* ---------- Error banner ---------- */
 
 .error-banner {
@@ -218,6 +297,23 @@ main {
   flex: none;
 }
 
+.controls-row-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.last-updated {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gray-400);
+  margin: 0;
+  white-space: nowrap;
+}
+
 .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .pill {
@@ -238,6 +334,8 @@ main {
 .pill.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
 .pill .arrow { display: inline-block; margin-left: 2px; }
+
+.watchlist-filter[data-active="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
 /* ---------- Tables ---------- */
 
@@ -283,6 +381,36 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
   margin-left: 2px;
   text-transform: uppercase;
 }
+
+.asset-monogram-sm, .asset-monogram-xs, .asset-monogram {
+  border: 1px solid var(--gray-200);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  flex: none;
+  background: var(--bg);
+}
+
+.asset-monogram-sm { width: 24px; height: 24px; font-size: 9px; }
+.asset-monogram-xs { width: 18px; height: 18px; font-size: 8px; }
+.asset-monogram { width: 40px; height: 40px; font-size: 13px; }
+
+.col-star { width: 30px; }
+
+.star-btn {
+  border: none;
+  background: none;
+  color: var(--gray-400);
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px;
+}
+
+.star-btn:hover { color: var(--fg); }
+.star-btn.active { color: var(--fg); }
 
 .change-positive { color: var(--green); }
 .change-negative { color: var(--red); }
@@ -343,6 +471,32 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
 
 .summary-value { font-size: clamp(20px, 3vw, 26px); font-weight: 700; letter-spacing: -0.01em; }
 .summary-sub { font-family: var(--mono); font-size: 13px; color: var(--gray-600); }
+
+.history-block {
+  border: 1px solid var(--gray-200);
+  padding: clamp(16px, 3vw, 24px);
+  margin-bottom: 28px;
+}
+
+.history-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.history-head .block-title { margin: 0; }
+
+.history-stats { display: flex; gap: clamp(20px, 4vw, 40px); flex-wrap: wrap; margin-bottom: 18px; }
+.history-stat { display: flex; flex-direction: column; gap: 4px; }
+.summary-value-sm { font-size: 14px; font-weight: 600; font-family: var(--mono); }
+
+.history-chart-wrap { position: relative; height: 220px; }
+
+.portfolio-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .portfolio-grid {
   display: grid;
@@ -527,8 +681,22 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
 .modal-close:hover { border-color: var(--fg); }
 
 .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-right: 40px; }
-.modal-coin-icon { width: 40px; height: 40px; border-radius: 50%; }
+.modal-icon-wrap { flex: none; width: 40px; height: 40px; }
+.modal-icon-wrap img { width: 40px; height: 40px; border-radius: 50%; }
+.modal-header-text { flex: 1; min-width: 0; }
 .modal-header h2 { margin: 0; font-size: 20px; }
+
+.modal-star {
+  flex: none;
+  border: 1px solid var(--gray-200);
+  background: none;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: var(--gray-400);
+}
+
+.modal-star.active { color: var(--fg); border-color: var(--fg); }
 
 .modal-price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .modal-price { font-size: 28px; font-weight: 800; font-family: var(--mono); }
@@ -543,6 +711,42 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
   font-size: 12px;
   margin: 10px 0 0;
 }
+
+/* ---------- Modal: Preis-Alarm ---------- */
+
+.modal-alert-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.alert-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+.alert-form select,
+.alert-form input {
+  border: 1px solid var(--gray-200);
+  background: var(--bg);
+  padding: 9px 10px;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.alert-form input { flex: 1; min-width: 100px; }
+
+.alert-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.alert-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--gray-200);
+}
+
+.alert-list li.triggered { color: var(--gray-400); }
+.alert-list .alert-text { flex: 1; }
+.alert-list-empty { color: var(--gray-400); font-family: var(--mono); font-size: 12px; border: none !important; padding: 4px 0 !important; }
 
 /* ---------- Footer ---------- */
 
@@ -576,9 +780,23 @@ th.col-price, th.col-change, th.col-cap { text-align: right; }
   .summary-row { grid-template-columns: 1fr; }
   .news-thumb-wrap { width: 72px; height: 56px; }
   thead th, tbody td { padding: 10px 6px; }
-  .coin-icon { width: 20px; height: 20px; }
+  .coin-icon, .asset-monogram-sm { width: 20px; height: 20px; }
   .coin-name-cell { gap: 7px; }
-  .coin-symbol { margin-left: 0; }
+  .coin-symbol { margin-left: 0; flex: none; }
+  .coin-name-text {
+    min-width: 0;
+    max-width: 24vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fng-widget { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .fng-bar { width: 100%; flex: 0 0 auto; height: 6px; }
+  .controls-row-secondary { flex-direction: column; align-items: flex-start; }
+  .portfolio-toolbar { flex-direction: column; align-items: stretch; }
+  .alert-form { flex-direction: column; }
+  .alert-form input { width: 100%; }
+  .meta-text { display: none; }
 }
 
 @media (max-width: 420px) {
