@@ -381,6 +381,48 @@ main {
 .fng-bar { flex: 1 1 160px; min-width: 120px; height: 6px; background: var(--gray-200); }
 .fng-bar-fill { height: 100%; background: var(--fg); transition: width .3s ease; }
 
+/* ---------- Trending strip ---------- */
+
+.trending-strip {
+  border: 1px solid var(--gray-200);
+  padding: 10px 20px;
+  margin: -14px 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  overflow-x: auto;
+}
+
+.trending-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--gray-600);
+  flex: none;
+}
+
+.trending-list {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trending-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.trending-item img { width: 16px; height: 16px; border-radius: 50%; }
+.trending-symbol { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.trending-pct { font-family: var(--mono); font-size: 11px; }
+
 /* ---------- Error banner ---------- */
 
 .error-banner {

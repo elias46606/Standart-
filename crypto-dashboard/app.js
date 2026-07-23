@@ -20,12 +20,14 @@ const WATCHLIST_STORAGE_KEY = 'crypto_dashboard_watchlist_v1';
 const ALERTS_STORAGE_KEY = 'crypto_dashboard_alerts_v1';
 const CURRENCY_STORAGE_KEY = 'crypto_dashboard_currency_v1';
 const PORTFOLIO_HISTORY_KEY = 'crypto_dashboard_portfolio_history_v1';
+const MARKET_SNAPSHOT_KEY = 'crypto_dashboard_market_snapshot_v1';
 
 const MARKET_REFRESH_MS = 60 * 1000;
 const ETF_REFRESH_MS = 60 * 1000;
 const NEWS_REFRESH_MS = 5 * 60 * 1000;
 const FX_REFRESH_MS = 60 * 60 * 1000;
 const FNG_REFRESH_MS = 10 * 60 * 1000;
+const TRENDING_REFRESH_MS = 10 * 60 * 1000;
 const RATE_LIMIT_BACKOFF_MS = [5000, 15000, 30000];
 
 // ETF_LIST wird aus etfs-data.js geladen (eigenes Datenmodul, vor app.js eingebunden).
@@ -288,6 +290,7 @@ const dataSources = {
   news: createDataSource('news', NEWS_REFRESH_MS, fetchNewsData),
   fx: createDataSource('fx', FX_REFRESH_MS, fetchFxRates),
   fng: createDataSource('fng', FNG_REFRESH_MS, fetchFearGreed),
+  trending: createDataSource('trending', TRENDING_REFRESH_MS, fetchTrending),
 };
 
 async function ensureFresh(source, { force = false } = {}) {
@@ -515,7 +518,35 @@ function wireStarButtons(container) {
 
 async function fetchMarketData() {
   const data = await fetchWithRetry(`${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true`);
-  return Array.isArray(data) ? data : [];
+  const coins = Array.isArray(data) ? data : [];
+  if (coins.length) saveMarketSnapshot(coins);
+  return coins;
+}
+
+// Letzten erfolgreichen Marktstand lokal sichern, damit die Tabelle beim nächsten
+// Öffnen sofort gefüllt ist (mit Zeitstempel), statt auf die API warten zu müssen.
+function saveMarketSnapshot(coins) {
+  try {
+    localStorage.setItem(MARKET_SNAPSHOT_KEY, JSON.stringify({ t: Date.now(), coins }));
+  } catch { /* voller localStorage ist kein Grund, das Laden scheitern zu lassen */ }
+}
+
+function restoreMarketSnapshot() {
+  try {
+    const raw = localStorage.getItem(MARKET_SNAPSHOT_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    if (!snap || !Array.isArray(snap.coins) || !snap.coins.length) return false;
+    state.coins = snap.coins;
+    state.coinsLoadedAt = snap.t || 0;
+    updateHeaderMeta();
+    renderMarketTable();
+    renderPortfolio();
+    updateLastUpdated('market', state.coinsLoadedAt);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function loadMarketData({ force = false } = {}) {
@@ -899,6 +930,42 @@ function renderFearGreed() {
   valueEl.textContent = String(state.fng.value);
   classEl.textContent = translateFngClassification(state.fng.classification);
   fillEl.style.width = `${Math.max(0, Math.min(100, state.fng.value))}%`;
+}
+
+/* ===================================================================
+   TRENDING — angesagteste/neueste Coins (CoinGecko /search/trending)
+   =================================================================== */
+
+async function fetchTrending() {
+  const json = await fetchWithRetry(`${COINGECKO_BASE}/search/trending`, { retries: 1 });
+  return ((json && json.coins) || []).map((c) => c.item).filter(Boolean).slice(0, 8);
+}
+
+async function loadTrending() {
+  try {
+    const items = await ensureFresh(dataSources.trending);
+    renderTrending(items);
+  } catch (err) {
+    console.warn('Trending-Coins nicht verfügbar:', err);
+    document.getElementById('trending-strip')?.classList.add('hidden');
+  }
+}
+
+function renderTrending(items) {
+  const strip = document.getElementById('trending-strip');
+  const list = document.getElementById('trending-list');
+  if (!strip || !list || !items.length) return;
+  list.innerHTML = items.map((it) => {
+    const pct = it.data && it.data.price_change_percentage_24h && it.data.price_change_percentage_24h.usd;
+    const pctHtml = pct != null && Number.isFinite(pct)
+      ? ` <span class="trending-pct ${changeClass(pct)}">${formatPercent(pct)}</span>` : '';
+    return `
+      <li class="trending-item" title="${escapeHtml(it.name)}${it.market_cap_rank ? ` · Rang ${it.market_cap_rank}` : ''}">
+        ${it.thumb ? `<img src="${escapeHtml(it.thumb)}" alt="" loading="lazy">` : ''}
+        <span class="trending-symbol">${escapeHtml((it.symbol || '').toUpperCase())}</span>${pctHtml}
+      </li>`;
+  }).join('');
+  strip.classList.remove('hidden');
 }
 
 /* ===================================================================
@@ -2572,15 +2639,23 @@ async function init() {
   renderWhatIf();
   renderStatusDots();
 
+  // Letzten bekannten Marktstand sofort anzeigen (falls vorhanden), damit die Seite
+  // nie leer startet — die frischen Daten laden parallel und ersetzen ihn gleich darauf.
+  restoreMarketSnapshot();
+
+  // Alle Quellen parallel statt nacheinander laden: Coins erscheinen sofort, sobald
+  // CoinGecko antwortet, ohne auf ETF-/News-Antworten zu warten (und umgekehrt).
   loadFxRates();
   loadFearGreed();
-  await loadMarketData();
+  loadTrending();
+  loadMarketData();
   loadEtfData();
-  await loadNews();
+  loadNews();
 
   resumeAutoRefresh();
   startAutoRefresh('fx', FX_REFRESH_MS, () => loadFxRates());
   startAutoRefresh('fng', FNG_REFRESH_MS, () => loadFearGreed());
+  startAutoRefresh('trending', TRENDING_REFRESH_MS, () => loadTrending());
 }
 
 document.addEventListener('DOMContentLoaded', init);
