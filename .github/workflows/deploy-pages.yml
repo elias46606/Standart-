@@ -36,6 +36,7 @@ jobs:
           cp *.png *.svg _site/ 2>/dev/null || true
           cp himmel.html _site/ 2>/dev/null || true
           cp -r css _site/ 2>/dev/null || true
+          cp -r crypto-dashboard _site/ 2>/dev/null || true
           touch _site/.nojekyll
 
       - name: Pages-Artefakt hochladen

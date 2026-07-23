@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krypto-Dashboard · Markt, ETFs, Portfolio &amp; News</title>
+<meta name="description" content="Schlichtes Krypto- &amp; ETF-Dashboard: Live-Marktdaten, Portfolio-Tracking über beide Anlageklassen, Preis-Alarme und aktuelle News.">
+<meta name="theme-color" content="#fbfbfa">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="install-banner hidden" id="install-banner">
+  <span>Zum Startbildschirm hinzufügen – schneller Zugriff, funktioniert auch offline.</span>
+  <div class="install-banner-actions">
+    <button type="button" id="install-banner-action" class="btn-primary">Installieren</button>
+    <button type="button" id="install-banner-dismiss" class="btn-ghost">Später</button>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="header-left">
+    <span class="logo">KRYPTO<span class="logo-dim">/DASHBOARD</span></span>
+  </div>
+  <div class="header-right">
+    <button type="button" class="cmdk-hint" id="cmdk-open-btn" aria-label="Suche öffnen">⌘K</button>
+    <span class="live-dot" aria-hidden="true"></span>
+    <span class="meta-text" id="coin-count-meta">50 COINS · LIVE</span>
+    <div class="currency-toggle" id="currency-toggle" role="group" aria-label="Anzeigewährung">
+      <button type="button" data-ccy="EUR" class="active">€</button>
+      <button type="button" data-ccy="USD">$</button>
+    </div>
+    <span class="status-dot status-dot-ok" id="fx-status-dot" title="FX: aktuell"></span>
+    <button class="icon-btn" id="account-icon" type="button" title="Keine Anmeldung nötig – Portfolio-Daten werden ausschließlich lokal in deinem Browser gespeichert" aria-label="Konto-Hinweis">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 19.5c1.6-3.4 4.4-5 7.5-5s5.9 1.6 7.5 5"/></svg>
+    </button>
+  </div>
+</header>
+
+<nav class="tab-nav" role="tablist" aria-label="Bereiche">
+  <button class="tab-btn active" data-tab="market" role="tab" aria-selected="true">Markt</button>
+  <button class="tab-btn" data-tab="etf" role="tab" aria-selected="false">ETFs</button>
+  <button class="tab-btn" data-tab="portfolio" role="tab" aria-selected="false">Portfolio</button>
+  <button class="tab-btn" data-tab="news" role="tab" aria-selected="false">News</button>
+</nav>
+
+<main>
+
+  <!-- ================= MARKT ================= -->
+  <section id="tab-market" class="tab-panel active" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">01 · MARKTÜBERSICHT</p>
+      <h1 class="headline">Marktübersicht</h1>
+      <p class="subtext">Die Top 50 Kryptowährungen nach Marktkapitalisierung, live von CoinGecko. Aktualisiert sich automatisch alle 60 Sekunden.</p>
+    </div>
+
+    <div class="fng-widget" id="fng-widget">
+      <div class="fng-info">
+        <span class="fng-label">Fear &amp; Greed Index</span>
+        <span class="fng-classification" id="fng-classification">Lädt …</span>
+      </div>
+      <div class="fng-value" id="fng-value">–</div>
+      <div class="fng-bar"><div class="fng-bar-fill" id="fng-bar-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="trending-strip hidden" id="trending-strip" aria-label="Trending Coins">
+      <span class="trending-label">Trending</span>
+      <ul class="trending-list" id="trending-list"></ul>
+    </div>
+
+    <div id="market-error" class="error-banner hidden" role="alert"></div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <input type="text" id="market-search" placeholder="Name oder Symbol suchen …" autocomplete="off" aria-label="Coin suchen">
+        <button id="market-search-btn" type="button">Suchen</button>
+      </div>
+      <div class="pill-group" id="sort-pills" aria-label="Sortieren nach">
+        <button class="pill active" data-sort="market_cap">Marktkap. <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="price">Preis <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="change">24h % <span class="arrow">↓</span></button>
+      </div>
+    </div>
+    <div class="controls-row-secondary">
+      <button class="pill watchlist-filter" id="market-watchlist-filter" type="button" data-active="false">★ Watchlist</button>
+      <p class="last-updated"><span class="status-dot status-dot-ok" id="market-status-dot" title="Markt: aktuell"></span><span id="market-last-updated"></span></p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th class="col-star"></th>
+            <th class="col-rank">#</th>
+            <th class="col-name">Name</th>
+            <th class="col-price">Preis</th>
+            <th class="col-change">24 Std. %</th>
+            <th class="col-cap">Marktkap.</th>
+            <th class="col-spark">7 Tage</th>
+          </tr>
+        </thead>
+        <tbody id="market-tbody"></tbody>
+      </table>
+    </div>
+    <p class="table-status" id="market-status">Lade Marktdaten …</p>
+  </section>
+
+  <!-- ================= ETFs ================= -->
+  <section id="tab-etf" class="tab-panel" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">02 · ETFs</p>
+      <h1 class="headline">ETFs</h1>
+      <p class="subtext">Ausgewählte ETFs über Stooq, mit automatischem Yahoo-Finance-Fallback pro Ticker. Aktualisiert sich automatisch alle 5 Minuten.</p>
+    </div>
+
+    <div id="etf-error" class="error-banner hidden" role="alert"></div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <input type="text" id="etf-search" placeholder="Name oder Symbol suchen …" autocomplete="off" aria-label="ETF suchen">
+        <button id="etf-search-btn" type="button">Suchen</button>
+      </div>
+      <div class="pill-group" id="etf-sort-pills" aria-label="Sortieren nach">
+        <button class="pill active" data-sort="name">Name <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="price">Preis <span class="arrow">↓</span></button>
+        <button class="pill" data-sort="change">Änderung % <span class="arrow">↓</span></button>
+      </div>
+    </div>
+    <div class="controls-row-secondary">
+      <button class="pill watchlist-filter" id="etf-watchlist-filter" type="button" data-active="false">★ Watchlist</button>
+      <p class="last-updated"><span class="status-dot status-dot-ok" id="etf-status-dot" title="ETFs: aktuell"></span><span id="etf-last-updated"></span></p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th class="col-star"></th>
+            <th class="col-name">Name</th>
+            <th class="col-price">Preis</th>
+            <th class="col-change">Änderung %</th>
+            <th class="col-cap">Marktkap.</th>
+            <th class="col-spark">Verlauf</th>
+          </tr>
+        </thead>
+        <tbody id="etf-tbody"></tbody>
+      </table>
+    </div>
+    <p class="table-status" id="etf-status">Lade ETF-Daten …</p>
+  </section>
+
+  <!-- ================= PORTFOLIO ================= -->
+  <section id="tab-portfolio" class="tab-panel" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">03 · MEIN PORTFOLIO</p>
+      <h1 class="headline">Mein Portfolio</h1>
+      <p class="subtext">Trage deine Bestände ein (Krypto oder ETF), um Gesamtwert und Gewinn/Verlust auf Basis der aktuellen Kurse zu verfolgen. Alle Angaben bleiben ausschließlich lokal in deinem Browser gespeichert.</p>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-card">
+        <span class="summary-label">Gesamtwert</span>
+        <span class="summary-value" id="portfolio-total-value">€0,00</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Heute</span>
+        <span class="summary-value" id="portfolio-day-change">€0,00</span>
+        <span class="summary-sub" id="portfolio-day-change-pct">—</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Gewinn/Verlust gesamt</span>
+        <span class="summary-value" id="portfolio-total-pl">—</span>
+        <span class="summary-sub" id="portfolio-total-pl-pct">—</span>
+      </div>
+    </div>
+
+    <div class="history-block">
+      <div class="history-head">
+        <h3 class="block-title">Wertentwicklung</h3>
+        <div class="pill-group" id="portfolio-history-pills">
+          <button class="pill" type="button" data-range="7">7T</button>
+          <button class="pill active" type="button" data-range="30">30T</button>
+          <button class="pill" type="button" data-range="all">Alle</button>
+        </div>
+      </div>
+      <div class="history-stats" id="portfolio-history-stats">
+        <div class="history-stat">
+          <span class="summary-label">Performance</span>
+          <span class="summary-value" id="portfolio-history-perf-abs">—</span>
+          <span class="summary-sub" id="portfolio-history-perf-pct">—</span>
+        </div>
+        <div class="history-stat">
+          <span class="summary-label">Bester Tag</span>
+          <span class="summary-value-sm" id="portfolio-history-best">—</span>
+        </div>
+        <div class="history-stat">
+          <span class="summary-label">Schlechtester Tag</span>
+          <span class="summary-value-sm" id="portfolio-history-worst">—</span>
+        </div>
+      </div>
+      <div class="history-chart-wrap" id="portfolio-history-chart-wrap">
+        <canvas id="portfolio-history-chart"></canvas>
+      </div>
+      <p class="table-status hidden" id="portfolio-history-empty">Noch nicht genug Daten – komm morgen wieder.</p>
+    </div>
+
+    <div class="portfolio-toolbar">
+      <p class="last-updated" id="portfolio-last-updated"></p>
+      <div class="toolbar-actions">
+        <button class="row-btn" id="export-json-btn" type="button">Export JSON</button>
+        <button class="row-btn" id="export-csv-btn" type="button">Export CSV</button>
+        <button class="row-btn" id="import-btn" type="button">Importieren</button>
+        <input type="file" id="import-file-input" class="hidden" accept=".json,.csv">
+        <button class="row-btn" id="share-performance-btn" type="button">Performance teilen</button>
+      </div>
+    </div>
+
+    <div class="portfolio-grid">
+      <div class="portfolio-main">
+        <h3 class="block-title">Holding hinzufügen</h3>
+        <form id="holding-form" class="holding-form" autocomplete="off">
+          <input type="hidden" id="holding-editing-id" value="">
+          <input type="hidden" id="holding-coin-id" value="">
+          <input type="hidden" id="holding-asset-type" value="">
+
+          <div class="form-field combobox" id="coin-combobox">
+            <label for="holding-coin-search">Asset (Krypto oder ETF)</label>
+            <input type="text" id="holding-coin-search" placeholder="Name oder Symbol …" required>
+            <ul class="combobox-list hidden" id="coin-suggestions"></ul>
+          </div>
+
+          <div class="form-field">
+            <label for="holding-amount">Menge</label>
+            <input type="number" id="holding-amount" step="any" min="0" placeholder="0,00" required>
+          </div>
+
+          <div class="form-field">
+            <label for="holding-buy-price">Kaufpreis pro Einheit (optional)</label>
+            <input type="number" id="holding-buy-price" step="any" min="0" placeholder="optional">
+          </div>
+
+          <div class="form-field">
+            <label for="holding-buy-date">Kaufdatum (optional)</label>
+            <input type="date" id="holding-buy-date">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="holding-submit-btn" class="btn-primary">Hinzufügen</button>
+            <button type="button" id="holding-cancel-btn" class="btn-ghost hidden">Abbrechen</button>
+          </div>
+        </form>
+
+        <div class="table-scroll">
+          <table class="holdings-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Menge</th>
+                <th>Preis</th>
+                <th>Wert</th>
+                <th>Kaufpreis</th>
+                <th>G/V seit Kauf</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="holdings-tbody"></tbody>
+          </table>
+        </div>
+        <p class="table-status" id="holdings-status">Noch keine Holdings hinzugefügt.</p>
+      </div>
+
+      <div class="portfolio-side">
+        <h3 class="block-title">Verteilung</h3>
+        <div class="donut-wrap">
+          <canvas id="portfolio-donut"></canvas>
+        </div>
+        <ul class="donut-legend" id="donut-legend"></ul>
+      </div>
+    </div>
+
+    <div class="history-block" id="trades-block">
+      <div class="history-head">
+        <h3 class="block-title">Trade-Verlauf</h3>
+      </div>
+      <div class="table-scroll">
+        <table class="trades-table hidden" id="trades-table">
+          <thead>
+            <tr><th>Datum</th><th>Aktion</th><th>Asset</th><th>Menge</th><th>Preis</th></tr>
+          </thead>
+          <tbody id="trades-tbody"></tbody>
+        </table>
+      </div>
+      <p class="table-status" id="trades-status">Noch keine Trades erfasst – füge oben eine Holding hinzu.</p>
+    </div>
+
+    <div class="history-block" id="correlation-block">
+      <div class="history-head">
+        <h3 class="block-title">Korrelation (30 Tage)</h3>
+      </div>
+      <p class="table-status" id="correlation-status">Mindestens 2 Positionen nötig.</p>
+      <div class="table-scroll">
+        <table class="corr-table hidden" id="corr-table"></table>
+      </div>
+      <p class="corr-hint hidden" id="corr-hint"></p>
+    </div>
+
+    <div class="history-block">
+      <div class="history-head">
+        <h3 class="block-title">Was-wäre-wenn</h3>
+        <button class="row-btn" id="whatif-reset-btn" type="button">Zurücksetzen</button>
+      </div>
+      <div class="whatif-summary">
+        <span class="summary-label">Simulierter Gesamtwert</span>
+        <span class="summary-value" id="whatif-total-value">—</span>
+        <span class="summary-sub" id="whatif-total-change">—</span>
+      </div>
+      <div class="whatif-sliders" id="whatif-sliders"></div>
+      <p class="table-status" id="whatif-status">Noch keine Holdings zum Simulieren.</p>
+    </div>
+  </section>
+
+  <!-- ================= NEWS ================= -->
+  <section id="tab-news" class="tab-panel" role="tabpanel">
+    <div class="section-head">
+      <p class="eyebrow">04 · NEWS</p>
+      <h1 class="headline">News</h1>
+      <p class="subtext">Aktuelle Krypto-News, sortiert nach den neuesten Artikeln. Aktualisiert sich automatisch alle 5 Minuten.</p>
+    </div>
+
+    <div id="news-error" class="error-banner hidden" role="alert"></div>
+
+    <div class="controls-row-secondary">
+      <div class="pill-group" id="news-category-pills" aria-label="Nach Kategorie filtern">
+        <button class="pill active" data-category="ALL">Alle</button>
+      </div>
+      <p class="last-updated"><span class="status-dot status-dot-ok" id="news-status-dot" title="News: aktuell"></span><span id="news-last-updated"></span></p>
+    </div>
+
+    <ul class="news-list" id="news-list"></ul>
+    <p class="table-status" id="news-status">Lade News …</p>
+  </section>
+
+</main>
+
+<!-- ================= ASSET DETAIL MODAL (Krypto + ETF) ================= -->
+<div id="asset-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="modal"></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-asset-name">
+    <button class="modal-close" data-close="modal" type="button" aria-label="Schließen">×</button>
+    <div class="modal-header">
+      <span id="modal-asset-icon-wrap" class="modal-icon-wrap"></span>
+      <div class="modal-header-text">
+        <h2 id="modal-asset-name"></h2>
+        <span id="modal-asset-symbol" class="mono-tag"></span>
+      </div>
+      <button class="star-btn modal-star" id="modal-watchlist-btn" type="button" aria-label="Zur Watchlist hinzufügen">☆</button>
+    </div>
+    <div class="modal-price-row">
+      <span id="modal-asset-price" class="modal-price"></span>
+      <span id="modal-asset-change" class="change-tag"></span>
+    </div>
+    <div class="pill-group" id="range-pills">
+      <button class="pill active" data-range="7">7T</button>
+      <button class="pill" data-range="30">30T</button>
+      <button class="pill" data-range="365">1J</button>
+    </div>
+    <div class="modal-chart-wrap">
+      <canvas id="modal-chart"></canvas>
+    </div>
+    <p class="modal-status" id="modal-status"></p>
+
+    <div class="modal-alert-section">
+      <h3 class="block-title">Preis-Alarm</h3>
+      <form id="alert-form" class="alert-form">
+        <select id="alert-direction" aria-label="Richtung">
+          <option value="above">steigt über</option>
+          <option value="below">fällt unter</option>
+        </select>
+        <input type="number" id="alert-threshold" step="any" min="0" placeholder="Schwellenwert" required aria-label="Schwellenwert">
+        <button type="submit" class="btn-primary">Alarm setzen</button>
+      </form>
+      <p class="modal-status hidden" id="alert-status"></p>
+      <ul class="alert-list" id="modal-alert-list"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================= COMMAND-K SUCHE ================= -->
+<div id="cmdk-overlay" class="cmdk-overlay hidden" aria-hidden="true">
+  <div class="cmdk-backdrop" data-close="cmdk"></div>
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Suche">
+    <input type="text" id="cmdk-input" class="cmdk-input" placeholder="Coins, ETFs oder Holdings suchen …" autocomplete="off">
+    <div class="cmdk-results" id="cmdk-results"></div>
+  </div>
+</div>
+
+<!-- ================= SHORTCUTS-UEBERSICHT ================= -->
+<div id="shortcuts-overlay" class="cmdk-overlay hidden" aria-hidden="true">
+  <div class="cmdk-backdrop" data-close="shortcuts"></div>
+  <div class="shortcuts-panel" role="dialog" aria-modal="true" aria-label="Tastenkürzel">
+    <button class="modal-close" data-close="shortcuts" type="button" aria-label="Schließen">×</button>
+    <h3 class="block-title">Tastenkürzel</h3>
+    <ul class="shortcuts-list">
+      <li><kbd>⌘</kbd><kbd>K</kbd><span>Suche öffnen</span></li>
+      <li><kbd>1</kbd><span>Markt</span></li>
+      <li><kbd>2</kbd><span>Portfolio</span></li>
+      <li><kbd>3</kbd><span>ETFs</span></li>
+      <li><kbd>4</kbd><span>News</span></li>
+      <li><kbd>?</kbd><span>Diese Übersicht</span></li>
+      <li><kbd>Esc</kbd><span>Overlay schließen</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= SHARE-KARTE (off-screen, für PNG-Export) ================= -->
+<div id="share-card" class="share-card" aria-hidden="true">
+  <p class="eyebrow">MEIN PORTFOLIO</p>
+  <h2 class="share-perf-value" id="share-perf-value">—</h2>
+  <p class="share-period" id="share-period">—</p>
+  <div class="share-allocation-bar" id="share-allocation-bar"></div>
+  <div class="share-allocation-legend" id="share-allocation-legend"></div>
+  <p class="share-footer">Krypto/Dashboard</p>
+</div>
+
+<footer class="site-footer">
+  <p>Daten von <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>, <a href="https://www.cryptocompare.com" target="_blank" rel="noopener noreferrer">CryptoCompare</a>, <a href="https://stooq.com" target="_blank" rel="noopener noreferrer">Stooq</a>, <a href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer">Yahoo Finance</a>, <a href="https://alternative.me" target="_blank" rel="noopener noreferrer">alternative.me</a> &amp; <a href="https://www.frankfurter.app" target="_blank" rel="noopener noreferrer">Frankfurter</a> · ohne Gewähr, keine Anlageberatung · Portfolio-Daten verlassen nie deinen Browser.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="etfs-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
