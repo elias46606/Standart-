@@ -21,6 +21,7 @@ const ALERTS_STORAGE_KEY = 'crypto_dashboard_alerts_v1';
 const CURRENCY_STORAGE_KEY = 'crypto_dashboard_currency_v1';
 const PORTFOLIO_HISTORY_KEY = 'crypto_dashboard_portfolio_history_v1';
 const MARKET_SNAPSHOT_KEY = 'crypto_dashboard_market_snapshot_v1';
+const TRADES_STORAGE_KEY = 'crypto_dashboard_trades_v1';
 
 const MARKET_REFRESH_MS = 60 * 1000;
 const ETF_REFRESH_MS = 60 * 1000;
@@ -1336,6 +1337,86 @@ function initCoinCombobox() {
 }
 
 /* ===================================================================
+   PORTFOLIO — Trade-Verlauf (chronologische Kauf-/Änderungs-Historie)
+   =================================================================== */
+
+let trades = loadTrades();
+
+function loadTrades() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TRADES_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+function saveTrades() {
+  try { localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades)); } catch { /* ignorieren */ }
+}
+
+// action: 'Kauf' | 'Änderung' | 'Entfernt'. Name/Symbol werden als Schnappschuss
+// gespeichert, damit der Eintrag lesbar bleibt, auch wenn das Asset später
+// nicht mehr in den Top 50 auftaucht.
+function recordTrade(action, holding, { t = null, price = null, priceCurrency = null } = {}) {
+  const asset = findAsset(holding.assetType, holding.assetId);
+  trades.push({
+    id: genId(),
+    t: t ?? Date.now(),
+    action,
+    assetType: holding.assetType,
+    assetId: holding.assetId,
+    symbol: asset ? asset.symbol : holding.assetId.toUpperCase(),
+    name: asset ? asset.name : holding.assetId,
+    amount: holding.amount,
+    price,
+    priceCurrency,
+  });
+  if (trades.length > 200) trades = trades.slice(-200);
+  saveTrades();
+  renderTrades();
+}
+
+// Bestehende Holdings einmalig als "Kauf"-Einträge übernehmen, damit der
+// Verlauf für Rückkehrer nicht leer startet.
+function seedTradesFromHoldings() {
+  if (trades.length || !holdings.length) return;
+  holdings.forEach((h) => {
+    recordTrade('Kauf', h, {
+      t: h.buyDate ? new Date(`${h.buyDate}T12:00:00`).getTime() : Date.now(),
+      price: h.buyPrice, priceCurrency: h.buyPriceCurrency || null,
+    });
+  });
+}
+
+function renderTrades() {
+  const table = document.getElementById('trades-table');
+  const tbody = document.getElementById('trades-tbody');
+  const statusEl = document.getElementById('trades-status');
+  if (!tbody) return;
+  if (!trades.length) {
+    table.classList.add('hidden');
+    statusEl.classList.remove('hidden');
+    return;
+  }
+  const rows = [...trades].sort((a, b) => b.t - a.t).slice(0, 25);
+  tbody.innerHTML = rows.map((tr) => {
+    // Live nachschlagen (falls Marktdaten inzwischen da sind), sonst Schnappschuss nutzen.
+    const asset = findAsset(tr.assetType, tr.assetId);
+    const symbol = asset ? asset.symbol : tr.symbol;
+    const name = asset ? asset.name : tr.name;
+    return `
+    <tr>
+      <td class="mono">${new Date(tr.t).toLocaleDateString('de-DE')}</td>
+      <td><span class="trade-tag trade-tag-${tr.action === 'Kauf' ? 'buy' : (tr.action === 'Entfernt' ? 'sell' : 'edit')}">${tr.action}</span></td>
+      <td><strong>${escapeHtml(symbol)}</strong> <span class="coin-symbol">${escapeHtml(name)}</span></td>
+      <td class="mono">${formatAmount(tr.amount)}</td>
+      <td class="mono">${tr.price != null ? formatCurrency(tr.price, tr.priceCurrency || 'USD') : '—'}</td>
+    </tr>`;
+  }).join('');
+  table.classList.remove('hidden');
+  statusEl.classList.add('hidden');
+}
+
+/* ===================================================================
    PORTFOLIO — Formular (Hinzufügen / Bearbeiten / Löschen)
    =================================================================== */
 
@@ -1369,6 +1450,14 @@ function startEditHolding(id) {
 
 function deleteHolding(id) {
   if (!confirm('Diesen Holding-Eintrag wirklich löschen?')) return;
+  const removed = holdings.find((h) => h.id === id);
+  if (removed) {
+    const asset = findAsset(removed.assetType, removed.assetId);
+    recordTrade('Entfernt', removed, {
+      price: asset ? asset.price : null,
+      priceCurrency: asset ? asset.currency : null,
+    });
+  }
   holdings = holdings.filter((h) => h.id !== id);
   saveHoldings();
   renderPortfolio();
@@ -1407,6 +1496,11 @@ function initHoldingForm() {
 
     if (editingId) holdings = holdings.map((h) => (h.id === editingId ? holding : h));
     else holdings.push(holding);
+
+    recordTrade(editingId ? 'Änderung' : 'Kauf', holding, {
+      t: !editingId && holding.buyDate ? new Date(`${holding.buyDate}T12:00:00`).getTime() : Date.now(),
+      price: holding.buyPrice, priceCurrency: holding.buyPriceCurrency,
+    });
 
     saveHoldings();
     resetHoldingForm();
@@ -1575,6 +1669,7 @@ function renderPortfolio() {
   const hasPricedRow = rows.some((r) => r.value != null);
   maybeSnapshotPortfolio(totalValue, hasPricedRow);
   renderPortfolioHistoryChart();
+  renderTrades();
   refreshWhatIfIfNeeded();
   refreshCorrelationIfNeeded();
 }
@@ -2637,6 +2732,8 @@ async function init() {
   updateEtfSortPillsUI();
   renderPortfolio();
   renderWhatIf();
+  seedTradesFromHoldings();
+  renderTrades();
   renderStatusDots();
 
   // Letzten bekannten Marktstand sofort anzeigen (falls vorhanden), damit die Seite

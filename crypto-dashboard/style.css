@@ -320,7 +320,7 @@ main {
 .tab-panel { display: none; padding: 40px 0 64px; }
 .tab-panel.active { display: block; }
 
-.section-head { margin-bottom: 32px; }
+.section-head { margin-bottom: 24px; }
 
 .eyebrow {
   font-family: var(--mono);
@@ -328,20 +328,20 @@ main {
   letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--gray-600);
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .headline {
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: clamp(24px, 3vw, 32px);
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
 }
 
 .subtext {
   color: var(--gray-600);
-  font-size: 15px;
-  max-width: 640px;
+  font-size: 14px;
+  max-width: 620px;
   margin: 0;
 }
 
@@ -380,6 +380,22 @@ main {
 
 .fng-bar { flex: 1 1 160px; min-width: 120px; height: 6px; background: var(--gray-200); }
 .fng-bar-fill { height: 100%; background: var(--fg); transition: width .3s ease; }
+
+/* ---------- Trade-Verlauf ---------- */
+
+.trade-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border: 1px solid var(--gray-200);
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.trade-tag-buy { color: var(--green); border-color: var(--green); }
+.trade-tag-sell { color: var(--red); border-color: var(--red); }
+.trade-tag-edit { color: var(--gray-600); }
 
 /* ---------- Trending strip ---------- */
 

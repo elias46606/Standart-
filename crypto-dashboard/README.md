@@ -6,7 +6,7 @@ Ein reines Vanilla-JS/HTML/CSS-Dashboard für Krypto-Assets, ETFs, Portfolio-Tra
 
 - **Markt**: Top-50-Kryptowährungen (Preis, 24h-Änderung, Marktkapitalisierung, Sparkline), Suche, Sortierung, Watchlist, Fear-&-Greed-Index, Trending-Leiste (angesagteste Coins laut CoinGecko). Der letzte Marktstand wird lokal gesichert und beim nächsten Öffnen sofort angezeigt, während frische Daten parallel laden.
 - **ETFs**: ~17 ETFs (World/Sektor/Anleihen/Rohstoffe/Region) mit Kurs, Änderung und Sparkline aus eigenem Datenmodul (`etfs-data.js`).
-- **Portfolio**: Bestände (Krypto + ETF) verwalten, Gesamtwert/Tagesänderung/Gewinn-Verlust, Allokations-Donut, Verlaufschart (tägliche Snapshots, 7T/30T/Alle), Korrelationsmatrix (30-Tage-Tagesrenditen, Pearson), Was-wäre-wenn-Simulator, Export/Import (JSON/CSV), anonymisierte Performance-Grafik zum Teilen (PNG).
+- **Portfolio**: Bestände (Krypto + ETF) verwalten, Trade-Verlauf (chronologische Kauf-/Änderungs-/Entfernt-Historie, lokal gespeichert), Gesamtwert/Tagesänderung/Gewinn-Verlust, Allokations-Donut, Verlaufschart (tägliche Snapshots, 7T/30T/Alle), Korrelationsmatrix (30-Tage-Tagesrenditen, Pearson), Was-wäre-wenn-Simulator, Export/Import (JSON/CSV), anonymisierte Performance-Grafik zum Teilen (PNG).
 - **News**: Aktuelle Krypto-News mit Kategorie-Filter, mehrstufige Fallback-Kette bei Ausfall einer Quelle.
 - **Bedienung**: Command-K-Suche (⌘K/Strg+K) über alle Assets/Portfolio-Einträge, Tastatur-Shortcuts (1–4 für Tabs, `?` für Übersicht), Preis-Alarme (Browser-Benachrichtigungen), USD/EUR-Umschalter.
 - **PWA**: Installierbar (Manifest + Icons), Service Worker mit Cache-Fallback für Marktdaten, funktioniert eingeschränkt offline (zuletzt geladene Daten bleiben sichtbar).
