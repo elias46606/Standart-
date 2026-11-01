@@ -22,7 +22,9 @@ def client() -> anthropic.Anthropic:
     if _client is None:
         if not config.ANTHROPIC_API_KEY:
             raise SystemExit("ANTHROPIC_API_KEY fehlt in .env (oder --demo nutzen).")
-        _client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        # base_url fest setzen: manche Umgebungen (z. B. Cloud-Sessions) setzen
+        # ANTHROPIC_BASE_URL auf einen eigenen Proxy – dein Key gehört zur echten API.
+        _client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, base_url=config.CLAUDE_BASE_URL)
     return _client
 
 

@@ -31,6 +31,7 @@ SCENE_MIN_WORDS, SCENE_MAX_WORDS = 10, 17   # ≈ 5–8 Sekunden pro Szene
 # --- APIs / Modelle ---
 CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-opus-5-5")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
+CLAUDE_BASE_URL = env("CLAUDE_BASE_URL", "https://api.anthropic.com")
 
 ELEVENLABS_API_KEY = env("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = env("ELEVENLABS_VOICE_ID")
